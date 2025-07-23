@@ -1,191 +1,212 @@
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@using NicolasQuiPaieData.DTOs
 @inject CommentService CommentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
 
-<div class="comment-card mb-3">
-    <div class="d-flex">
-        <!-- Avatar -->
-        <div class="me-3">
-            <i class="fas fa-user-circle fa-2x text-primary"></i>
-        </div>
-        
-        <!-- Content -->
-        <div class="flex-grow-1">
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <strong class="me-2">@Comment.UserDisplayName</strong>
-                    <span class="nicolas-level-badge">@GetNicolasBadge(FiscalLevel.PetitNicolas)</span>
-                    <small class="text-muted ms-2">
-                        @Comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                    </small>
-                </div>
-                
-                <!-- Actions -->
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                            type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-ellipsis-h"></i>
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <button class="dropdown-item" @onclick="LikeComment">
-                                <i class="fas fa-heart me-2 @(userLikedComment ? "text-danger" : "")"></i>
-                                @(userLikedComment ? "Ne plus aimer" : "J'aime")
-                            </button>
-                        </li>
-                        <li>
-                            <button class="dropdown-item" @onclick="ToggleReplyForm">
-                                <i class="fas fa-reply me-2"></i>Répondre
-                            </button>
-                        </li>
-                        <AuthorizeView>
-                            <Authorized>
-                                @if (context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Comment.UserId)
-                                {
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <button class="dropdown-item text-danger" @onclick="DeleteComment">
-                                            <i class="fas fa-trash me-2"></i>Supprimer
-                                        </button>
-                                    </li>
-                                }
-                            </Authorized>
-                        </AuthorizeView>
-                    </ul>
+<div class="comment-card">
+    @if (!Comment.IsDeleted)
+    {
+        <div class="d-flex align-items-start mb-3">
+            <!-- User Avatar -->
+            <div class="me-3">
+                <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                     style="width: 40px; height: 40px; border-radius: 50%;">
+                    @(Comment.UserDisplayName?.FirstOrDefault().ToString().ToUpper() ?? "?")
                 </div>
             </div>
-            
-            <!-- Comment Text -->
-            <div class="comment-content mb-2">
-                <p class="mb-0">@Comment.Content</p>
-            </div>
-            
-            <!-- Footer -->
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Likes -->
-                    <button class="btn btn-sm btn-outline-danger @(userLikedComment ? "active" : "")" 
-                            @onclick="LikeComment"
-                            disabled="@isLiking">
-                        @if (isLiking)
+
+            <!-- Comment Content -->
+            <div class="flex-grow-1">
+                <div class="comment-header d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center">
+                        <strong class="me-2">@Comment.UserDisplayName</strong>
+                        <small class="text-muted">@Comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                        @if (Comment.UpdatedAt.HasValue)
                         {
-                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <small class="text-muted ms-2">(modifié)</small>
                         }
-                        else
-                        {
-                            <i class="fas fa-heart me-1"></i>
-                        }
-                        @currentLikesCount
-                    </button>
+                    </div>
                     
-                    <!-- Reply Button -->
-                    <button class="btn btn-sm btn-outline-primary" @onclick="ToggleReplyForm">
-                        <i class="fas fa-reply me-1"></i>
-                        Répondre
-                    </button>
-                    
-                    <!-- Replies Count -->
-                    @if (Comment.Replies.Count > 0)
+                    <!-- Comment Actions -->
+                    <AuthorizeView>
+                        <Authorized>
+                            @if (canUserEdit)
+                            {
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" @onclick="ToggleEditMode"><i class="fas fa-edit me-2"></i>Modifier</a></li>
+                                        <li><a class="dropdown-item text-danger" href="#" @onclick="DeleteComment"><i class="fas fa-trash me-2"></i>Supprimer</a></li>
+                                    </ul>
+                                </div>
+                            }
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+
+                <!-- Comment Text -->
+                <div class="comment-content">
+                    @if (isEditing)
                     {
-                        <span class="text-muted">
-                            <i class="fas fa-comments me-1"></i>
-                            @Comment.Replies.Count réponse(s)
-                        </span>
-                    }
-                </div>
-            </div>
-            
-            <!-- Reply Form -->
-            @if (showReplyForm)
-            {
-                <AuthorizeView>
-                    <Authorized>
-                        <div class="mt-3 p-3 bg-light rounded">
-                            <div class="mb-2">
-                                <textarea class="form-control form-control-sm" 
-                                        rows="2" 
-                                        @bind="replyContent" 
-                                        placeholder="Votre réponse..."></textarea>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-primary btn-sm" 
-                                        @onclick="SubmitReply"
-                                        disabled="@(isSubmittingReply || string.IsNullOrWhiteSpace(replyContent))">
-                                    @if (isSubmittingReply)
+                        <div class="mb-3">
+                            <textarea class="form-control" @bind="editContent" rows="3" placeholder="Modifiez votre commentaire..."></textarea>
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-primary me-2" @onclick="SaveEdit" disabled="@isSavingEdit">
+                                    @if (isSavingEdit)
                                     {
                                         <span class="spinner-border spinner-border-sm me-1"></span>
                                     }
-                                    Répondre
+                                    Sauvegarder
                                 </button>
-                                <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleReplyForm">
-                                    Annuler
-                                </button>
+                                <button class="btn btn-sm btn-secondary" @onclick="CancelEdit">Annuler</button>
                             </div>
                         </div>
-                    </Authorized>
-                    <NotAuthorized>
-                        <div class="mt-3">
-                            <small class="text-muted">
-                                <a href="/login">Connectez-vous</a> pour répondre à ce commentaire.
-                            </small>
-                        </div>
-                    </NotAuthorized>
-                </AuthorizeView>
-            }
-            
-            <!-- Nested Replies -->
-            @if (Comment.Replies.Count > 0)
-            {
-                <div class="mt-3 ps-3 border-start">
-                    @foreach (var reply in Comment.Replies)
+                    }
+                    else
                     {
-                        <CommentCard Comment="reply" IsReply="true" OnCommentChanged="OnCommentChanged" />
+                        <p class="mb-3">@Comment.Content</p>
                     }
                 </div>
-            }
+
+                <!-- Comment Actions Bar -->
+                <div class="comment-actions d-flex align-items-center">
+                    <button class="btn btn-sm btn-outline-primary me-2" @onclick="ToggleLike" disabled="@isTogglingLike">
+                        @if (isTogglingLike)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        <i class="fas fa-heart me-1"></i>
+                        @Comment.LikesCount
+                    </button>
+                    
+                    <AuthorizeView>
+                        <Authorized>
+                            <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleReplyForm">
+                                <i class="fas fa-reply me-1"></i>
+                                Répondre
+                            </button>
+                        </Authorized>
+                        <NotAuthorized>
+                            <a href="/login" class="btn btn-sm btn-outline-secondary text-decoration-none">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                Se connecter pour répondre
+                            </a>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </div>
+
+                <!-- Reply Form -->
+                @if (showReplyForm)
+                {
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <div class="mb-3">
+                            <textarea class="form-control" @bind="replyContent" rows="3" 
+                                     placeholder="Écrivez votre réponse..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button class="btn btn-sm btn-primary me-2" @onclick="SubmitReply" 
+                                   disabled="@(isSubmittingReply || string.IsNullOrWhiteSpace(replyContent))">
+                                @if (isSubmittingReply)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                Publier
+                            </button>
+                            <button class="btn btn-sm btn-secondary" @onclick="CancelReply">Annuler</button>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
-    </div>
+
+        <!-- Replies -->
+        @if (Comment.Replies.Any())
+        {
+            <div class="mt-3 ps-3 border-start">
+                @foreach (var reply in Comment.Replies)
+                {
+                    <CommentCard Comment="reply" OnCommentChanged="OnCommentChanged" />
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="text-muted fst-italic py-2">
+            <i class="fas fa-trash me-2"></i>
+            Ce commentaire a été supprimé.
+        </div>
+    }
 </div>
 
 @code {
     [Parameter] public CommentDto Comment { get; set; } = null!;
-    [Parameter] public bool IsReply { get; set; } = false;
     [Parameter] public EventCallback<CommentDto> OnCommentChanged { get; set; }
 
-    private bool userLikedComment = false;
+    private bool isEditing = false;
+    private bool isSavingEdit = false;
+    private bool isTogglingLike = false;
     private bool showReplyForm = false;
-    private string replyContent = "";
     private bool isSubmittingReply = false;
-    private bool isLiking = false;
-    private int currentLikesCount;
+    private bool canUserEdit = false;
+    
+    private string editContent = "";
+    private string replyContent = "";
 
     protected override async Task OnInitializedAsync()
     {
-        currentLikesCount = Comment.LikesCount;
-        await CheckUserLike();
+        canUserEdit = await CanUserEditComment();
     }
 
     protected override void OnParametersSet()
     {
-        currentLikesCount = Comment.LikesCount;
+        editContent = Comment.Content;
     }
 
-    private async Task CheckUserLike()
+    private async Task<bool> CanUserEditComment()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated == true)
+        if (authState.User.Identity?.IsAuthenticated != true) return false;
+
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        return userId == Comment.UserId;
+    }
+
+    private async Task SaveEdit()
+    {
+        if (string.IsNullOrWhiteSpace(editContent)) return;
+
+        isSavingEdit = true;
+        StateHasChanged();
+
+        try
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId))
+            var updateDto = new UpdateCommentDto { Content = editContent.Trim() };
+            var updatedComment = await CommentService.UpdateCommentAsync(Comment.Id, updateDto);
+            if (updatedComment is not null)
             {
-                // TODO: Check if user liked comment via API when implemented
-                userLikedComment = false; // Placeholder
+                await OnCommentChanged.InvokeAsync(updatedComment);
+                isEditing = false;
             }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la mise à jour du commentaire");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de la sauvegarde: {ex.Message}");
+        }
+        finally
+        {
+            isSavingEdit = false;
+            StateHasChanged();
         }
     }
 
-    private async Task LikeComment()
+    private async Task ToggleLike()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
@@ -194,49 +215,47 @@
             return;
         }
 
-        isLiking = true;
+        isTogglingLike = true;
         StateHasChanged();
 
         try
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                // TODO: Call API to like/unlike comment when endpoints are available
-                // For now, simulate the API call and update local state
-                await Task.Delay(500); // Simulate network delay
-                
-                var wasLiked = userLikedComment;
-                userLikedComment = !userLikedComment;
-                currentLikesCount += userLikedComment ? 1 : -1;
-                
-                // Ensure likes count doesn't go below 0
-                currentLikesCount = Math.Max(0, currentLikesCount);
-                
-                // TODO: Replace with actual API call
-                // var updatedComment = userLikedComment 
-                //     ? await CommentService.LikeCommentAsync(Comment.Id, userId)
-                //     : await CommentService.UnlikeCommentAsync(Comment.Id, userId);
-                // 
-                // if (updatedComment is not null)
-                // {
-                //     await OnCommentChanged.InvokeAsync(updatedComment);
-                // }
-            }
+            // TODO: Implement like/unlike functionality when API endpoint is available
+            // For now, just simulate the action
+            await Task.Delay(500); // Simulate API call
+            
+            // Create updated comment with incremented likes
+            var updatedComment = Comment with 
+            { 
+                LikesCount = Comment.LikesCount + 1
+            };
+            
+            await OnCommentChanged.InvokeAsync(updatedComment);
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de l'action: {ex.Message}");
-            // Revert state on error
-            userLikedComment = !userLikedComment;
-            currentLikesCount += userLikedComment ? 1 : -1;
-            currentLikesCount = Math.Max(0, currentLikesCount);
+            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors du like: {ex.Message}");
         }
         finally
         {
-            isLiking = false;
+            isTogglingLike = false;
             StateHasChanged();
         }
+    }
+
+    private void ToggleEditMode()
+    {
+        isEditing = !isEditing;
+        if (isEditing)
+        {
+            editContent = Comment.Content;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        editContent = Comment.Content;
     }
 
     private void ToggleReplyForm()
@@ -246,6 +265,12 @@
         {
             replyContent = "";
         }
+    }
+
+    private void CancelReply()
+    {
+        showReplyForm = false;
+        replyContent = "";
     }
 
     private async Task SubmitReply()
@@ -264,33 +289,29 @@
 
         try
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId))
+            var createReplyDto = new CreateCommentDto
             {
-                var createReplyDto = new CreateCommentDto
-                {
-                    Content = replyContent.Trim(),
-                    ProposalId = Comment.ProposalId,
-                    ParentCommentId = Comment.Id
-                };
+                Content = replyContent.Trim(),
+                ProposalId = Comment.ProposalId,
+                ParentCommentId = Comment.Id
+            };
 
-                var newReply = await CommentService.CreateCommentAsync(createReplyDto);
+            var newReply = await CommentService.CreateCommentAsync(createReplyDto);
+            
+            if (newReply is not null)
+            {
+                // Create updated comment with new reply
+                var updatedReplies = Comment.Replies.Append(newReply).ToList();
+                var updatedComment = Comment with { Replies = updatedReplies };
                 
-                if (newReply is not null)
-                {
-                    // Create updated comment with new reply
-                    var updatedReplies = Comment.Replies.Append(newReply).ToList();
-                    var updatedComment = Comment with { Replies = updatedReplies };
-                    
-                    await OnCommentChanged.InvokeAsync(updatedComment);
-                    
-                    replyContent = "";
-                    showReplyForm = false;
-                }
-                else
-                {
-                    await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la création de la réponse");
-                }
+                await OnCommentChanged.InvokeAsync(updatedComment);
+                
+                replyContent = "";
+                showReplyForm = false;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la création de la réponse");
             }
         }
         catch (Exception ex)
@@ -334,13 +355,4 @@
             await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de la suppression: {ex.Message}");
         }
     }
-
-    private static string GetNicolasBadge(FiscalLevel level) => level switch
-    {
-        FiscalLevel.PetitNicolas => "??? Petit Nicolas",
-        FiscalLevel.GrosMoyenNicolas => "?? Moyen Nicolas",
-        FiscalLevel.GrosNicolas => "?? Gros Nicolas",
-        FiscalLevel.NicolasSupreme => "?? Nicolas Suprême",
-        _ => "??? Petit Nicolas"
-    };
 }

@@ -48,22 +48,22 @@ namespace NicolasQuiPaieAPI.Presentation.Endpoints
             .WithSummary("Récupère les tendances de vote")
             .Produces<VotingTrendsDto>();
 
-            // GET /api/analytics/fiscal-distribution
-            group.MapGet("/fiscal-distribution", async ([FromServices] IAnalyticsService analyticsService) =>
+            // GET /api/analytics/contribution-distribution
+            group.MapGet("/contribution-distribution", async ([FromServices] IAnalyticsService analyticsService) =>
             {
                 try
                 {
-                    var distribution = await analyticsService.GetFiscalLevelDistributionAsync();
+                    var distribution = await analyticsService.GetContributionLevelDistributionAsync();
                     return Results.Ok(distribution);
                 }
                 catch (Exception ex)
                 {
-                    return Results.Problem($"Error retrieving fiscal distribution: {ex.Message}");
+                    return Results.Problem($"Error retrieving contribution level distribution: {ex.Message}");
                 }
             })
-            .WithName("GetFiscalDistribution")
-            .WithSummary("Récupère la distribution des niveaux fiscaux")
-            .Produces<FiscalLevelDistributionDto>();
+            .WithName("GetContributionDistribution")
+            .WithSummary("Récupère la distribution des niveaux de contribution")
+            .Produces<ContributionLevelDistributionDto>();
 
             // GET /api/analytics/top-contributors
             group.MapGet("/top-contributors", async (
@@ -125,30 +125,7 @@ namespace NicolasQuiPaieAPI.Presentation.Endpoints
             {
                 try
                 {
-                    // Combine multiple analytics for dashboard
-                    var globalStats = await analyticsService.GetGlobalStatsAsync();
-                    var votingTrends = await analyticsService.GetVotingTrendsAsync(7); // Last 7 days
-                    var topContributors = await analyticsService.GetTopContributorsAsync(5);
-                    var frustration = await analyticsService.GetFrustrationBarometerAsync();
-
-                    var dashboardStats = new DashboardStatsDto
-                    {
-                        TotalUsers = globalStats.TotalUsers,
-                        TotalProposals = globalStats.TotalProposals,
-                        TotalVotes = globalStats.TotalVotes,
-                        TotalComments = globalStats.TotalComments,
-                        ActiveProposals = globalStats.ActiveProposals,
-                        RasLebolMeter = frustration.FrustrationLevel,
-                        DailyVoteTrends = votingTrends.DailyVotes.Select(d => new DailyVoteStatsDto 
-                        { 
-                            Date = d.Date, 
-                            VotesFor = d.VotesFor, 
-                            VotesAgainst = d.VotesAgainst 
-                        }).ToList(),
-                        TopCategories = new List<CategoryStatsDto>(), // TODO: Implement category stats
-                        NicolasLevelDistribution = new List<NicolasLevelStatsDto>()
-                    };
-
+                    var dashboardStats = await analyticsService.GetDashboardStatsAsync();
                     return Results.Ok(dashboardStats);
                 }
                 catch (Exception ex)

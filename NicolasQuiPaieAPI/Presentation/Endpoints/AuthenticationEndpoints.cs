@@ -6,6 +6,9 @@ using NicolasQuiPaieAPI.Application.Interfaces;
 
 namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
+/// <summary>
+/// C# 13.0 - Authentication endpoints with contribution-based user levels
+/// </summary>
 public static class AuthenticationEndpoints
 {
     public static void MapAuthenticationEndpoints(this IEndpointRouteBuilder routes)
@@ -16,11 +19,11 @@ public static class AuthenticationEndpoints
 
         group.MapPost("/login", LoginAsync)
             .WithSummary("User login")
-            .WithDescription("Authenticate user and return JWT token");
+            .WithDescription("Authenticate user and return JWT token with contribution level");
 
         group.MapPost("/register", RegisterAsync)
             .WithSummary("User registration")
-            .WithDescription("Register new user account");
+            .WithDescription("Register new user account with initial contribution level");
 
         group.MapPost("/refresh", RefreshTokenAsync)
             .WithSummary("Refresh JWT token")
@@ -48,7 +51,7 @@ public static class AuthenticationEndpoints
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
-            if (user == null)
+            if (user is null)
             {
                 return Results.BadRequest(new AuthResponseDto
                 {
@@ -81,7 +84,7 @@ public static class AuthenticationEndpoints
                     Id = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,
-                    FiscalLevel = (NicolasQuiPaieData.DTOs.FiscalLevel)(int)user.FiscalLevel,
+                    ContributionLevel = (NicolasQuiPaieData.DTOs.ContributionLevel)(int)user.ContributionLevel,
                     ReputationScore = user.ReputationScore,
                     IsVerified = user.IsVerified,
                     CreatedAt = user.CreatedAt
@@ -106,7 +109,7 @@ public static class AuthenticationEndpoints
         try
         {
             var existingUser = await userManager.FindByEmailAsync(request.Email);
-            if (existingUser != null)
+            if (existingUser is not null)
             {
                 return Results.BadRequest(new AuthResponseDto
                 {
@@ -115,13 +118,14 @@ public static class AuthenticationEndpoints
                 });
             }
 
+            // C# 13.0 - Object initialization with contribution level
             var user = new ApplicationUser
             {
                 UserName = request.Email,
                 Email = request.Email,
                 DisplayName = request.DisplayName,
                 Bio = request.Bio,
-                FiscalLevel = Infrastructure.Models.FiscalLevel.PetitNicolas,
+                ContributionLevel = Infrastructure.Models.ContributionLevel.PetitNicolas, // Start at basic level
                 CreatedAt = DateTime.UtcNow,
                 EmailConfirmed = true, // For simplicity, auto-confirm emails
                 IsVerified = false,
@@ -152,7 +156,7 @@ public static class AuthenticationEndpoints
                     Id = user.Id,
                     Email = user.Email,
                     DisplayName = user.DisplayName,
-                    FiscalLevel = (NicolasQuiPaieData.DTOs.FiscalLevel)(int)user.FiscalLevel,
+                    ContributionLevel = (NicolasQuiPaieData.DTOs.ContributionLevel)(int)user.ContributionLevel,
                     ReputationScore = user.ReputationScore,
                     IsVerified = user.IsVerified,
                     CreatedAt = user.CreatedAt
@@ -211,7 +215,7 @@ public static class AuthenticationEndpoints
                 }
 
                 var user = await userManager.FindByIdAsync(request.UserId);
-                if (user == null)
+                if (user is null)
                 {
                     return Results.BadRequest(new AuthResponseDto
                     {
@@ -235,7 +239,7 @@ public static class AuthenticationEndpoints
                         Id = user.Id,
                         Email = user.Email,
                         DisplayName = user.DisplayName,
-                        FiscalLevel = (NicolasQuiPaieData.DTOs.FiscalLevel)(int)user.FiscalLevel,
+                        ContributionLevel = (NicolasQuiPaieData.DTOs.ContributionLevel)(int)user.ContributionLevel,
                         ReputationScore = user.ReputationScore,
                         IsVerified = user.IsVerified,
                         CreatedAt = user.CreatedAt
@@ -261,6 +265,7 @@ public static class AuthenticationEndpoints
         }
     }
 
+    // C# 13.0 - Lambda expression with static modifier
     private static Task<IResult> LogoutAsync() =>
         // With JWT, logout is handled client-side by removing the token
         Task.FromResult(Results.Ok(new { message = "Logged out successfully" }));
@@ -273,7 +278,7 @@ public static class AuthenticationEndpoints
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
-            if (user == null)
+            if (user is null)
             {
                 // For security, don't reveal if email exists or not
                 return Results.Ok(new { message = "If the email exists, a password reset link has been sent" });
@@ -303,7 +308,7 @@ public static class AuthenticationEndpoints
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
-            if (user == null)
+            if (user is null)
             {
                 return Results.BadRequest(new { message = "Invalid reset request" });
             }

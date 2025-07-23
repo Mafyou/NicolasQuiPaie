@@ -1,170 +1,266 @@
 ﻿@page "/profile"
-@using System.Security.Claims
+@using NicolasQuiPaieData.DTOs
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager Navigation
-@inject BadgeService BadgeService
+@inject IJSRuntime JSRuntime
 @attribute [Authorize]
 
 <PageTitle>Mon Profil - Nicolas Qui Paie</PageTitle>
 
 <div class="container py-4">
-    @if (isLoading)
-    {
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
-            </div>
-            <p class="mt-3 text-muted">Chargement de votre profil...</p>
-        </div>
-    }
-    else if (currentUser != null)
-    {
-        <div class="row">
-            <!-- Profile Header -->
-            <div class="col-12 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="row align-items-center">
-                            <div class="col-md-3 text-center">
-                                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-                                <h4 class="fw-bold">@currentUser.DisplayName</h4>
-                                <div class="nicolas-level-badge-large">
-                                    @GetNicolasBadge(currentUser.FiscalLevel)
-                                </div>
-                                <small class="text-muted">Membre depuis @currentUser.CreatedAt.ToString("dd/MM/yyyy")</small>
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Chargement de votre profil...</p>
+                </div>
+            }
+            else if (currentUser is null)
+            {
+                <div class="alert alert-warning text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <h4>Profil non trouvé</h4>
+                    <p>Impossible de charger les informations de votre profil.</p>
+                    <button class="btn btn-primary" @onclick="RetryLoadProfile">
+                        <i class="fas fa-refresh me-2"></i>Réessayer
+                    </button>
+                </div>
+            }
+            else
+            {
+                <!-- Profile Header -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-lg bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-user fa-2x"></i>
                             </div>
-                            <div class="col-md-9">
-                                <div class="row g-4">
-                                    <div class="col-md-3">
-                                        <div class="stat-card text-center">
-                                            <h3 class="text-primary">@userStats.ProposalsCount</h3>
-                                            <small class="text-muted">Propositions</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="stat-card text-center">
-                                            <h3 class="text-success">@userStats.VotesCount</h3>
-                                            <small class="text-muted">Votes</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="stat-card text-center">
-                                            <h3 class="text-info">@userStats.CommentsCount</h3>
-                                            <small class="text-muted">Commentaires</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="stat-card text-center">
-                                            <h3 class="text-warning">@currentUser.ReputationScore</h3>
-                                            <small class="text-muted">Réputation</small>
-                                        </div>
-                                    </div>
+                            <div>
+                                <h4 class="mb-1">@currentUser.DisplayName</h4>
+                                <p class="mb-0 opacity-75">@currentUser.Email</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h5 class="text-primary mb-1">@GetContributionLevelDisplay(currentUser.ContributionLevel)</h5>
+                                    <small class="text-muted">Badge Nicolas</small>
                                 </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h5 class="text-warning mb-1">@currentUser.ReputationScore</h5>
+                                    <small class="text-muted">Points de Réputation</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end">
+                                    <h5 class="text-success mb-1">@(currentUser.IsVerified ? "Vérifié" : "Non vérifié")</h5>
+                                    <small class="text-muted">Statut</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <h5 class="text-info mb-1">@currentUser.CreatedAt.ToString("dd/MM/yyyy")</h5>
+                                <small class="text-muted">Membre depuis</small>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Profile Content -->
-            <div class="col-lg-8">
-                <!-- Tab Navigation -->
-                <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-pills nav-fill mb-4" id="profileTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
-                            <i class="fas fa-user me-1"></i>Informations
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="pill" data-bs-target="#info" type="button" role="tab">
+                            <i class="fas fa-user me-2"></i>Informations
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="badges-tab" data-bs-toggle="tab" data-bs-target="#badges" type="button" role="tab">
-                            <i class="fas fa-medal me-1"></i>Badges
+                        <button class="nav-link" id="stats-tab" data-bs-toggle="pill" data-bs-target="#stats" type="button" role="tab">
+                            <i class="fas fa-chart-bar me-2"></i>Statistiques
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="badges-tab" data-bs-toggle="pill" data-bs-target="#badges" type="button" role="tab">
+                            <i class="fas fa-medal me-2"></i>Badges
                         </button>
                     </li>
                 </ul>
 
                 <!-- Tab Content -->
-                <div class="tab-content" id="profileTabContent">
-                    <!-- Info Tab -->
+                <div class="tab-content" id="profileTabsContent">
+                    
+                    <!-- Personal Information Tab -->
                     <div class="tab-pane fade show active" id="info" role="tabpanel">
                         <div class="card border-0 shadow-sm">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-edit me-2"></i>Modifier le Profil
+                                </h5>
+                            </div>
                             <div class="card-body">
-                                <h5 class="fw-bold mb-3">Informations personnelles</h5>
-                                
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Nom d'affichage</label>
-                                        <input type="text" class="form-control" @bind="editDisplayName" />
+                                @if (!string.IsNullOrEmpty(updateMessage))
+                                {
+                                    <div class="alert alert-success alert-dismissible fade show">
+                                        <i class="fas fa-check-circle me-2"></i>@updateMessage
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" value="@currentUser.Email" readonly />
-                                        <small class="text-muted">Contact le support pour changer l'email</small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Niveau Nicolas</label>
-                                        <input type="text" class="form-control" value="@GetNicolasBadge(currentUser.FiscalLevel)" readonly />
-                                        <small class="text-muted">Badge attribué automatiquement selon votre contribution</small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">Membre depuis</label>
-                                        <input type="text" class="form-control" value="@currentUser.CreatedAt.ToString("dd/MM/yyyy")" readonly />
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Biographie</label>
-                                        <textarea class="form-control" rows="3" @bind="editBio" placeholder="Parlez-nous de vous..." maxlength="500"></textarea>
-                                        <small class="text-muted">@(editBio?.Length ?? 0)/500 caractères</small>
-                                    </div>
-                                </div>
+                                }
 
-                                <div class="mt-3">
-                                    <button class="btn btn-primary" @onclick="UpdateProfile" disabled="@isUpdating">
-                                        @if (isUpdating)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-1"></span>
-                                        }
-                                        <i class="fas fa-save me-1"></i>Sauvegarder
-                                    </button>
-                                    @if (!string.IsNullOrEmpty(updateMessage))
-                                    {
-                                        <span class="ms-2 text-success">@updateMessage</span>
-                                    }
+                                <form @onsubmit="UpdateProfile" @onsubmit:preventDefault="true">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="displayName" class="form-label">Nom d'affichage</label>
+                                            <input type="text" class="form-control" id="displayName" @bind="editDisplayName" 
+                                                   maxlength="50" placeholder="Votre nom d'affichage">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="email" value="@currentUser.Email" readonly>
+                                            <div class="form-text">L'email ne peut pas être modifié ici.</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="bio" class="form-label">Biographie</label>
+                                        <textarea class="form-control" id="bio" @bind="editBio" rows="4" 
+                                                 maxlength="500" placeholder="Parlez-nous de vous... (optionnel)"></textarea>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end">
+                                        <button type="submit" class="btn btn-primary" disabled="@isUpdating">
+                                            @if (isUpdating)
+                                            {
+                                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                            }
+                                            <i class="fas fa-save me-2"></i>Sauvegarder
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Tab -->
+                    <div class="tab-pane fade" id="stats" role="tabpanel">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                                        <h3 class="text-primary">@(userStats?.ProposalsCount ?? 0)</h3>
+                                        <p class="text-muted">Propositions Créées</p>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-vote-yea fa-3x text-info mb-3"></i>
+                                        <h3 class="text-primary">@(userStats?.VotesCount ?? 0)</h3>
+                                        <p class="text-muted">Votes Exprimés</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-comments fa-3x text-success mb-3"></i>
+                                        <h3 class="text-primary">@(userStats?.CommentsCount ?? 0)</h3>
+                                        <p class="text-muted">Commentaires Publiés</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-0 shadow-sm text-center">
+                                    <div class="card-body">
+                                        <i class="fas fa-star fa-3x text-warning mb-3"></i>
+                                        <h3 class="text-primary">@currentUser.ReputationScore</h3>
+                                        <p class="text-muted">Réputation Totale</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Les statistiques sont mises à jour en temps réel
+                            </small>
                         </div>
                     </div>
 
                     <!-- Badges Tab -->
                     <div class="tab-pane fade" id="badges" role="tabpanel">
                         <div class="card border-0 shadow-sm">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-trophy me-2"></i>Système de Badges Nicolas
+                                </h5>
+                                <button class="btn btn-sm btn-outline-primary" @onclick="RefreshBadgeProgress" disabled="@isRefreshingBadge">
+                                    @if (isRefreshingBadge)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
                             <div class="card-body">
-                                <h5 class="fw-bold mb-3">Système de Badges Nicolas</h5>
                                 
                                 <!-- Current Badge -->
-                                <div class="alert alert-info mb-4">
-                                    <div class="d-flex align-items-center">
-                                        <div class="badge-icon me-3">@GetBadgeEmoji(currentUser.FiscalLevel)</div>
-                                        <div>
-                                            <h6 class="fw-bold mb-1">Votre badge actuel : @GetNicolasBadge(currentUser.FiscalLevel)</h6>
-                                            <p class="mb-0">@BadgeService.GetBadgeDescription(currentUser.FiscalLevel)</p>
-                                        </div>
+                                <div class="text-center mb-4">
+                                    <div class="badge-display p-4 border rounded bg-light">
+                                        <div class="display-4 mb-3">@GetContributionLevelIcon(currentUser.ContributionLevel)</div>
+                                        <h4 class="text-primary">@GetContributionLevelDisplay(currentUser.ContributionLevel)</h4>
+                                        <p class="text-muted">Votre badge actuel</p>
                                     </div>
                                 </div>
 
-                                <!-- All Badges -->
-                                <h6 class="fw-bold mb-3">Tous les badges Nicolas</h6>
+                                <!-- Badge Progression -->
+                                <div class="mb-4">
+                                    <h6>Progression vers le prochain niveau</h6>
+                                    <div class="progress mb-2" style="height: 8px;">
+                                        <div class="progress-bar bg-primary" style="width: @GetProgressToNextLevel()%"></div>
+                                    </div>
+                                    <small class="text-muted">
+                                        @currentUser.ReputationScore / @GetNextLevelRequirement() points de réputation
+                                    </small>
+                                </div>
+
+                                <!-- All Badges Overview -->
                                 <div class="row g-3">
-                                    @foreach (FiscalLevel level in Enum.GetValues<FiscalLevel>())
+                                    @foreach (var level in Enum.GetValues<ContributionLevel>())
                                     {
-                                        <div class="col-md-4">
-                                            <div class="card border @(currentUser.FiscalLevel == level ? "border-primary bg-primary bg-opacity-10" : "")">
-                                                <div class="card-body text-center">
-                                                    <div class="badge-icon-large mb-2">@GetBadgeEmoji(level)</div>
-                                                    <h6 class="fw-bold">@GetNicolasBadge(level)</h6>
-                                                    <small class="text-muted">@BadgeService.GetBadgeDescription(level)</small>
-                                                    @if (currentUser.FiscalLevel == level)
+                                        var isCurrentLevel = level == currentUser.ContributionLevel;
+                                        var isUnlocked = currentUser.ContributionLevel >= level;
+                                        
+                                        <div class="col-md-6">
+                                            <div class="card @(isCurrentLevel ? "border-primary" : isUnlocked ? "border-success" : "border-secondary opacity-50")">
+                                                <div class="card-body text-center p-3">
+                                                    <div class="h4 mb-2">@GetContributionLevelIcon(level)</div>
+                                                    <h6 class="mb-1">@GetContributionLevelDisplay(level)</h6>
+                                                    <small class="text-muted">@GetContributionLevelDescription(level)</small>
+                                                    @if (isCurrentLevel)
                                                     {
                                                         <div class="mt-2">
-                                                            <span class="badge bg-primary">Votre badge actuel</span>
+                                                            <span class="badge bg-primary">Actuel</span>
+                                                        </div>
+                                                    }
+                                                    else if (isUnlocked)
+                                                    {
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-success">Débloqué</span>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-secondary">Verrouillé</span>
                                                         </div>
                                                     }
                                                 </div>
@@ -172,87 +268,35 @@
                                         </div>
                                     }
                                 </div>
+
+                                <!-- Information about contribution system -->
+                                <div class="alert alert-info mt-4">
+                                    <div class="d-flex">
+                                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                                        <div>
+                                            <h6 class="alert-heading">Comment progresser ?</h6>
+                                            <p class="mb-2">Votre niveau de contribution augmente avec :</p>
+                                            <ul class="mb-0">
+                                                <li>🗳️ <strong>Voter sur les propositions</strong> (+1-2 points)</li>
+                                                <li>💡 <strong>Créer des propositions</strong> (+5-10 points)</li>
+                                                <li>💬 <strong>Commenter constructivement</strong> (+1 point)</li>
+                                                <li>👍 <strong>Recevoir des likes</strong> (points bonus)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-lg-4">
-                <!-- Achievement Card -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h6 class="mb-0">
-                            <i class="fas fa-trophy me-1"></i>Accomplissements
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="achievement-list">
-                            @foreach (var achievement in GetUserAchievements())
-                            {
-                                <div class="achievement-item d-flex align-items-center mb-2">
-                                    <span class="me-2">@achievement.Icon</span>
-                                    <div>
-                                        <div class="fw-bold">@achievement.Title</div>
-                                        <small class="text-muted">@achievement.Description</small>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Activity Card -->
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="fas fa-chart-line me-1"></i>Activité récente
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Dernière connexion : @(currentUser.CreatedAt > DateTime.UtcNow.AddDays(-1) ? "Aujourd'hui" : "Il y a quelques jours")</p>
-                        <p class="text-muted">Actions cette semaine : @GetWeeklyActivity()</p>
-                        <div class="mt-3">
-                            <button class="btn btn-sm btn-outline-info" @onclick="RefreshBadge" disabled="@isRefreshingBadge">
-                                @if (isRefreshingBadge)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-1"></span>
-                                }
-                                <i class="fas fa-sync-alt me-1"></i>Actualiser badge
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
-    }
-    else
-    {
-        <!-- Error state -->
-        <div class="text-center py-5">
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-                <h4>Problème d'authentification</h4>
-                <p>Impossible de charger votre profil. Veuillez vous reconnecter.</p>
-                
-                <div class="mt-4">
-                    <a href="/login" class="btn btn-primary me-2">
-                        <i class="fas fa-sign-in-alt me-1"></i>Se reconnecter
-                    </a>
-                    <button class="btn btn-outline-secondary" @onclick="RetryLoadProfile">
-                        <i class="fas fa-redo me-1"></i>Réessayer
-                    </button>
-                </div>
-            </div>
-        </div>
-    }
+    </div>
 </div>
 
 @code {
-    // User information from JWT claims
     private UserDto? currentUser;
-    private UserStatsDto userStats = new UserStatsDto();
+    private UserStatsDto? userStats;
     
     // Edit fields
     private string editDisplayName = "";
@@ -292,7 +336,7 @@
                     Id = authState.User.FindFirst("sub")?.Value ?? authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "",
                     Email = authState.User.FindFirst("email")?.Value ?? authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "",
                     DisplayName = authState.User.FindFirst("DisplayName")?.Value ?? authState.User.Identity?.Name ?? "Nicolas",
-                    FiscalLevel = Enum.TryParse<FiscalLevel>(authState.User.FindFirst("FiscalLevel")?.Value, out var level) ? level : FiscalLevel.PetitNicolas,
+                    ContributionLevel = Enum.TryParse<ContributionLevel>(authState.User.FindFirst("FiscalLevel")?.Value, out var level) ? level : ContributionLevel.PetitNicolas,
                     ReputationScore = int.TryParse(authState.User.FindFirst("ReputationScore")?.Value, out var score) ? score : 0,
                     IsVerified = bool.TryParse(authState.User.FindFirst("IsVerified")?.Value, out var verified) && verified,
                     CreatedAt = DateTime.TryParse(authState.User.FindFirst("CreatedAt")?.Value, out var created) ? created : DateTime.UtcNow
@@ -344,8 +388,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors de la mise à jour: {ex.Message}");
-            updateMessage = "Erreur lors de la mise à jour du profil.";
+            updateMessage = $"Erreur lors de la mise à jour: {ex.Message}";
         }
         finally
         {
@@ -354,78 +397,70 @@
         }
     }
 
-    private async Task RefreshBadge()
+    private async Task RefreshBadgeProgress()
     {
-        if (currentUser == null) return;
-
         isRefreshingBadge = true;
+        StateHasChanged();
         
-        try
-        {
-            // TODO: Call API to refresh badge when endpoint is available
-            updateMessage = "Badge actualisé !";
-            
-            _ = Task.Delay(3000).ContinueWith(_ => 
-            {
-                updateMessage = "";
-                InvokeAsync(StateHasChanged);
-            });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la mise à jour du badge: {ex.Message}");
-            updateMessage = "Erreur lors de la mise à jour du badge.";
-        }
-        finally
-        {
-            isRefreshingBadge = false;
-            StateHasChanged();
-        }
+        // TODO: Call API to refresh badge progression when available
+        await Task.Delay(1000);
+        
+        isRefreshingBadge = false;
+        StateHasChanged();
     }
 
-    // Helper methods
-    private string GetNicolasBadge(FiscalLevel level)
+    private string GetContributionLevelDisplay(ContributionLevel level) => level switch
     {
-        return BadgeService.GetBadgeDisplayName(level);
-    }
+        ContributionLevel.PetitNicolas => "🥉 Petit Nicolas",
+        ContributionLevel.GrosMoyenNicolas => "🥈 Moyen Nicolas",
+        ContributionLevel.GrosNicolas => "🥇 Gros Nicolas", 
+        ContributionLevel.NicolasSupreme => "👑 Nicolas Suprême",
+        _ => "🥉 Petit Nicolas"
+    };
 
-    private string GetBadgeEmoji(FiscalLevel level)
+    private string GetContributionLevelIcon(ContributionLevel level) => level switch
     {
-        return level switch
+        ContributionLevel.PetitNicolas => "🥉",
+        ContributionLevel.GrosMoyenNicolas => "🥈",
+        ContributionLevel.GrosNicolas => "🥇",
+        ContributionLevel.NicolasSupreme => "👑",
+        _ => "🥉"
+    };
+
+    private string GetContributionLevelDescription(ContributionLevel level) => level switch
+    {
+        ContributionLevel.PetitNicolas => "Nouveau contributeur (0-99 points)",
+        ContributionLevel.GrosMoyenNicolas => "Contributeur actif (100-499 points)",
+        ContributionLevel.GrosNicolas => "Contributeur expérimenté (500-999 points)",
+        ContributionLevel.NicolasSupreme => "Expert de la communauté (1000+ points)",
+        _ => "Contributeur Nicolas"
+    };
+
+    private double GetProgressToNextLevel()
+    {
+        if (currentUser == null) return 0;
+
+        return currentUser.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "🥉",
-            FiscalLevel.GrosMoyenNicolas => "🥈",
-            FiscalLevel.GrosNicolas => "🥈",
-            FiscalLevel.NicolasSupreme => "🏆",
-            _ => "🥉"
+            ContributionLevel.PetitNicolas => (double)currentUser.ReputationScore / 100 * 100,
+            ContributionLevel.GrosMoyenNicolas => (double)(currentUser.ReputationScore - 100) / 400 * 100,
+            ContributionLevel.GrosNicolas => (double)(currentUser.ReputationScore - 500) / 500 * 100,
+            ContributionLevel.NicolasSupreme => 100, // Max level
+            _ => 0
         };
     }
 
-    private List<AchievementDto> GetUserAchievements()
+    private int GetNextLevelRequirement()
     {
-        var achievements = new List<AchievementDto>();
-        
-        if (userStats.VotesCount > 0)
-            achievements.Add(new AchievementDto { Icon = "🗳️", Title = "Premier Vote", Description = "Votre premier vote sur une proposition" });
-            
-        if (userStats.ProposalsCount > 0)
-            achievements.Add(new AchievementDto { Icon = "💡", Title = "Créateur", Description = "Votre première proposition créée" });
-            
-        if (userStats.CommentsCount >= 10)
-            achievements.Add(new AchievementDto { Icon = "💬", Title = "Commentateur", Description = "10 commentaires postés" });
-            
-        if (userStats.VotesCount >= 50)
-            achievements.Add(new AchievementDto { Icon = "🎖️", Title = "Citoyen Actif", Description = "50 votes exprimés" });
-            
-        if ((currentUser?.CreatedAt.AddDays(30) ?? DateTime.MaxValue) < DateTime.UtcNow)
-            achievements.Add(new AchievementDto { Icon = "🌟", Title = "Vétéran", Description = "Membre depuis plus d'un mois" });
+        if (currentUser == null) return 100;
 
-        return achievements;
-    }
-
-    private int GetWeeklyActivity()
-    {
-        // TODO: Calculate from actual data when API is available
-        return userStats.VotesCount + userStats.ProposalsCount;
+        return currentUser.ContributionLevel switch
+        {
+            ContributionLevel.PetitNicolas => 100,
+            ContributionLevel.GrosMoyenNicolas => 500,
+            ContributionLevel.GrosNicolas => 1000,
+            ContributionLevel.NicolasSupreme => 1000, // Max level
+            _ => 100
+        };
     }
 }

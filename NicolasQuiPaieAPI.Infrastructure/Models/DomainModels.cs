@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace NicolasQuiPaieAPI.Infrastructure.Models
 {
-    public enum FiscalLevel
+    public enum ContributionLevel
     {
         PetitNicolas = 1,
         GrosMoyenNicolas = 2,
@@ -28,7 +28,7 @@ namespace NicolasQuiPaieAPI.Infrastructure.Models
     {
         public string? DisplayName { get; set; }
         public string? Bio { get; set; }
-        public FiscalLevel FiscalLevel { get; set; } = FiscalLevel.PetitNicolas;
+        public ContributionLevel ContributionLevel { get; set; } = ContributionLevel.PetitNicolas;
         public int ReputationScore { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastLoginAt { get; set; }

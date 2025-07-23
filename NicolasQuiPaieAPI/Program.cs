@@ -341,26 +341,28 @@ static async Task SeedTestUserAsync(UserManager<ApplicationUser> userManager, IL
         
         var existingUser = await userManager.FindByEmailAsync(testEmail);
         
-        if (existingUser == null)
+        if (existingUser is null) // C# 13.0 - Use 'is null' pattern
         {
+            // C# 13.0 - Object initialization with contribution level
             var testUser = new ApplicationUser
             {
                 UserName = testEmail,
                 Email = testEmail,
                 EmailConfirmed = true,
                 DisplayName = "Nicolas Test API",
-                FiscalLevel = NicolasQuiPaieAPI.Infrastructure.Models.FiscalLevel.PetitNicolas,
+                ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel.PetitNicolas,
                 CreatedAt = DateTime.UtcNow,
                 ReputationScore = 0,
                 IsVerified = true,
-                Bio = "Utilisateur de test pour l'API Nicolas Qui Paie"
+                Bio = "Utilisateur de test pour l'API Nicolas Qui Paie - Niveau de contribution initial"
             };
 
             var result = await userManager.CreateAsync(testUser, testPassword);
             
             if (result.Succeeded)
             {
-                logger.LogInformation("Utilisateur de test créé avec succès: {Email}", testEmail);
+                logger.LogInformation("Utilisateur de test créé avec succès: {Email} - Niveau de contribution: {Level}", 
+                    testEmail, testUser.ContributionLevel);
             }
             else
             {

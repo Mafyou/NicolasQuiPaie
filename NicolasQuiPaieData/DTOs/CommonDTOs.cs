@@ -1,7 +1,7 @@
 namespace NicolasQuiPaieData.DTOs;
 
 // DTOs should include their own enum definitions to avoid dependencies
-public enum FiscalLevel
+public enum ContributionLevel
 {
     PetitNicolas = 1,
     GrosMoyenNicolas = 2,
@@ -168,7 +168,7 @@ public record UserDto
     public string? Email { get; init; }
     public string? DisplayName { get; init; }
     public string? Bio { get; init; }
-    public FiscalLevel FiscalLevel { get; init; }
+    public ContributionLevel ContributionLevel { get; init; }
     public int ReputationScore { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? LastLoginAt { get; init; }

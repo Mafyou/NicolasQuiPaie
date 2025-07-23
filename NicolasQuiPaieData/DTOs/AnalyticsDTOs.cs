@@ -59,7 +59,7 @@ public record DailyVoteStatsDto
 /// </summary>
 public record NicolasLevelStatsDto
 {
-    public FiscalLevel Level { get; init; }
+    public ContributionLevel Level { get; init; }
     public int Count { get; init; }
     public double Percentage { get; init; }
 }
@@ -82,7 +82,7 @@ public record TopContributorDto
 {
     public string UserId { get; init; } = "";
     public string UserDisplayName { get; init; } = "";
-    public FiscalLevel UserFiscalLevel { get; init; }
+    public ContributionLevel UserContributionLevel { get; init; }
     public int ProposalsCount { get; init; }
     public int VotesCount { get; init; }
     public int CommentsCount { get; init; }
@@ -123,18 +123,18 @@ public record CategoryVoteCount
 }
 
 /// <summary>
-/// DTO pour la répartition des niveaux fiscaux (record for immutability)
+/// DTO pour la répartition des niveaux de contribution (record for immutability)
 /// </summary>
-public record FiscalLevelDistributionDto
+public record ContributionLevelDistributionDto
 {
-    public IReadOnlyList<FiscalLevelCount> Distribution { get; init; } = [];
+    public IReadOnlyList<ContributionLevelCount> Distribution { get; init; } = [];
     public double AverageLevel { get; init; }
 }
 
 /// <summary>
-/// DTO pour le nombre d'utilisateurs par niveau fiscal (record for immutability)
+/// DTO pour le nombre d'utilisateurs par niveau de contribution (record for immutability)
 /// </summary>
-public record FiscalLevelCount
+public record ContributionLevelCount
 {
     public string LevelName { get; init; } = "";
     public int UserCount { get; init; }
@@ -158,7 +158,7 @@ public record UserContributionDto
 {
     public string UserId { get; init; } = "";
     public string UserDisplayName { get; init; } = "";
-    public FiscalLevel UserFiscalLevel { get; init; }
+    public ContributionLevel UserContributionLevel { get; init; }
     public int ContributionCount { get; init; }
     public int ReputationScore { get; init; }
 }

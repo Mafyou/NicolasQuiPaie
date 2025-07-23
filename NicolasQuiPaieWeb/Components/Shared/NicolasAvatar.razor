@@ -1,3 +1,5 @@
+@using NicolasQuiPaieData.DTOs
+
 @if (User != null)
 {
     <div class="nicolas-avatar-component">
@@ -46,24 +48,24 @@
 
     private string GetLevelEmoji()
     {
-        return User?.FiscalLevel switch
+        return User?.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "??",
-            FiscalLevel.GrosMoyenNicolas => "??",
-            FiscalLevel.GrosNicolas => "??", 
-            FiscalLevel.NicolasSupreme => "??",
+            ContributionLevel.PetitNicolas => "??",
+            ContributionLevel.GrosMoyenNicolas => "??", 
+            ContributionLevel.GrosNicolas => "??", 
+            ContributionLevel.NicolasSupreme => "??",
             _ => "??"
         };
     }
 
     private string GetLevelText()
     {
-        return User?.FiscalLevel switch
+        return User?.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "Petit Nicolas",
-            FiscalLevel.GrosMoyenNicolas => "Moyen Nicolas",
-            FiscalLevel.GrosNicolas => "Gros Nicolas",
-            FiscalLevel.NicolasSupreme => "Nicolas Suprême", 
+            ContributionLevel.PetitNicolas => "Petit Nicolas",
+            ContributionLevel.GrosMoyenNicolas => "Moyen Nicolas",
+            ContributionLevel.GrosNicolas => "Gros Nicolas",
+            ContributionLevel.NicolasSupreme => "Nicolas Suprême", 
             _ => "Petit Nicolas"
         };
     }
@@ -80,36 +82,36 @@
 
     private string GetAvatarBorderClass()
     {
-        return User?.FiscalLevel switch
+        return User?.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "nicolas-avatar-petit",
-            FiscalLevel.GrosMoyenNicolas => "nicolas-avatar-moyen",
-            FiscalLevel.GrosNicolas => "nicolas-avatar-gros",
-            FiscalLevel.NicolasSupreme => "nicolas-avatar-supreme",
+            ContributionLevel.PetitNicolas => "nicolas-avatar-petit",
+            ContributionLevel.GrosMoyenNicolas => "nicolas-avatar-moyen",
+            ContributionLevel.GrosNicolas => "nicolas-avatar-gros",
+            ContributionLevel.NicolasSupreme => "nicolas-avatar-supreme",
             _ => "nicolas-avatar-petit"
         };
     }
 
     private string GetBadgeClass()
     {
-        return User?.FiscalLevel switch
+        return User?.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "nicolas-level-badge-petit",
-            FiscalLevel.GrosMoyenNicolas => "nicolas-level-badge-moyen",
-            FiscalLevel.GrosNicolas => "nicolas-level-badge-gros", 
-            FiscalLevel.NicolasSupreme => "nicolas-level-badge-supreme",
+            ContributionLevel.PetitNicolas => "nicolas-level-badge-petit",
+            ContributionLevel.GrosMoyenNicolas => "nicolas-level-badge-moyen",
+            ContributionLevel.GrosNicolas => "nicolas-level-badge-gros", 
+            ContributionLevel.NicolasSupreme => "nicolas-level-badge-supreme",
             _ => "nicolas-level-badge-petit"
         };
     }
 
     private string GetLevelClass()
     {
-        return User?.FiscalLevel switch
+        return User?.ContributionLevel switch
         {
-            FiscalLevel.PetitNicolas => "text-secondary",
-            FiscalLevel.GrosMoyenNicolas => "text-primary",
-            FiscalLevel.GrosNicolas => "text-info",
-            FiscalLevel.NicolasSupreme => "text-warning",
+            ContributionLevel.PetitNicolas => "text-secondary",
+            ContributionLevel.GrosMoyenNicolas => "text-primary",
+            ContributionLevel.GrosNicolas => "text-info",
+            ContributionLevel.NicolasSupreme => "text-warning",
             _ => "text-secondary"
         };
     }

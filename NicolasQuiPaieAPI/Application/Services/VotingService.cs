@@ -12,7 +12,7 @@ public class VotingService(
     IUserRepository userRepository) : IVotingService
 {
     /// <summary>
-    /// Casts a vote with proper weight calculation based on fiscal level
+    /// Casts a vote with proper weight calculation based on contribution level
     /// </summary>
     public async Task<VoteDto> CastVoteAsync(CreateVoteDto voteDto, string userId)
     {
@@ -175,7 +175,7 @@ public class VotingService(
         existingVote.VoteType = (Infrastructure.Models.VoteType)(int)voteDto.VoteType;
         existingVote.Comment = voteDto.Comment;
         existingVote.VotedAt = DateTime.UtcNow;
-        existingVote.Weight = CalculateVoteWeight(user.FiscalLevel);
+        existingVote.Weight = CalculateVoteWeight(user.ContributionLevel);
 
         var updatedVote = await unitOfWork.Votes.UpdateAsync(existingVote);
         return updatedVote.ToVoteDto();
@@ -193,7 +193,7 @@ public class VotingService(
             VoteType = (Infrastructure.Models.VoteType)(int)voteDto.VoteType,
             Comment = voteDto.Comment,
             VotedAt = DateTime.UtcNow,
-            Weight = CalculateVoteWeight(user.FiscalLevel)
+            Weight = CalculateVoteWeight(user.ContributionLevel)
         };
 
         var createdVote = await unitOfWork.Votes.AddAsync(vote);
@@ -201,14 +201,14 @@ public class VotingService(
     }
 
     /// <summary>
-    /// Calculates vote weight based on user's fiscal level
+    /// Calculates vote weight based on user's contribution level
     /// </summary>
-    private static int CalculateVoteWeight(Infrastructure.Models.FiscalLevel fiscalLevel) => fiscalLevel switch
+    private static int CalculateVoteWeight(Infrastructure.Models.ContributionLevel contributionLevel) => contributionLevel switch
     {
-        Infrastructure.Models.FiscalLevel.PetitNicolas => 1,
-        Infrastructure.Models.FiscalLevel.GrosMoyenNicolas => 2,
-        Infrastructure.Models.FiscalLevel.GrosNicolas => 3,
-        Infrastructure.Models.FiscalLevel.NicolasSupreme => 5,
+        Infrastructure.Models.ContributionLevel.PetitNicolas => 1,
+        Infrastructure.Models.ContributionLevel.GrosMoyenNicolas => 2,
+        Infrastructure.Models.ContributionLevel.GrosNicolas => 3,
+        Infrastructure.Models.ContributionLevel.NicolasSupreme => 5,
         _ => 1
     };
 
@@ -230,8 +230,8 @@ public class VotingService(
 
         user.ReputationScore += reputationChange;
         
-        // Check for fiscal level upgrade
-        await CheckAndUpdateFiscalLevelAsync(user);
+        // Check for contribution level upgrade
+        await CheckAndUpdateContributionLevelAsync(user);
         
         await userRepository.UpdateAsync(user);
     }
@@ -254,21 +254,21 @@ public class VotingService(
     }
 
     /// <summary>
-    /// Checks and updates user's fiscal level based on reputation
+    /// Checks and updates user's contribution level based on reputation
     /// </summary>
-    private static async Task CheckAndUpdateFiscalLevelAsync(ApplicationUser user)
+    private static async Task CheckAndUpdateContributionLevelAsync(ApplicationUser user)
     {
         var newLevel = user.ReputationScore switch
         {
-            >= 1000 => Infrastructure.Models.FiscalLevel.NicolasSupreme,
-            >= 500 => Infrastructure.Models.FiscalLevel.GrosNicolas,
-            >= 100 => Infrastructure.Models.FiscalLevel.GrosMoyenNicolas,
-            _ => Infrastructure.Models.FiscalLevel.PetitNicolas
+            >= 1000 => Infrastructure.Models.ContributionLevel.NicolasSupreme,
+            >= 500 => Infrastructure.Models.ContributionLevel.GrosNicolas,
+            >= 100 => Infrastructure.Models.ContributionLevel.GrosMoyenNicolas,
+            _ => Infrastructure.Models.ContributionLevel.PetitNicolas
         };
 
-        if (newLevel != user.FiscalLevel)
+        if (newLevel != user.ContributionLevel)
         {
-            user.FiscalLevel = newLevel;
+            user.ContributionLevel = newLevel;
             // Could trigger badge notification here
         }
 

@@ -40,6 +40,7 @@ builder.Services.AddScoped<ProposalService>();
 builder.Services.AddScoped<VotingService>();
 builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<BadgeService>();
 
 // Add health check service for API availability

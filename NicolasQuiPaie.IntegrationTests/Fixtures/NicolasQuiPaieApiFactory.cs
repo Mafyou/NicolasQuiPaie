@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using NicolasQuiPaieAPI.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using NicolasQuiPaieAPI.Infrastructure.Models;
-using FiscalLevel = NicolasQuiPaieAPI.Infrastructure.Models.FiscalLevel;
+using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
 using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
 
 namespace NicolasQuiPaie.IntegrationTests.Fixtures
@@ -74,7 +74,7 @@ namespace NicolasQuiPaie.IntegrationTests.Fixtures
                 Email = "testuser1@test.com",
                 EmailConfirmed = true,
                 DisplayName = "Test User 1",
-                FiscalLevel = FiscalLevel.PetitNicolas,
+                ContributionLevel = ContributionLevel.PetitNicolas,
                 ReputationScore = 100,
                 IsVerified = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-30)
@@ -87,7 +87,7 @@ namespace NicolasQuiPaie.IntegrationTests.Fixtures
                 Email = "testuser2@test.com",
                 EmailConfirmed = true,
                 DisplayName = "Test User 2",
-                FiscalLevel = FiscalLevel.GrosMoyenNicolas,
+                ContributionLevel = ContributionLevel.GrosMoyenNicolas,
                 ReputationScore = 250,
                 IsVerified = true,
                 CreatedAt = DateTime.UtcNow.AddDays(-45)

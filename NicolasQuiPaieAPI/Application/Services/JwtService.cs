@@ -24,7 +24,8 @@ public class JwtService(IConfiguration configuration) : IJwtService
             new(ClaimTypes.Name, user.UserName ?? ""),
             new(ClaimTypes.Email, user.Email ?? ""),
             new("DisplayName", user.DisplayName ?? ""),
-            new("FiscalLevel", user.FiscalLevel.ToString()),
+            new("FiscalLevel", user.ContributionLevel.ToString()), // Keep FiscalLevel claim for backward compatibility
+            new("ContributionLevel", user.ContributionLevel.ToString()),
             new("ReputationScore", user.ReputationScore.ToString()),
             new("IsVerified", user.IsVerified.ToString()),
             new("CreatedAt", user.CreatedAt.ToString("O"))

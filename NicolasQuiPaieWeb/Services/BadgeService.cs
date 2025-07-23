@@ -23,26 +23,26 @@ namespace NicolasQuiPaieWeb.Services
             return false; // No change for now
         }
 
-        public string GetBadgeDisplayName(FiscalLevel level)
+        public string GetBadgeDisplayName(ContributionLevel level)
         {
             return level switch
             {
-                FiscalLevel.PetitNicolas => "?? Petit Nicolas",
-                FiscalLevel.GrosMoyenNicolas => "?? Moyen Nicolas", 
-                FiscalLevel.GrosNicolas => "?? Gros Nicolas",
-                FiscalLevel.NicolasSupreme => "?? Nicolas Suprême",
+                ContributionLevel.PetitNicolas => "?? Petit Nicolas",
+                ContributionLevel.GrosMoyenNicolas => "?? Moyen Nicolas", 
+                ContributionLevel.GrosNicolas => "?? Gros Nicolas",
+                ContributionLevel.NicolasSupreme => "?? Nicolas Suprême",
                 _ => "?? Petit Nicolas"
             };
         }
 
-        public string GetBadgeDescription(FiscalLevel level)
+        public string GetBadgeDescription(ContributionLevel level)
         {
             return level switch
             {
-                FiscalLevel.PetitNicolas => "Badge de débutant - Reconnaissance pour vos premiers pas dans la communauté Nicolas",
-                FiscalLevel.GrosMoyenNicolas => "Badge de contributeur moyen - Participation régulière reconnue",
-                FiscalLevel.GrosNicolas => "Badge de contributeur actif - Reconnaissance de votre participation régulière et engagement",
-                FiscalLevel.NicolasSupreme => "Badge d'expert - Reconnaissance de votre expertise et contribution exceptionnelle à la communauté",
+                ContributionLevel.PetitNicolas => "Badge de débutant - Reconnaissance pour vos premiers pas dans la communauté Nicolas",
+                ContributionLevel.GrosMoyenNicolas => "Badge de contributeur moyen - Participation régulière reconnue",
+                ContributionLevel.GrosNicolas => "Badge de contributeur actif - Reconnaissance de votre participation régulière et engagement",
+                ContributionLevel.NicolasSupreme => "Badge d'expert - Reconnaissance de votre expertise et contribution exceptionnelle à la communauté",
                 _ => "Badge de contributeur Nicolas"
             };
         }

@@ -1,4 +1,5 @@
-﻿@inject VotingService VotingService
+﻿@using NicolasQuiPaieData.DTOs
+@inject VotingService VotingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject BadgeService BadgeService
 @inject IJSRuntime JSRuntime
@@ -156,7 +157,7 @@
     [Parameter] public EventCallback<VoteDto> OnVoteChanged { get; set; }
 
     private VoteDto? userVote;
-    private FiscalLevel currentUserLevel = FiscalLevel.PetitNicolas;
+    private ContributionLevel currentUserLevel = ContributionLevel.PetitNicolas;
     private bool isVoting = false;
     private VoteType? pendingVoteType;
     private bool showVoteNotification = false;
@@ -177,9 +178,9 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            // Get user level from JWT claims
+            // Get user level from JWT claims (still using FiscalLevel claim for backward compatibility)
             var levelClaim = authState.User.FindFirst("FiscalLevel")?.Value;
-            if (Enum.TryParse<FiscalLevel>(levelClaim, out var level))
+            if (Enum.TryParse<ContributionLevel>(levelClaim, out var level))
             {
                 currentUserLevel = level;
             }

@@ -5,6 +5,16 @@ using System.Text.Json;
 namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
+/// Interface for analytics services
+/// </summary>
+public interface IAnalyticsService
+{
+    Task<DashboardStatsDto> GetDashboardStatsAsync();
+    Task<List<TrendingProposalDto>> GetTrendingProposalsAsync(int hours = 24);
+    Task<List<TopContributorDto>> GetTopContributorsAsync(int count = 10);
+}
+
+/// <summary>
 /// Client-side service for analytics via API
 /// </summary>
 public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsService> logger)
@@ -76,7 +86,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
                 {
                     UserId = u.UserId,
                     UserDisplayName = u.UserDisplayName,
-                    UserFiscalLevel = u.UserFiscalLevel,
+                    UserContributionLevel = u.UserContributionLevel,
                     ProposalsCount = u.ContributionCount,
                     VotesCount = 0, // Will be loaded separately
                     CommentsCount = 0, // Will be loaded separately
@@ -97,7 +107,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
 /// <summary>
 /// Client-side wrapper service for analytics - now uses real API
 /// </summary>
-public class AnalyticsService(ApiAnalyticsService apiAnalyticsService)
+public class AnalyticsService(ApiAnalyticsService apiAnalyticsService) : IAnalyticsService
 {
     public async Task<DashboardStatsDto> GetDashboardStatsAsync()
         => await apiAnalyticsService.GetDashboardStatsAsync();

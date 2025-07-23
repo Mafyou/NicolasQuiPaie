@@ -5,6 +5,9 @@ using NicolasQuiPaieAPI.Infrastructure.Data;
 
 namespace NicolasQuiPaieAPI.Application.Services;
 
+/// <summary>
+/// Service for analytics and statistics
+/// </summary>
 public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsService> logger) : IAnalyticsService
 {
     public async Task<GlobalStatsDto> GetGlobalStatsAsync()
@@ -14,11 +17,11 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
             var totalUsers = await context.Users.CountAsync();
             var totalProposals = await context.Proposals.CountAsync();
             var totalVotes = await context.Votes.CountAsync();
-            var totalComments = await context.Comments.Where(c => !c.IsDeleted).CountAsync();
-
+            var totalComments = await context.Comments.CountAsync();
             var activeProposals = await context.Proposals
-                .Where(p => p.Status == Infrastructure.Models.ProposalStatus.Active)
-                .CountAsync();
+                .CountAsync(p => p.Status == Infrastructure.Models.ProposalStatus.Active);
+
+            var averageParticipation = totalUsers > 0 ? (double)(totalVotes + totalComments) / totalUsers : 0;
 
             return new GlobalStatsDto
             {
@@ -26,7 +29,8 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
                 TotalProposals = totalProposals,
                 TotalVotes = totalVotes,
                 TotalComments = totalComments,
-                ActiveProposals = activeProposals
+                ActiveProposals = activeProposals,
+                AverageParticipationRate = averageParticipation
             };
         }
         catch (Exception ex)
@@ -36,12 +40,43 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
         }
     }
 
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync()
+    {
+        try
+        {
+            var stats = await GetGlobalStatsAsync();
+            var activeUsers = await context.Users
+                .CountAsync(u => u.LastLoginAt > DateTime.UtcNow.AddDays(-30));
+
+            // Calculate frustration meter (percentage of against votes)
+            var totalVotes = await context.Votes.CountAsync();
+            var againstVotes = await context.Votes
+                .CountAsync(v => v.VoteType == Infrastructure.Models.VoteType.Against);
+            var rasLebolMeter = totalVotes > 0 ? (double)againstVotes / totalVotes * 100 : 0;
+
+            return new DashboardStatsDto
+            {
+                TotalUsers = stats.TotalUsers,
+                ActiveUsers = activeUsers,
+                TotalProposals = stats.TotalProposals,
+                ActiveProposals = stats.ActiveProposals,
+                TotalVotes = stats.TotalVotes,
+                TotalComments = stats.TotalComments,
+                RasLebolMeter = rasLebolMeter
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting dashboard stats");
+            return new DashboardStatsDto();
+        }
+    }
+
     public async Task<VotingTrendsDto> GetVotingTrendsAsync(int days = 30)
     {
         try
         {
             var startDate = DateTime.UtcNow.AddDays(-days);
-            
             var dailyVotes = await context.Votes
                 .Where(v => v.VotedAt >= startDate)
                 .GroupBy(v => v.VotedAt.Date)
@@ -66,32 +101,32 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
         }
     }
 
-    public async Task<FiscalLevelDistributionDto> GetFiscalLevelDistributionAsync()
+    public async Task<ContributionLevelDistributionDto> GetContributionLevelDistributionAsync()
     {
         try
         {
             var distribution = await context.Users
-                .GroupBy(u => u.FiscalLevel)
+                .GroupBy(u => u.ContributionLevel)
                 .Select(g => new { Level = g.Key, Count = g.Count() })
                 .ToListAsync();
 
             var totalUsers = distribution.Sum(d => d.Count);
-            var fiscalLevelCounts = distribution.Select(d => new FiscalLevelCount
+            var contributionLevelCounts = distribution.Select(d => new ContributionLevelCount
             {
                 LevelName = d.Level.ToString(),
                 UserCount = d.Count,
                 Percentage = totalUsers > 0 ? (double)d.Count / totalUsers * 100 : 0
             }).ToList();
 
-            return new FiscalLevelDistributionDto
+            return new ContributionLevelDistributionDto
             {
-                Distribution = fiscalLevelCounts
+                Distribution = contributionLevelCounts
             };
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting fiscal level distribution");
-            return new FiscalLevelDistributionDto { Distribution = [] };
+            logger.LogError(ex, "Error getting contribution level distribution");
+            return new ContributionLevelDistributionDto { Distribution = [] };
         }
     }
 
@@ -106,7 +141,7 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
                 {
                     UserId = u.Id,
                     UserDisplayName = u.DisplayName ?? "Anonymous",
-                    UserFiscalLevel = (NicolasQuiPaieData.DTOs.FiscalLevel)(int)u.FiscalLevel,
+                    UserContributionLevel = (NicolasQuiPaieData.DTOs.ContributionLevel)(int)u.ContributionLevel,
                     ContributionCount = context.Proposals.Count(p => p.CreatedById == u.Id) + 
                                       context.Votes.Count(v => v.UserId == u.Id) + 
                                       context.Comments.Count(c => c.UserId == u.Id && !c.IsDeleted),
@@ -158,7 +193,9 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
                 .Select(v => new RecentActivityItem
                 {
                     Type = "Vote",
-                    Description = $"a voté {(v.VoteType == Infrastructure.Models.VoteType.For ? "POUR" : "CONTRE")} '{v.Proposal.Title}'",
+                    Description = v.VoteType == Infrastructure.Models.VoteType.For ? 
+                        $"a voté POUR '{v.Proposal.Title}'" : 
+                        $"a voté CONTRE '{v.Proposal.Title}'",
                     UserId = v.UserId,
                     UserDisplayName = v.User.DisplayName ?? "Anonymous",
                     Timestamp = v.VotedAt,
@@ -188,28 +225,43 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
     {
         try
         {
-            // Calculate frustration based on voting patterns
             var totalVotes = await context.Votes.CountAsync();
-            var againstVotes = await context.Votes.CountAsync(v => v.VoteType == Infrastructure.Models.VoteType.Against);
-            
-            var frustrationLevel = totalVotes > 0 ? (double)againstVotes / totalVotes * 100 : 0;
+            var totalVotesAgainst = await context.Votes
+                .CountAsync(v => v.VoteType == Infrastructure.Models.VoteType.Against);
 
-            // Determine mood based on frustration level
-            string mood = frustrationLevel switch
+            var frustrationLevel = totalVotes > 0 ? (double)totalVotesAgainst / totalVotes * 100 : 0;
+
+            var categoryBreakdown = await context.Categories
+                .Select(c => new CategoryFrustration
+                {
+                    CategoryId = c.Id,
+                    CategoryName = c.Name,
+                    VotesAgainst = context.Votes.Count(v => v.Proposal.CategoryId == c.Id && 
+                                                           v.VoteType == Infrastructure.Models.VoteType.Against),
+                    TotalVotes = context.Votes.Count(v => v.Proposal.CategoryId == c.Id),
+                    FrustrationLevel = context.Votes.Count(v => v.Proposal.CategoryId == c.Id) > 0 ?
+                        (double)context.Votes.Count(v => v.Proposal.CategoryId == c.Id && 
+                                                        v.VoteType == Infrastructure.Models.VoteType.Against) /
+                        context.Votes.Count(v => v.Proposal.CategoryId == c.Id) * 100 : 0
+                })
+                .ToListAsync();
+
+            var currentMood = frustrationLevel switch
             {
-                < 30 => "Calm",
-                < 50 => "Concerned",
-                < 70 => "Frustrated",
-                _ => "Angry"
+                < 20 => "Calme",
+                < 40 => "Légèrement frustré",
+                < 60 => "Frustré",
+                < 80 => "Très frustré",
+                _ => "Ras-le-bol général"
             };
 
             return new FrustrationBarometerDto
             {
                 FrustrationLevel = frustrationLevel,
+                TotalVotesAgainst = totalVotesAgainst,
                 TotalVotes = totalVotes,
-                TotalVotesAgainst = againstVotes,
-                CurrentMood = mood,
-                CategoryBreakdown = []
+                CategoryBreakdown = categoryBreakdown,
+                CurrentMood = currentMood
             };
         }
         catch (Exception ex)

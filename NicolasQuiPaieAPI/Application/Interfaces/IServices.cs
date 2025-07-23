@@ -21,7 +21,7 @@ namespace NicolasQuiPaieAPI.Application.Interfaces
     public interface IVotingService
     {
         /// <summary>
-        /// Casts a vote with proper weight calculation based on fiscal level
+        /// Casts a vote with proper weight calculation based on contribution level
         /// </summary>
         Task<VoteDto> CastVoteAsync(CreateVoteDto voteDto, string userId);
         
@@ -59,8 +59,9 @@ namespace NicolasQuiPaieAPI.Application.Interfaces
     public interface IAnalyticsService
     {
         Task<GlobalStatsDto> GetGlobalStatsAsync();
+        Task<DashboardStatsDto> GetDashboardStatsAsync();
         Task<VotingTrendsDto> GetVotingTrendsAsync(int days = 30);
-        Task<FiscalLevelDistributionDto> GetFiscalLevelDistributionAsync();
+        Task<ContributionLevelDistributionDto> GetContributionLevelDistributionAsync();
         Task<TopContributorsDto> GetTopContributorsAsync(int take = 10);
         Task<RecentActivityDto> GetRecentActivityAsync(int take = 20);
         Task<FrustrationBarometerDto> GetFrustrationBarometerAsync();
