@@ -1,6 +1,5 @@
 ﻿@page "/Error"
 @using System.Diagnostics
-@inject IWebHostEnvironment Environment
 
 <PageTitle>Erreur - Nicolas Qui Paie</PageTitle>
 
@@ -46,24 +45,21 @@
                     </p>
                 </div>
                 
-                @if (Environment.IsDevelopment())
-                {
-                    <!-- Development Info -->
-                    <div class="mt-5">
-                        <div class="card border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-code me-1"></i>
-                                    Informations de développement
-                                </h6>
-                            </div>
-                            <div class="card-body text-start">
-                                <p><strong>Request ID:</strong> @Activity.Current?.Id</p>
-                                <p class="mb-0"><strong>Time:</strong> @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")</p>
-                            </div>
+                <!-- Development Info - Always shown in debug -->
+                <div class="mt-5">
+                    <div class="card border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-code me-1"></i>
+                                Informations de développement
+                            </h6>
+                        </div>
+                        <div class="card-body text-start">
+                            <p><strong>Request ID:</strong> @Activity.Current?.Id</p>
+                            <p class="mb-0"><strong>Time:</strong> @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC")</p>
                         </div>
                     </div>
-                }
+                </div>
             </div>
         </div>
     </div>

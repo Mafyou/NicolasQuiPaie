@@ -1,13 +1,47 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>e0421c83-b988-4a99-b612-e2449652f6e9</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Infrastructure\Services\**" />
+    <Compile Remove="Presentation\Controllers\**" />
+    <Content Remove="Infrastructure\Services\**" />
+    <Content Remove="Presentation\Controllers\**" />
+    <EmbeddedResource Remove="Infrastructure\Services\**" />
+    <EmbeddedResource Remove="Presentation\Controllers\**" />
+    <None Remove="Infrastructure\Services\**" />
+    <None Remove="Presentation\Controllers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Reference both DTOs and Infrastructure -->
+    <ProjectReference Include="..\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
+    <ProjectReference Include="..\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\Commands\" />
+    <Folder Include="Application\Queries\" />
+    <Folder Include="Application\Handlers\" />
   </ItemGroup>
 
 </Project>

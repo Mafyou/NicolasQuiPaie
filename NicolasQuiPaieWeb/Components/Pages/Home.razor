@@ -1,10 +1,8 @@
 ﻿@page "/"
-@using Microsoft.EntityFrameworkCore
-@using NicolasQuiPaieWeb.Data.DTOs
 @inject ProposalService ProposalService
 @inject AnalyticsService AnalyticsService
-@inject UserManager<ApplicationUser> UserManager
-@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ApiHealthService ApiHealthService
+@inject ILogger<Home> Logger
 
 <PageTitle>Nicolas Qui Paie - La Démocratie Souveraine Numérique</PageTitle>
 
@@ -44,29 +42,29 @@
                 </div>
                 
                 <AuthorizeView>
-            <Authorized>
-                <!-- Utilisateur connecté -->
-                <div class="d-flex gap-3 justify-content-center">
-                    <a href="/create-proposal" class="btn btn-warning btn-lg">
-                        <i class="fas fa-lightbulb me-2"></i>Proposer une Idée
-                    </a>
-                    <a href="/proposals" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-vote-yea me-2"></i>Voter sur les Propositions
-                    </a>
-                </div>
-            </Authorized>
-            <NotAuthorized>
-                <!-- Utilisateur non connecté -->
-                <div class="d-flex gap-3 justify-content-center">
-                    <a href="/proposals" class="btn btn-warning btn-lg">
-                        <i class="fas fa-vote-yea me-2"></i>Découvrir les Propositions
-                    </a>
-                    <a href="/Identity/Account/Register" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-user-plus me-2"></i>Rejoindre les Nicolas
-                    </a>
-                </div>
-            </NotAuthorized>
-        </AuthorizeView>
+                    <Authorized>
+                        <!-- Utilisateur connecté -->
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a href="/create-proposal" class="btn btn-warning btn-lg">
+                                <i class="fas fa-lightbulb me-2"></i>Proposer une Idée
+                            </a>
+                            <a href="/proposals" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-vote-yea me-2"></i>Voter sur les Propositions
+                            </a>
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <!-- Utilisateur non connecté -->
+                        <div class="d-flex gap-3 justify-content-center">
+                            <a href="/proposals" class="btn btn-warning btn-lg">
+                                <i class="fas fa-vote-yea me-2"></i>Découvrir les Propositions
+                            </a>
+                            <a href="/register" class="btn btn-outline-light btn-lg">
+                                <i class="fas fa-user-plus me-2"></i>Rejoindre les Nicolas
+                            </a>
+                        </div>
+                    </NotAuthorized>
+                </AuthorizeView>
             </div>
             <div class="col-lg-6 text-center">
                 <div class="hero-illustration">
@@ -77,6 +75,23 @@
     </div>
 </div>
 
+<!-- API Status Indicator (if API is down) -->
+@if (!isApiAvailable && !isLoading)
+{
+    <div class="container py-3">
+        <div class="alert alert-warning d-flex align-items-center" role="alert">
+            <i class="fas fa-exclamation-triangle me-3"></i>
+            <div class="flex-grow-1">
+                <strong>Mode dégradé</strong> - Connexion à l'API en cours de rétablissement.
+                Certaines fonctionnalités peuvent être limitées.
+            </div>
+            <button class="btn btn-sm btn-outline-warning" @onclick="RetryConnection">
+                <i class="fas fa-redo me-1"></i>Réessayer
+            </button>
+        </div>
+    </div>
+}
+
 @if (isLoading)
 {
     <div class="container py-5">
@@ -84,7 +99,7 @@
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Chargement...</span>
             </div>
-            <p class="mt-3 text-muted">Chargement des données...</p>
+            <p class="mt-3 text-muted">@loadingMessage</p>
         </div>
     </div>
 }
@@ -190,52 +205,17 @@ else
             </div>
         </section>
     }
-
-    <!-- Nicolas du Mois -->
-    @if (topContributor != null)
+    else if (!hasLoadedData && isApiAvailable)
     {
-        <section class="py-5 bg-primary text-white">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h2 class="fw-bold mb-3">
-                            <i class="fas fa-crown text-warning me-2"></i>
-                            Nicolas du Mois
-                        </h2>
-                        <h3 class="display-5 fw-bold mb-3">@topContributor.UserDisplayName</h3>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-lightbulb text-warning me-2"></i>
-                                    <span>@topContributor.ProposalsCount propositions</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-vote-yea text-warning me-2"></i>
-                                    <span>@topContributor.VotesCount votes</span>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-comments text-warning me-2"></i>
-                                    <span>@topContributor.CommentsCount commentaires</span>
-                                </div>
-                            </div>
-                        </div>
-                        <blockquote class="blockquote">
-                            <p class="mb-0 fst-italic">"@GetNicolasQuote(topContributor)"</p>
-                        </blockquote>
-                    </div>
-                    <div class="col-lg-4 text-center">
-                        <div class="nicolas-avatar">
-                            <i class="fas fa-user-circle fa-8x text-warning"></i>
-                            <div class="mt-2">
-                                <span class="badge bg-warning text-dark fs-6">
-                                    @GetNicolasBadge(topContributor.UserFiscalLevel)
-                                </span>
-                            </div>
-                        </div>
+        <!-- Show message when no trending proposals -->
+        <section class="py-5">
+            <div class="container text-center">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body py-5">
+                        <i class="fas fa-rocket fa-3x text-muted mb-3"></i>
+                        <h3>La révolution Nicolas commence !</h3>
+                        <p class="text-muted">Soyez parmi les premiers à proposer et voter.</p>
+                        <a href="/proposals" class="btn btn-primary">Explorer les propositions</a>
                     </div>
                 </div>
             </div>
@@ -260,10 +240,10 @@ else
                     </a>
                 </Authorized>
                 <NotAuthorized>
-                    <a href="/Identity/Account/Register" class="btn btn-primary btn-lg me-3">
+                    <a href="/register" class="btn btn-primary btn-lg me-3">
                         <i class="fas fa-user-plus me-2"></i>Créer un Compte
                     </a>
-                    <a href="/Identity/Account/Login" class="btn btn-outline-primary btn-lg">
+                    <a href="/login" class="btn btn-outline-primary btn-lg">
                         <i class="fas fa-sign-in-alt me-2"></i>Se Connecter
                     </a>
                 </NotAuthorized>
@@ -273,10 +253,12 @@ else
 }
 
 @code {
-    private IEnumerable<ProposalDto> trendingProposals = new List<ProposalDto>();
-    private DashboardStatsDto dashboardStats = new DashboardStatsDto();
-    private TopContributorDto? topContributor;
+    private IEnumerable<ProposalDto> trendingProposals = [];
+    private DashboardStatsDto dashboardStats = new();
     private bool isLoading = true;
+    private bool isApiAvailable = true;
+    private bool hasLoadedData = false;
+    private string loadingMessage = "Chargement des données...";
 
     protected override async Task OnInitializedAsync()
     {
@@ -286,145 +268,100 @@ else
     private async Task LoadDashboardData()
     {
         isLoading = true;
+        loadingMessage = "Vérification de la connexion API...";
+        StateHasChanged();
         
         try
         {
-            // Charger les données depuis les services avec debug
-            Console.WriteLine("🔍 Début du chargement des données dashboard...");
+            // Check API availability first
+            isApiAvailable = await ApiHealthService.IsApiAvailableAsync();
             
-            // 🚨 DIAGNOSTIC: Comparaison UserManager vs DbContext
-            var userManagerCount = UserManager.Users.Count();
-            Console.WriteLine($"📊 UserManager.Users.Count(): {userManagerCount}");
-            
-            using (var dbContext = await DbContextFactory.CreateDbContextAsync())
+            if (!isApiAvailable)
             {
-                var dbContextUserCount = await dbContext.Users.CountAsync();
-                Console.WriteLine($"📊 DbContext.Users.CountAsync(): {dbContextUserCount}");
-                
-                // Afficher quelques utilisateurs pour debug
-                var dbUsers = await dbContext.Users.Take(5).Select(u => new { u.Id, u.UserName, u.Email }).ToListAsync();
-                Console.WriteLine($"📊 Utilisateurs dans DbContext:");
-                foreach (var user in dbUsers)
-                {
-                    Console.WriteLine($"   👤 {user.UserName} - {user.Email} - ID: {user.Id}");
-                }
+                Logger.LogWarning("API not available, using fallback data");
+                await LoadFallbackData();
+                return;
             }
+
+            loadingMessage = "Chargement des propositions trending...";
+            StateHasChanged();
             
             trendingProposals = await ProposalService.GetTrendingProposalsAsync(4);
-            Console.WriteLine($"✅ Propositions trending: {trendingProposals?.Count() ?? 0}");
+            
+            loadingMessage = "Chargement des statistiques...";
+            StateHasChanged();
             
             dashboardStats = await AnalyticsService.GetDashboardStatsAsync();
-            Console.WriteLine($"✅ Dashboard stats chargées:");
-            Console.WriteLine($"   - TotalUsers: {dashboardStats.TotalUsers}");
-            Console.WriteLine($"   - TotalVotes: {dashboardStats.TotalVotes}");
-            Console.WriteLine($"   - ActiveProposals: {dashboardStats.ActiveProposals}");
-            Console.WriteLine($"   - RasLebolMeter: {dashboardStats.RasLebolMeter:F1}%");
+            hasLoadedData = true;
             
-            var topContributors = await AnalyticsService.GetTopContributorsAsync(1);
-            Console.WriteLine($"✅ Top contributeurs: {topContributors?.Count ?? 0}");
-            
-            topContributor = topContributors?.FirstOrDefault();
-            
-            if (topContributor != null)
-            {
-                Console.WriteLine($"🏆 Nicolas du mois: {topContributor.UserDisplayName} (Score: {topContributor.TotalScore})");
-            }
-            else
-            {
-                Console.WriteLine("⚠️ Aucun top contributeur trouvé");
-            }
-            
-            // 🔧 SOLUTION TEMPORAIRE: Si dashboard stats montre 0 utilisateurs mais UserManager en a
-            if (dashboardStats.TotalUsers == 0 && userManagerCount > 0)
-            {
-                Console.WriteLine("🚨 PROBLÈME DÉTECTÉ: DbContext.Users vide mais UserManager a des utilisateurs!");
-                Console.WriteLine("🔧 Affichage des données UserManager comme fallback...");
-                
-                // Utiliser UserManager comme source de vérité temporaire
-                dashboardStats.TotalUsers = userManagerCount;
-            }
+            Logger.LogInformation("Dashboard data loaded successfully");
         }
         catch (Exception ex)
         {
-            // Log error détaillé
-            Console.WriteLine($"❌ Erreur lors du chargement des données: {ex.Message}");
-            Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
-            
-            // Valeurs par défaut avec fallback UserManager
-            trendingProposals = new List<ProposalDto>();
-            dashboardStats = new DashboardStatsDto();
-            topContributor = null;
-            
-            try
-            {
-                // Fallback: au moins afficher le nombre d'utilisateurs depuis UserManager
-                dashboardStats.TotalUsers = UserManager.Users.Count();
-                Console.WriteLine($"🔧 Fallback activé: TotalUsers depuis UserManager = {dashboardStats.TotalUsers}");
-            }
-            catch (Exception fallbackEx)
-            {
-                Console.WriteLine($"❌ Échec du fallback UserManager: {fallbackEx.Message}");
-            }
+            Logger.LogError(ex, "Error loading dashboard data");
+            isApiAvailable = false;
+            await LoadFallbackData();
         }
         finally
         {
             isLoading = false;
-            Console.WriteLine($"🏁 Chargement terminé. TotalUsers final: {dashboardStats.TotalUsers}");
             StateHasChanged();
         }
     }
 
-    private string GetNicolasBadge(FiscalLevel level)
+    private async Task LoadFallbackData()
     {
-        return level switch
-        {
-            FiscalLevel.PetitNicolas => "Petit Nicolas",
-            FiscalLevel.GrosNicolas => "Gros Nicolas",
-            FiscalLevel.NicolasSupreme => "Nicolas Suprême",
-            _ => "Petit Nicolas"
-        };
-    }
-
-    private string GetNicolasQuote(TopContributorDto? contributor)
-    {
-        if (contributor == null) 
-            return "Soyez le premier à contribuer à la démocratie numérique !";
+        Logger.LogInformation("Loading fallback data for offline mode");
         
-        var quotes = new[]
+        // Provide demo/fallback data when API is not available
+        trendingProposals = GetDemoProposals();
+        dashboardStats = new DashboardStatsDto
         {
-            "C'est en débattant ensemble qu'on trouve les vraies solutions !",
-            "Chaque vote compte dans notre démocratie souveraine numérique.",
-            "L'engagement citoyen commence par une proposition, un vote, un débat.",
-            "Together, nous construisons l'avenir fiscal de la France.",
-            "La participation citoyenne, c'est l'essence de la démocratie.",
-            "Merci de faire vivre notre communauté Nicolas !"
+            TotalUsers = 1337,
+            TotalVotes = 9999,
+            ActiveProposals = 42,
+            RasLebolMeter = 75.5,
+            TotalComments = 2580
         };
-
-        var index = (contributor.TotalScore % quotes.Length);
-        return quotes[index];
+        
+        hasLoadedData = false; // Indicate this is fallback data
+        await Task.CompletedTask;
     }
 
-    private async Task DiagnosticUsers()
+    private async Task RetryConnection()
     {
-        try
-        {
-            Console.WriteLine("🔍 DIAGNOSTIC UTILISATEURS...");
-            
-            // Vérifier directement avec UserManager
-            var allUsers = UserManager.Users.ToList();
-            Console.WriteLine($"📊 UserManager.Users.Count(): {allUsers.Count}");
-            
-            foreach (var user in allUsers.Take(5))
+        Logger.LogInformation("Retrying API connection...");
+        await LoadDashboardData();
+    }
+
+    private static IEnumerable<ProposalDto> GetDemoProposals()
+    {
+        return 
+        [
+            new ProposalDto
             {
-                Console.WriteLine($"👤 User: {user.UserName} - {user.Email} - Created: {user.CreatedAt}");
+                Id = 1,
+                Title = "Supprimer la redevance audiovisuelle",
+                Description = "Proposition de suppression définitive de la redevance audiovisuelle pour alléger la fiscalité des ménages français.",
+                CategoryName = "Fiscalité",
+                CategoryColor = "#dc3545",
+                VotesFor = 1250,
+                VotesAgainst = 340,
+                CreatedByDisplayName = "Nicolas Patriote",
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new ProposalDto
+            {
+                Id = 2,
+                Title = "Réduire les dépenses de communication gouvernementale",
+                Description = "Limiter le budget communication des ministères à 50% de leur montant actuel pour réduire les dépenses publiques.",
+                CategoryName = "Dépenses Publiques",
+                CategoryColor = "#0d6efd",
+                VotesFor = 980,
+                VotesAgainst = 120,
+                CreatedByDisplayName = "Nicolas Économe",
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
             }
-            
-            // Recharger les stats
-            await LoadDashboardData();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ Erreur diagnostic: {ex.Message}");
-        }
+        ];
     }
 }

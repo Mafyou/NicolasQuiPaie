@@ -1,5 +1,4 @@
 @page "/proposals"
-@using NicolasQuiPaieWeb.Data.DTOs
 @inject ProposalService ProposalService
 @inject NavigationManager Navigation
 
@@ -105,7 +104,7 @@
 
 @code {
     private IEnumerable<ProposalDto> proposals = new List<ProposalDto>();
-    private IEnumerable<Category> categories = new List<Category>();
+    private IEnumerable<CategoryDto> categories = new List<CategoryDto>();
     private string? selectedCategory;
     private string searchTerm = "";
     private string sortBy = "recent";
@@ -129,7 +128,7 @@
         }
         catch (Exception)
         {
-            categories = new List<Category>();
+            categories = new List<CategoryDto>();
         }
     }
 
@@ -206,4 +205,4 @@
     {
         await LoadProposals(append: true);
     }
-}
+}}

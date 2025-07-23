@@ -1,5 +1,4 @@
-﻿@using NicolasQuiPaieWeb.Data.DTOs
-@inject VotingService VotingService
+﻿@inject VotingService VotingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -122,7 +121,7 @@
                 </Authorized>
                 <NotAuthorized>
                     <div class="text-center">
-                        <a href="/Identity/Account/Login" class="btn btn-primary">
+                        <a href="/login" class="btn btn-primary">
                             <i class="fas fa-sign-in-alt me-1"></i>
                             Connectez-vous pour voter
                         </a>
@@ -153,7 +152,7 @@
     [Parameter] public bool ShowActions { get; set; } = true;
     [Parameter] public int? CommentsCount { get; set; }
 
-    private Vote? userVote;
+    private VoteDto? userVote;
     private bool isVoting = false;
     private VoteType? pendingVoteType;
 
@@ -183,7 +182,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
         {
-            Navigation.NavigateTo("/Identity/Account/Login");
+            Navigation.NavigateTo("/login");
             return;
         }
 

@@ -1,0 +1,262 @@
+@page "/diagnostics"
+@inject ApiHealthService ApiHealthService
+@inject IConfiguration Configuration
+@inject HttpClient HttpClient
+@inject ILogger<Diagnostics> Logger
+
+<PageTitle>Diagnostics - Nicolas Qui Paie</PageTitle>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-stethoscope fa-2x text-primary me-3"></i>
+                <div>
+                    <h1 class="mb-0">Diagnostics Système</h1>
+                    <p class="text-muted mb-0">Vérification de l'état des services et de la connectivité</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- API Connectivity -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plug me-2"></i>Connectivité API
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (isCheckingApi)
+                    {
+                        <div class="text-center py-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Vérification...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Vérification de l'API...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <strong>URL de base:</strong> 
+                            <code>@apiBaseUrl</code>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Statut:</strong>
+                            @if (apiStatus.HasValue)
+                            {
+                                @if (apiStatus.Value)
+                                {
+                                    <span class="badge bg-success ms-2">? Connecté</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger ms-2">? Non disponible</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary ms-2">? En cours...</span>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Message:</strong>
+                            <p class="text-muted mb-0">@apiStatusMessage</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Dernière vérification:</strong>
+                            <small class="text-muted">@lastCheckTime</small>
+                        </div>
+
+                        <button class="btn btn-outline-primary" @onclick="CheckApiHealth" disabled="@isCheckingApi">
+                            <i class="fas fa-redo me-1"></i>Revérifier
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Environnement</strong></td>
+                                    <td><code>@environment</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Base URL</strong></td>
+                                    <td><code>@baseUrl</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>API URL</strong></td>
+                                    <td><code>@apiBaseUrl</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Version .NET</strong></td>
+                                    <td><code>.NET 9</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>C# Version</strong></td>
+                                    <td><code>C# 13.0</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Actions Rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="/proposals" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-list me-2"></i>Tester les Propositions
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/analytics" class="btn btn-outline-success w-100">
+                                <i class="fas fa-chart-bar me-2"></i>Tester les Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info w-100" @onclick="ClearStorage">
+                                <i class="fas fa-trash me-2"></i>Vider le Cache
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Guide de Dépannage
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>?? Si l'API n'est pas disponible :</h6>
+                    <ol>
+                        <li>Vérifiez que le projet <code>NicolasQuiPaieAPI</code> est en cours d'exécution sur <code>@apiBaseUrl</code></li>
+                        <li>Dans Visual Studio, définissez plusieurs projets de démarrage</li>
+                        <li>Vérifiez les ports dans <code>launchSettings.json</code></li>
+                        <li>Testez l'API directement : <a href="@apiBaseUrl/swagger" target="_blank">@apiBaseUrl/swagger</a></li>
+                    </ol>
+
+                    <h6 class="mt-4">?? Si les pages affichent 404 :</h6>
+                    <ol>
+                        <li>Vérifiez que l'application Blazor WebAssembly démarre correctement</li>
+                        <li>Contrôlez la console du navigateur pour les erreurs JavaScript</li>
+                        <li>Vérifiez le fichier <code>wwwroot/index.html</code></li>
+                        <li>Assurez-vous que le routage Blazor fonctionne dans <code>App.razor</code></li>
+                    </ol>
+
+                    <h6 class="mt-4">?? Si l'authentification échoue :</h6>
+                    <ol>
+                        <li>Vérifiez la configuration JWT dans les deux projets</li>
+                        <li>Contrôlez les tokens dans le LocalStorage du navigateur</li>
+                        <li>Vérifiez les services d'authentification dans <code>Program.cs</code></li>
+                    </ol>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Conseil :</strong> L'application fonctionne en mode dégradé avec des données de démonstration 
+                        lorsque l'API n'est pas disponible.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool? apiStatus;
+    private string apiStatusMessage = "";
+    private bool isCheckingApi = false;
+    private string lastCheckTime = "";
+    private string apiBaseUrl = "";
+    private string baseUrl = "";
+    private string environment = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get configuration values
+        apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7051";
+        baseUrl = HttpClient.BaseAddress?.ToString() ?? "Unknown";
+        environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+        
+        // Initial API check
+        await CheckApiHealth();
+    }
+
+    private async Task CheckApiHealth()
+    {
+        isCheckingApi = true;
+        StateHasChanged();
+
+        try
+        {
+            Logger.LogInformation("Running diagnostic API health check");
+            
+            apiStatus = await ApiHealthService.IsApiAvailableAsync();
+            apiStatusMessage = await ApiHealthService.GetApiStatusMessageAsync();
+            lastCheckTime = DateTime.Now.ToString("HH:mm:ss");
+            
+            Logger.LogInformation("API health check completed. Status: {Status}", apiStatus);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during API health check");
+            apiStatus = false;
+            apiStatusMessage = $"Erreur lors de la vérification: {ex.Message}";
+            lastCheckTime = DateTime.Now.ToString("HH:mm:ss");
+        }
+        finally
+        {
+            isCheckingApi = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearStorage()
+    {
+        try
+        {
+            // Clear browser storage (this would need IJSRuntime injection)
+            Logger.LogInformation("Storage clearing requested");
+            
+            // Reload page to clear memory cache
+            await Task.Delay(100);
+            // Note: To fully implement this, inject IJSRuntime and call localStorage.clear()
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error clearing storage");
+        }
+    }
+}

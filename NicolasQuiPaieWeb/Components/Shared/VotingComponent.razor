@@ -1,6 +1,6 @@
 ﻿@inject VotingService VotingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager
+@inject BadgeService BadgeService
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
@@ -144,7 +144,7 @@
             <div class="mt-3">
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    <a href="/Identity/Account/Login" class="text-decoration-none">Connectez-vous</a> pour participer et obtenir votre badge Nicolas !
+                    <a href="/login" class="text-decoration-none">Connectez-vous</a> pour participer et obtenir votre badge Nicolas !
                 </div>
             </div>
         </NotAuthorized>
@@ -152,11 +152,11 @@
 </div>
 
 @code {
-    [Parameter] public Proposal Proposal { get; set; } = null!;
-    [Parameter] public EventCallback<Vote> OnVoteChanged { get; set; }
+    [Parameter] public ProposalDto Proposal { get; set; } = null!;
+    [Parameter] public EventCallback<VoteDto> OnVoteChanged { get; set; }
 
-    private Vote? userVote;
-    private ApplicationUser? currentUser;
+    private VoteDto? userVote;
+    private FiscalLevel currentUserLevel = FiscalLevel.PetitNicolas;
     private bool isVoting = false;
     private VoteType? pendingVoteType;
     private bool showVoteNotification = false;
@@ -177,10 +177,11 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (!string.IsNullOrEmpty(userId))
+            // Get user level from JWT claims
+            var levelClaim = authState.User.FindFirst("FiscalLevel")?.Value;
+            if (Enum.TryParse<FiscalLevel>(levelClaim, out var level))
             {
-                currentUser = await UserManager.FindByIdAsync(userId);
+                currentUserLevel = level;
             }
         }
     }
@@ -257,15 +258,7 @@
 
     private string GetCurrentNicolasLevel()
     {
-        if (currentUser == null) return "🥉 Petit Nicolas";
-        
-        return currentUser.FiscalLevel switch
-        {
-            FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
-            FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
-            FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
-            _ => "🥉 Petit Nicolas"
-        };
+        return BadgeService.GetBadgeDisplayName(currentUserLevel);
     }
 
     public async ValueTask DisposeAsync()

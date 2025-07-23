@@ -1,0 +1,265 @@
+@page "/api-example"
+@inject ApiProposalService ApiProposalService
+@inject ApiVotingService ApiVotingService
+@inject ILogger<ApiExample> Logger
+
+<PageTitle>API Integration Example - Nicolas Qui Paie</PageTitle>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <i class="fas fa-plug me-2"></i>
+                Exemple d'intégration API
+            </h1>
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Configuration automatique</h5>
+                <p class="mb-1">
+                    <strong>Développement:</strong> API locale sur <code>https://localhost:7398</code>
+                </p>
+                <p class="mb-0">
+                    <strong>Production:</strong> API déployée sur <code>https://nicolasquipaieapi-a6behmeyaahpc7c0.francecentral-01.azurewebsites.net</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Propositions depuis l'API
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary mb-3" @onclick="LoadProposalsFromApi" disabled="@isLoadingProposals">
+                        @if (isLoadingProposals)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        Charger les propositions
+                    </button>
+
+                    @if (apiProposals.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var proposal in apiProposals)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@proposal.Title</h6>
+                                        <small class="text-success">API ?</small>
+                                    </div>
+                                    <p class="mb-1">@proposal.Description</p>
+                                    <small class="text-muted">
+                                        Votes: @proposal.VotesFor Pour, @proposal.VotesAgainst Contre
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (!isLoadingProposals && hasTriedLoading)
+                    {
+                        <div class="text-muted">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Aucune proposition chargée ou erreur de connexion à l'API
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Test de vote via API
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (apiProposals.Any())
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Sélectionner une proposition:</label>
+                            <select class="form-select" @bind="selectedProposalId">
+                                <option value="0">-- Choisir une proposition --</option>
+                                @foreach (var proposal in apiProposals)
+                                {
+                                    <option value="@proposal.Id">@proposal.Title</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (selectedProposalId > 0)
+                        {
+                            <div class="btn-group w-100 mb-3" role="group">
+                                <button class="btn btn-outline-success" 
+                                        @onclick="() => TestVote(VoteType.For)" 
+                                        disabled="@isVoting">
+                                    @if (isVoting && pendingVoteType == VoteType.For)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    <i class="fas fa-thumbs-up me-1"></i>
+                                    Nicolas Approuve
+                                </button>
+                                <button class="btn btn-outline-danger" 
+                                        @onclick="() => TestVote(VoteType.Against)" 
+                                        disabled="@isVoting">
+                                    @if (isVoting && pendingVoteType == VoteType.Against)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    <i class="fas fa-thumbs-down me-1"></i>
+                                    Nicolas Refuse
+                                </button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(voteMessage))
+                        {
+                            <div class="alert @(voteSuccess ? "alert-success" : "alert-danger")">
+                                @voteMessage
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-muted">
+                            Chargez d'abord les propositions pour tester le vote.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Configuration des services
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Services disponibles:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>ApiProposalService (HTTP)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>ApiVotingService (HTTP)</li>
+                                <li><i class="fas fa-check text-warning me-2"></i>ProposalService (Base de données locale)</li>
+                                <li><i class="fas fa-check text-warning me-2"></i>VotingService (Base de données locale)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Endpoints API:</h6>
+                            <ul class="list-unstyled">
+                                <li><code>GET /api/proposals</code></li>
+                                <li><code>GET /api/proposals/trending</code></li>
+                                <li><code>GET /api/proposals/{id}</code></li>
+                                <li><code>POST /api/votes</code></li>
+                                <li><code>GET /api/categories</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ProposalDto> apiProposals = new();
+    private bool isLoadingProposals = false;
+    private bool hasTriedLoading = false;
+    private int selectedProposalId = 0;
+    private bool isVoting = false;
+    private VoteType? pendingVoteType;
+    private string voteMessage = "";
+    private bool voteSuccess = false;
+
+    private async Task LoadProposalsFromApi()
+    {
+        isLoadingProposals = true;
+        hasTriedLoading = true;
+        voteMessage = "";
+
+        try
+        {
+            var proposals = await ApiProposalService.GetActiveProposalsAsync(0, 10);
+            apiProposals = proposals.ToList();
+
+            if (apiProposals.Any())
+            {
+                Logger.LogInformation("Chargé {Count} propositions depuis l'API", apiProposals.Count);
+            }
+            else
+            {
+                Logger.LogWarning("Aucune proposition retournée par l'API");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erreur lors du chargement des propositions depuis l'API");
+            apiProposals.Clear();
+        }
+        finally
+        {
+            isLoadingProposals = false;
+        }
+    }
+
+    private async Task TestVote(VoteType voteType)
+    {
+        if (selectedProposalId <= 0) return;
+
+        isVoting = true;
+        pendingVoteType = voteType;
+        voteMessage = "";
+
+        try
+        {
+            var voteDto = new CreateVoteDto
+            {
+                ProposalId = selectedProposalId,
+                VoteType = voteType,
+                Comment = "Vote de test depuis l'interface web"
+            };
+
+            var success = await ApiVotingService.CastVoteAsync(voteDto);
+            
+            if (success)
+            {
+                voteMessage = $"Vote '{voteType}' envoyé avec succès via l'API !";
+                voteSuccess = true;
+                Logger.LogInformation("Vote envoyé avec succès pour la proposition {ProposalId}", selectedProposalId);
+                
+                // Recharger les propositions pour voir les nouveaux totaux
+                await LoadProposalsFromApi();
+            }
+            else
+            {
+                voteMessage = "Échec de l'envoi du vote via l'API.";
+                voteSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            voteMessage = $"Erreur lors du vote: {ex.Message}";
+            voteSuccess = false;
+            Logger.LogError(ex, "Erreur lors du test de vote via l'API");
+        }
+        finally
+        {
+            isVoting = false;
+            pendingVoteType = null;
+        }
+    }
+}

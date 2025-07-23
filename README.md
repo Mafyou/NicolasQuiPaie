@@ -1,10 +1,10 @@
 ﻿# Nicolas Qui Paie - Plateforme de Démocratie Souveraine Numérique
 
-![Nicolas Qui Paie](https://img.shields.io/badge/Nicolas-Qui%20Paie-blue) ![.NET 9](https://img.shields.io/badge/.NET-9-purple) ![Blazor](https://img.shields.io/badge/Blazor-Server-green)
+![Nicolas Qui Paie](https://img.shields.io/badge/Nicolas-Qui%20Paie-blue) ![.NET 9](https://img.shields.io/badge/.NET-9-purple) ![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-green) ![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-orange)
 
 ## 🇫🇷💰 Description
 
-**Nicolas Qui Paie** est une plateforme web innovante de démocratie participative numérique, inspirée du phénomène viral français. Elle permet aux citoyens de voter et débattre sur diverses propositions liées aux dépenses publiques et à la fiscalité française.
+**Nicolas Qui Paie** est une plateforme web innovante de démocratie participative numérique basée sur une **Clean Architecture** moderne. Elle permet aux citoyens de voter et débattre sur diverses propositions liées aux dépenses publiques et à la fiscalité française.
 
 ### 💡 Concept
 
@@ -14,171 +14,218 @@ Cette plateforme capitalise sur le mème viral "Nicolas Qui Paie" pour créer un
 - 📊 Visualiser en temps réel l'opinion publique
 - 🏆 Participer à une communauté engagée avec un système de badges
 
-## ⚙️ Architecture Technique
+## 🏗️ Architecture Technique
 
-### Backend
-- **Framework** : ASP.NET Core Blazor Server (.NET 9)
-- **Base de données** : Azure SQL Server / SQL Server LocalDB
-- **ORM** : Entity Framework Core
-- **Authentification** : ASP.NET Core Identity
-- **Temps réel** : SignalR
-- **Hébergement** : Azure Web App
+### Clean Architecture Implementation
 
-### Frontend
-- **UI Framework** : Blazor Server Components
-- **Design System** : Bootstrap 5 + CSS personnalisé
-- **Thématique** : Couleurs françaises (Bleu, Blanc, Rouge)
-- **Graphiques** : Chart.js
-- **Icons** : Font Awesome 6
+Le projet suit les principes de la **Clean Architecture** avec une séparation claire des responsabilités :
+
+```
+📁 NicolasQuiPaieData/
+├── 📄 Models/              # Entités du domaine
+├── 📄 DTOs/                # Objets de transfert de données
+└── 📄 Context/             # Contexte Entity Framework
+
+📁 NicolasQuiPaieAPI/
+├── 📁 Application/
+│   ├── 📄 Interfaces/      # Contrats des services et repositories
+│   ├── 📄 Services/        # Logique métier
+│   ├── 📄 Validators/      # Validation des données (FluentValidation)
+│   └── 📄 Mappings/        # Mappings AutoMapper
+├── 📁 Infrastructure/
+│   └── 📄 Repositories/    # Implémentation des repositories
+└── 📁 Presentation/
+    └── 📄 Endpoints/       # API minimale .NET 9
+
+📁 NicolasQuiPaieWebApp/
+├── 📄 Components/          # Composants Blazor WebAssembly
+├── 📄 Services/            # Services d'appel API
+└── 📄 Pages/               # Pages de l'application
+
+📁 Tests/
+├── 📁 NicolasQuiPaie.UnitTests/        # Tests unitaires (NUnit + Moq + Shouldly)
+└── 📁 NicolasQuiPaie.IntegrationTests/ # Tests d'intégration (WebApplicationFactory)
+```
+
+### Stack Technologique
+
+#### Backend API
+- **Framework** : ASP.NET Core 9 avec API minimale
+- **Architecture** : Clean Architecture + CQRS patterns
+- **Base de données** : SQL Server avec Entity Framework Core 9
+- **Authentification** : JWT Bearer tokens
+- **Validation** : FluentValidation
+- **Mapping** : AutoMapper
+- **Documentation** : OpenAPI/Swagger
+- **Logging** : Serilog
+
+#### Frontend Client
+- **Framework** : Blazor WebAssembly (.NET 9)
+- **Authentification** : MSAL (Microsoft Authentication Library)
+- **State Management** : Blazored.LocalStorage
 - **Temps réel** : SignalR Client
+- **HTTP Client** : System.Net.Http.Json
+- **Design System** : Bootstrap 5 + CSS personnalisé
+
+#### Tests & Qualité
+- **Tests Unitaires** : NUnit + Moq + Shouldly
+- **Tests d'Intégration** : WebApplicationFactory + TestContainers
+- **Couverture de code** : Coverlet
+- **CI/CD** : GitHub Actions (à venir)
 
 ## 🚀 Fonctionnalités Principales
 
-### 1. 🔐 Système d'Authentification Robuste
-- Inscription avec validation email
-- Connexion sécurisée
-- Profils utilisateurs personnalisables
+### 1. 🔐 Système d'Authentification Moderne
+- Authentification JWT sécurisée
+- Gestion des tokens avec MSAL
+- Profils utilisateurs avec niveaux fiscaux
 - **Système de badges Nicolas** :
   - 🥉 **Petit Nicolas** (Poids de vote : 1x)
   - 🥈 **Gros Nicolas** (Poids de vote : 2x)  
   - 🏆 **Nicolas Suprême** (Poids de vote : 3x)
 
-### 2. 🗳️ Plateforme de Vote Démocratique
-- **Création de propositions** : Interface intuitive pour soumettre des sujets
-- **Système de vote pondéré** : Votes avec poids selon le niveau fiscal
-- **Boutons thématiques** :
-  - ✅ "Nicolas Approuve"
-  - ❌ "Nicolas Refuse"
-- **Commentaires et débats** : Section de discussion complète
-- **Tendances** : Sujet qui buzzent le plus
+### 2. 🗳️ API de Vote Démocratique
+- **Endpoints RESTful** pour toutes les opérations
+- **Système de vote pondéré** basé sur le niveau fiscal
+- **Validation robuste** avec FluentValidation
+- **Commentaires et débats** avec threading
+- **Catégorisation** des propositions
 
-### 3. 📈 Dashboard "Nicolas Analytics"
-- **Baromètre du ras-le-bol national** : Indicateur visuel en temps réel
+### 3. 📈 Dashboard Analytics en Temps Réel
+- **API d'analytics** dédiée avec endpoints spécialisés
+- **Baromètre du ras-le-bol** en temps réel via SignalR
 - **Statistiques détaillées** :
   - Nombre de Nicolas inscrits
   - Votes exprimés total
   - Propositions actives
-  - Commentaires et débats
-- **Graphiques interactifs** :
-  - Tendances des votes (7 derniers jours)
-  - Répartition des niveaux Nicolas
-  - Catégories les plus actives
-- **Top Contributors** du mois
-- **Propositions tendances** (24h)
+  - Tendances des votes
+- **Graphiques interactifs** côté client
 
-### 4. 👥 Fonctionnalités Sociales
-- **Profils utilisateurs** complets avec statistiques
-- **Système de réputation** basé sur la participation
-- **Accomplissements et badges** de participation
-- **Partage social** avec hashtags #JeSuisNicolas
-- **Commentaires imbriqués** avec likes
+### 4. 🧪 Tests Complets
+- **Tests unitaires** avec isolation des dépendances (Moq)
+- **Tests d'intégration** avec base de données en mémoire
+- **Tests d'API** avec WebApplicationFactory
+- **Assertions expressives** avec Shouldly
 
-### 5. 🛡️ Sécurité et Modération
-- **Protection anti-spam** et limitation de votes
-- **Système de signalement** communautaire
-- **Modération des commentaires**
-- **Authentification sécurisée**
+## 📁 Structure Détaillée du Projet
 
-## 📁 Structure du Projet
+### Couche Data (NicolasQuiPaieData)
+```csharp
+// Modèles du domaine
+public class Proposal
+{
+    public int Id { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public ProposalStatus Status { get; set; }
+    // ... autres propriétés
+}
 
-```
-NicolasQuiPaieWeb/
-├── Components/
-│   ├── Layout/
-│   │   ├── MainLayout.razor      # Layout principal
-│   │   └── NavMenu.razor         # Navigation
-│   ├── Pages/
-│   │   ├── Home.razor           # Page d'accueil
-│   │   ├── Proposals.razor      # Liste des propositions
-│   │   ├── ProposalDetail.razor # Détail d'une proposition
-│   │   ├── CreateProposal.razor # Création de proposition
-│   │   ├── Profile.razor        # Profil utilisateur
-│   │   ├── Analytics.razor      # Dashboard analytics
-│   │   └── Error.razor          # Page d'erreur
-│   └── Shared/
-│       ├── ProposalCard.razor   # Carte de proposition
-│       ├── VotingComponent.razor # Composant de vote
-│       └── CommentCard.razor    # Carte de commentaire
-├── Data/
-│   ├── ApplicationDbContext.cs  # Contexte EF
-│   └── Models/                  # Modèles de données
-│       ├── ApplicationUser.cs
-│       ├── Proposal.cs
-│       ├── Vote.cs
-│       ├── Comment.cs
-│       └── Category.cs
-├── Services/
-│   ├── ProposalService.cs       # Service des propositions
-│   ├── VotingService.cs         # Service de vote
-│   └── AnalyticsService.cs      # Service d'analytics
-├── Hubs/
-│   └── VotingHub.cs            # Hub SignalR
-└── wwwroot/
-    ├── css/app.css             # Styles personnalisés
-    └── js/charts.js            # Scripts JavaScript
+// DTOs pour les transferts
+public class ProposalDto
+{
+    public int Id { get; set; }
+    public string Title { get; set; }
+    // ... propriétés calculées
+    public int TotalVotes => VotesFor + VotesAgainst;
+}
 ```
 
-## 🗄️ Modèle de Données
+### Couche Application (API/Application)
+```csharp
+// Services métier
+public interface IProposalService
+{
+    Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(...);
+    Task<ProposalDto> CreateProposalAsync(...);
+    // ...
+}
 
-### Tables Principales
-
-```sql
--- Utilisateurs avec niveaux fiscaux
-Users (Id, Username, Email, FiscalLevel, ReputationScore, CreatedAt)
-
--- Propositions de vote
-Proposals (Id, Title, Description, CategoryId, CreatedBy, Status, VotesFor, VotesAgainst)
-
--- Votes pondérés
-Votes (Id, UserId, ProposalId, VoteType, Weight, VotedAt)
-
--- Commentaires imbriqués
-Comments (Id, UserId, ProposalId, Content, ParentCommentId, LikesCount, CreatedAt)
-
--- Catégories organisées
-Categories (Id, Name, Description, IconClass, Color)
+// Repositories avec Unit of Work
+public interface IUnitOfWork
+{
+    IProposalRepository Proposals { get; }
+    IVoteRepository Votes { get; }
+    Task<int> SaveChangesAsync();
+}
 ```
 
-### Relations
-- **1:N** User → Proposals (un utilisateur peut créer plusieurs propositions)
-- **1:N** User → Votes (un utilisateur peut voter sur plusieurs propositions)
-- **1:1** User/Proposal → Vote (contrainte unique par proposition)
-- **1:N** Proposal → Comments (une proposition peut avoir plusieurs commentaires)
-- **1:N** Comment → Comment (commentaires imbriqués)
+### Couche Présentation (API/Presentation)
+```csharp
+// API minimale .NET 9
+public static void MapProposalEndpoints(this IEndpointRouteBuilder app)
+{
+    var group = app.MapGroup("/api/proposals").WithTags("Proposals");
+    
+    group.MapGet("/", async (IProposalService service) => 
+        Results.Ok(await service.GetActiveProposalsAsync()));
+    
+    group.MapPost("/", [Authorize] async (IProposalService service, CreateProposalDto dto) => 
+        Results.Created($"/api/proposals/{result.Id}", result));
+}
+```
 
-## 🎨 Design et UI/UX
+### Frontend Blazor WebAssembly
+```razor
+@* Composant de vote *@
+<div class="voting-component">
+    <button class="btn btn-success" @onclick="() => VoteAsync(VoteType.For)">
+        <i class="fas fa-thumbs-up"></i> Nicolas Approuve (@proposal.VotesFor)
+    </button>
+    <button class="btn btn-danger" @onclick="() => VoteAsync(VoteType.Against)">
+        <i class="fas fa-thumbs-down"></i> Nicolas Refuse (@proposal.VotesAgainst)
+    </button>
+</div>
 
-### Thématique Visuelle
-- **Couleurs principales** : Tricolore français (#002395, #ffffff, #ed2939)
-- **Palette étendue** : Bootstrap 5 avec personnalisations Nicolas
-- **Typographie** : Segoe UI, système fonts
-- **Icons** : Font Awesome 6 avec icônes thématiques
+@code {
+    private async Task VoteAsync(VoteType voteType)
+    {
+        var voteDto = new CreateVoteDto { ProposalId = proposal.Id, VoteType = voteType };
+        await VotingService.CastVoteAsync(voteDto);
+        await OnVoteChanged.InvokeAsync();
+    }
+}
+```
 
-### Composants Clés
-- **Baromètre du ras-le-bol** : Indicateur visuel avec needle animée
-- **Cartes de proposition** : Design cards avec hover effects
-- **Boutons de vote** : Thématiques "Nicolas Approuve/Refuse"
-- **Badges Nicolas** : Système de niveaux avec émojis
-- **Graphiques** : Chart.js avec thème Nicolas
+## 🧪 Tests et Qualité
 
-### Responsive Design
-- **Mobile-first** approach
-- **Breakpoints** Bootstrap 5 standards
-- **Touch-friendly** interfaces
-- **Progressive enhancement**
+### Tests Unitaires
+```csharp
+[Test]
+public async Task CreateProposalAsync_ShouldCreateProposal_WhenValidDataProvided()
+{
+    // Arrange
+    var createDto = new CreateProposalDto { Title = "Test", Description = "..." };
+    _mockRepository.Setup(x => x.AddAsync(It.IsAny<Proposal>())).ReturnsAsync(proposal);
+    
+    // Act
+    var result = await _proposalService.CreateProposalAsync(createDto, "user123");
+    
+    // Assert
+    result.ShouldNotBeNull();
+    result.Title.ShouldBe("Test");
+    _mockRepository.Verify(x => x.AddAsync(It.IsAny<Proposal>()), Times.Once);
+}
+```
 
-## ⚡ Fonctionnalités Temps Réel
-
-### SignalR Integration
-- **Mise à jour des votes** en temps réel
-- **Notifications** de nouveaux commentaires
-- **Statistiques live** sur le dashboard
-- **Présence utilisateur** (optionnel)
-
-### Groupes SignalR
-- `proposal_{id}` : Mises à jour d'une proposition spécifique
-- `global_updates` : Statistiques globales
-- Connexion/déconnexion automatique
+### Tests d'Intégration
+```csharp
+[Test]
+public async Task GetProposals_ShouldReturnOk_WithProposals()
+{
+    // Arrange
+    using var factory = new NicolasQuiPaieApiFactory();
+    using var client = factory.CreateClient();
+    
+    // Act
+    var response = await client.GetAsync("/api/proposals");
+    
+    // Assert
+    response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    var proposals = await response.Content.ReadFromJsonAsync<List<ProposalDto>>();
+    proposals.ShouldNotBeEmpty();
+}
+```
 
 ## 🚀 Installation et Déploiement
 
@@ -186,9 +233,10 @@ Categories (Id, Name, Description, IconClass, Color)
 - **.NET 9 SDK**
 - **SQL Server** ou **Azure SQL Database**
 - **Visual Studio 2022** ou **VS Code**
-- **Azure CLI** (pour déploiement)
+- **Node.js** (pour les outils frontend)
 
 ### Installation Locale
+
 1. **Cloner le repository**
    ```bash
    git clone https://github.com/votre-repo/nicolas-qui-paie.git
@@ -197,141 +245,196 @@ Categories (Id, Name, Description, IconClass, Color)
 
 2. **Configuration de la base de données**
    ```bash
-   # Modifier appsettings.json avec votre connection string
+   # Dans appsettings.json de l'API
+   cd NicolasQuiPaieAPI
    dotnet ef database update
    ```
 
-3. **Lancement de l'application**
+3. **Lancement de l'API**
    ```bash
-   cd NicolasQuiPaieWeb
+   cd NicolasQuiPaieAPI
    dotnet run
+   # API disponible sur https://localhost:7001
    ```
 
-4. **Accès** : https://localhost:5001
+4. **Lancement du client Blazor**
+   ```bash
+   cd NicolasQuiPaieWebApp
+   dotnet run
+   # Client disponible sur https://localhost:5001
+   ```
 
-### Déploiement Azure
-
-#### Option 1 : Via Azure CLI
+### Tests
 ```bash
-# Connexion à Azure
-az login
+# Tests unitaires
+cd NicolasQuiPaie.UnitTests
+dotnet test
 
-# Création du groupe de ressources
-az group create --name NicolasQuiPaieRG --location "France Central"
+# Tests d'intégration
+cd NicolasQuiPaie.IntegrationTests
+dotnet test
 
-# Déploiement de l'ARM template
-az deployment group create \
-  --resource-group NicolasQuiPaieRG \
-  --template-file azure/deploy.json \
-  --parameters @azure/parameters.json
+# Tous les tests avec couverture
+dotnet test --collect:"XPlat Code Coverage"
 ```
 
-#### Option 2 : Via GitHub Actions
-- Configuration automatique avec secrets Azure
-- Déploiement continu sur push main
-- Tests automatisés inclus
+### Configuration
 
-### Variables d'Environnement
+#### API (appsettings.json)
 ```json
 {
   "ConnectionStrings": {
     "DefaultConnection": "Server=...;Database=NicolasQuiPaieDb;..."
   },
-  "Identity": {
-    "RequireConfirmedAccount": false
+  "Jwt": {
+    "Key": "YourSecretKeyHere",
+    "Issuer": "NicolasQuiPaieAPI",
+    "Audience": "NicolasQuiPaieClient"
   }
 }
 ```
 
-## 🔥 Potentiel Viral et Business
-
-### Facteurs de Viralité
-- 📈 **Tendance existante** : Capitalise sur "Nicolas Qui Paie"
-- 🎯 **Besoin réel** : Expression démocratique hors élections
-- ⚡ **Interactivité forte** : Votes et débats temps réel
-- 🎮 **Gamification** : Badges et système de points
-- 📱 **Partage social** : Integration réseaux sociaux
-- ⏰ **Timing parfait** : Contexte politique français
-
-### Roadmap Future
-#### Phase 2 (3-6 mois)
-- **API publique** pour apps tierces
-- **Notifications push** mobiles
-- **Géolocalisation** pour votes régionaux
-- **Pétitions** populaires
-
-#### Phase 3 (6-12 mois)
-- **IA pour résumés** de débats
-- **Mode assemblée virtuelle** live
-- **Délégation de vote** numérique
-- **Intégration données fiscales** réelles
-
-### Monétisation (Optionnelle)
-- **Freemium** : Fonctionnalités avancées payantes
-- **Partenariats** : Organisations civiques
-- **Consulting** : Solutions pour collectivités
-- **API premium** : Accès données agrégées
-
-## 🧪 Tests et Qualité
-
-### Tests Unitaires
-```bash
-dotnet test
+#### Client Blazor (appsettings.json)
+```json
+{
+  "ApiBaseAddress": "https://localhost:7001",
+  "AzureAd": {
+    "Authority": "https://login.microsoftonline.com/your-tenant",
+    "ClientId": "your-client-id"
+  }
+}
 ```
 
-### Tests d'Intégration
-- **SignalR** : Tests de connexion temps réel
-- **Base de données** : Tests EF Core
-- **API** : Tests des endpoints
+## 📊 Endpoints API
 
-### Performance
-- **Benchmarks** : Temps de réponse < 200ms
-- **Concurrent users** : Support 1000+ utilisateurs
-- **Cache** : Stratégies de mise en cache
+### Propositions
+- `GET /api/propositions` - Liste des propositions actives
+- `GET /api/propositions/trending` - Propositions tendances
+- `GET /api/propositions/{id}` - Détail d'une proposition
+- `POST /api/propositions` - Créer une proposition (auth requis)
+- `PUT /api/propositions/{id}` - Modifier une proposition (auth requis)
+- `DELETE /api/propositions/{id}` - Supprimer une proposition (auth requis)
 
-## 🤝 Contribution
+### Votes
+- `POST /api/votes` - Voter (auth requis)
+- `GET /api/votes/proposal/{id}` - Votes d'une proposition
+- `GET /api/votes/user` - Votes de l'utilisateur (auth requis)
+- `DELETE /api/votes/proposal/{id}/user` - Supprimer son vote (auth requis)
 
-### Standards de Code
-- **C# conventions** : Microsoft guidelines
-- **Razor** : Clean component structure
-- **CSS** : BEM methodology
-- **JavaScript** : ES6+ modules
+### Analytics
+- `GET /api/analytics/global-stats` - Statistiques globales
+- `GET /api/analytics/voting-trends` - Tendances de vote
+- `GET /api/analytics/frustration-barometer` - Baromètre du ras-le-bol
 
-### Pull Requests
-1. Fork du repository
-2. Feature branch (`feature/nouvelle-fonctionnalite`)
-3. Tests ajoutés/mis à jour
-4. Documentation mise à jour
-5. Pull request avec description détaillée
+## 🔥 Innovations Techniques
+
+### API Minimale .NET 9
+- **Performance optimisée** avec des endpoints légers
+- **Documentation automatique** avec OpenAPI
+- **Validation intégrée** avec FluentValidation
+- **Authentification JWT** native
+
+### Clean Architecture Benefits
+- **Séparation des responsabilités** claire
+- **Testabilité** maximale avec injection de dépendances
+- **Maintenabilité** long terme
+- **Évolutivité** de l'architecture
+
+### Blazor WebAssembly Avantages
+- **Expérience utilisateur** native côté client
+- **Performance** optimisée avec WebAssembly
+- **Partage de code** entre client et serveur (.NET)
+- **SignalR** pour les mises à jour temps réel
+
+## 🧪 Stratégie de Tests
+
+### Pyramide de Tests
+1. **Tests Unitaires** (70%) - Logique métier isolée
+2. **Tests d'Intégration** (20%) - API et base de données
+3. **Tests E2E** (10%) - Parcours utilisateur complets
+
+### Outils de Qualité
+- **Code Coverage** avec Coverlet
+- **Analyse statique** avec SonarQube
+- **Performance** avec BenchmarkDotNet
+- **Sécurité** avec analyse OWASP
+
+## 🚀 Roadmap Technique
+
+### Phase 1 ✅ (Actuelle)
+- ✅ Clean Architecture avec API minimale
+- ✅ Blazor WebAssembly client
+- ✅ Tests unitaires et d'intégration
+- ✅ Authentification JWT
+- ✅ Documentation OpenAPI
+
+### Phase 2 (3-6 mois)
+- 🔄 **Microservices** avec conteneurisation Docker
+- 🔄 **CQRS + Event Sourcing** pour l'audit
+- 🔄 **Cache distribué** avec Redis
+- 🔄 **API Gateway** avec YARP
+- 🔄 **Monitoring** avec Application Insights
+
+### Phase 3 (6-12 mois)
+- 🔄 **Architecture hexagonale** complète
+- 🔄 **Event-driven architecture** avec Azure Service Bus
+- 🔄 **GraphQL** pour les requêtes flexibles
+- 🔄 **Machine Learning** pour recommandations
+- 🔄 **Progressive Web App** (PWA)
+
+## 🤝 Contribution et Standards
+
+### Standards de Développement
+- **C# Conventions** : Microsoft guidelines
+- **Clean Code** : SOLID principles
+- **Git Flow** : Feature branches + Pull Requests
+- **Code Review** : Obligatoire avant merge
+
+### Architecture Guidelines
+- **Dependency Inversion** : Toujours dépendre des abstractions
+- **Single Responsibility** : Une classe = une responsabilité
+- **Unit Testing** : Coverage minimum 80%
+- **API Design** : RESTful + OpenAPI documentation
+
+### Pull Requests Process
+1. **Fork** du repository
+2. **Feature branch** (`feature/nouvelle-fonctionnalite`)
+3. **Tests** ajoutés/mis à jour (obligatoire)
+4. **Documentation** mise à jour
+5. **Code Review** par l'équipe
+6. **Merge** après validation
 
 ## 📄 Licence
 
 Ce projet est sous licence **MIT** - voir [LICENSE.md](LICENSE.md)
 
-## 👥💻 Équipe
+## 👥💻 Équipe Technique
 
-- **Développement** : Équipe Nicolas
-- **Design** : UX/UI Nicolas
-- **DevOps** : Infrastructure Nicolas
+- **Architecture** : Clean Architecture + DDD patterns
+- **Backend** : .NET 9 + Entity Framework Core
+- **Frontend** : Blazor WebAssembly + SignalR
+- **DevOps** : Azure + GitHub Actions
+- **Tests** : NUnit + Moq + Shouldly
 
-## 📞 Support
+## 📞 Support et Communauté
 
-- **Email** : support@nicolasquipaie.fr
-- **Discord** : [Serveur Nicolas](https://discord.gg/nicolas)
+- **Documentation** : [Wiki GitHub](https://github.com/votre-repo/wiki)
 - **Issues** : [GitHub Issues](https://github.com/votre-repo/issues)
+- **Discussions** : [GitHub Discussions](https://github.com/votre-repo/discussions)
+- **Email** : support@nicolasquipaie.fr
 
 ---
 
-## 🎯 Objectifs 2024
+## 🎯 Métriques de Qualité 2024
 
-- 👥 **10 000** Nicolas inscrits
-- 🗳️ **100 000** votes exprimés
-- 💡 **1 000** propositions créées
-- 🔥 **Viralité** sur réseaux sociaux
-- 📺 **Couverture médiatique** nationale
+- 🧪 **Tests Coverage** : >80%
+- ⚡ **API Response Time** : <200ms
+- 🔒 **Security Score** : A+
+- 📈 **Performance Score** : >90
+- 🚀 **Uptime SLA** : 99.9%
 
 ---
 
-*"C'est Nicolas qui paie, mais c'est nous tous qui décidons !"* 🇫🇷💰
+*"Code propre, architecture solide, Nicolas qui paie mais développeurs qui gagnent !"* 🇫🇷💻
 
-![Made with ❤️ in France](https://img.shields.io/badge/Made%20with-❤️-red?label=Made%20in&color=blue&logo=france)
+![Made with ❤️ and Clean Architecture](https://img.shields.io/badge/Made%20with-❤️%20%26%20Clean%20Architecture-red)

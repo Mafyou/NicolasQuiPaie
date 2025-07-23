@@ -1,12 +1,10 @@
-@using NicolasQuiPaieWeb.Data.Models
-
 @if (User != null)
 {
     <div class="nicolas-avatar-component">
         <div class="nicolas-avatar @GetAvatarClass()">
-            @if (!string.IsNullOrEmpty(User.AvatarUrl))
+            @if (!string.IsNullOrEmpty(User.ProfileImageUrl))
             {
-                <img src="@User.AvatarUrl" alt="@User.DisplayName" class="nicolas-avatar-img @GetAvatarBorderClass()" />
+                <img src="@User.ProfileImageUrl" alt="@User.DisplayName" class="nicolas-avatar-img @GetAvatarBorderClass()" />
             }
             else
             {
@@ -30,7 +28,7 @@
 }
 
 @code {
-    [Parameter] public ApplicationUser? User { get; set; }
+    [Parameter] public UserDto? User { get; set; }
     [Parameter] public bool ShowInfo { get; set; } = true;
     [Parameter] public string Size { get; set; } = "medium"; // small, medium, large
 
@@ -51,6 +49,7 @@
         return User?.FiscalLevel switch
         {
             FiscalLevel.PetitNicolas => "??",
+            FiscalLevel.GrosMoyenNicolas => "??",
             FiscalLevel.GrosNicolas => "??", 
             FiscalLevel.NicolasSupreme => "??",
             _ => "??"
@@ -62,6 +61,7 @@
         return User?.FiscalLevel switch
         {
             FiscalLevel.PetitNicolas => "Petit Nicolas",
+            FiscalLevel.GrosMoyenNicolas => "Moyen Nicolas",
             FiscalLevel.GrosNicolas => "Gros Nicolas",
             FiscalLevel.NicolasSupreme => "Nicolas Suprême", 
             _ => "Petit Nicolas"
@@ -83,6 +83,7 @@
         return User?.FiscalLevel switch
         {
             FiscalLevel.PetitNicolas => "nicolas-avatar-petit",
+            FiscalLevel.GrosMoyenNicolas => "nicolas-avatar-moyen",
             FiscalLevel.GrosNicolas => "nicolas-avatar-gros",
             FiscalLevel.NicolasSupreme => "nicolas-avatar-supreme",
             _ => "nicolas-avatar-petit"
@@ -94,6 +95,7 @@
         return User?.FiscalLevel switch
         {
             FiscalLevel.PetitNicolas => "nicolas-level-badge-petit",
+            FiscalLevel.GrosMoyenNicolas => "nicolas-level-badge-moyen",
             FiscalLevel.GrosNicolas => "nicolas-level-badge-gros", 
             FiscalLevel.NicolasSupreme => "nicolas-level-badge-supreme",
             _ => "nicolas-level-badge-petit"
@@ -105,6 +107,7 @@
         return User?.FiscalLevel switch
         {
             FiscalLevel.PetitNicolas => "text-secondary",
+            FiscalLevel.GrosMoyenNicolas => "text-primary",
             FiscalLevel.GrosNicolas => "text-info",
             FiscalLevel.NicolasSupreme => "text-warning",
             _ => "text-secondary"

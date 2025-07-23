@@ -1,181 +1,63 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using NicolasQuiPaieWeb.Components;
-using NicolasQuiPaieWeb.Data;
-using NicolasQuiPaieWeb.Data.Models;
-using NicolasQuiPaieWeb.Services;
-using NicolasQuiPaieWeb.Hubs;
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-var builder = WebApplication.CreateBuilder(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+// Configure API Base URL with fallback
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7051";
 
-// Add Razor Pages support for Identity
-builder.Services.AddRazorPages();
-
-// Configure Entity Framework
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// Add DbContextFactory for resolving DbContext threading issues in Blazor components
-// Use a separate registration to avoid the scoped/singleton conflict
-builder.Services.AddSingleton<IDbContextFactory<ApplicationDbContext>>(provider =>
+// Configure HttpClient for API calls with timeout and base configuration
+builder.Services.AddScoped(sp => 
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-    optionsBuilder.UseSqlServer(connectionString);
+    var httpClient = new HttpClient 
+    { 
+        BaseAddress = new Uri(apiBaseUrl),
+        Timeout = TimeSpan.FromSeconds(30)
+    };
     
-    return new CustomDbContextFactory<ApplicationDbContext>(optionsBuilder.Options);
+    // Add default headers
+    httpClient.DefaultRequestHeaders.Add("User-Agent", "NicolasQuiPaieWeb/1.0");
+    
+    return httpClient;
 });
 
-// Configure Identity
-builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
-{
-    options.SignIn.RequireConfirmedAccount = false;
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 6;
-    options.Password.RequireNonAlphanumeric = false;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
-    options.User.RequireUniqueEmail = true;
-})
-.AddEntityFrameworkStores<ApplicationDbContext>();
+// Add Blazored LocalStorage for JWT token storage
+builder.Services.AddBlazoredLocalStorage();
 
-// Add SignalR
-builder.Services.AddSignalR();
+// Configure Authentication
+builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
-// Add custom services
+// Add API Services (direct HTTP clients) with error handling
+builder.Services.AddScoped<ApiProposalService>();
+builder.Services.AddScoped<ApiVotingService>();
+builder.Services.AddScoped<ApiCommentService>();
+builder.Services.AddScoped<ApiAnalyticsService>();
+
+// Add Client-side wrapper services (for backward compatibility)
 builder.Services.AddScoped<ProposalService>();
 builder.Services.AddScoped<VotingService>();
+builder.Services.AddScoped<CommentService>();
 builder.Services.AddScoped<AnalyticsService>();
-builder.Services.AddScoped<BadgeService>(); // Service d'évolution des badges
+builder.Services.AddScoped<BadgeService>();
 
-// Add email sender (no-op for demo)
-builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, NoOpEmailSender>();
+// Add health check service for API availability
+builder.Services.AddScoped<ApiHealthService>();
 
-// Add logging
-builder.Services.AddLogging();
+// Add logging with enhanced configuration
+builder.Services.AddLogging(logging =>
+{
+    logging.SetMinimumLevel(LogLevel.Information);
+    logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
+    logging.AddFilter("Microsoft.AspNetCore.Components.WebAssembly", LogLevel.Warning);
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    app.UseHsts();
-}
+// Add global error handler
+app.Services.GetRequiredService<ILoggerFactory>()
+    .CreateLogger("Startup")
+    .LogInformation("Nicolas Qui Paie Web Application Starting - API Base URL: {ApiBaseUrl}", apiBaseUrl);
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseAntiforgery();
-
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
-
-app.MapRazorPages();
-app.MapHub<VotingHub>("/votingHub");
-
-// Ensure database is created and seeded
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    try
-    {
-        context.Database.EnsureCreated();
-        
-        // Seed test user for development
-        await SeedTestUserAsync(userManager, logger);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Erreur lors de l'initialisation de la base de données");
-    }
-}
-
-app.Run();
-
-// Seed test user method
-static async Task SeedTestUserAsync(UserManager<ApplicationUser> userManager, ILogger logger)
-{
-    try
-    {
-        const string testEmail = "nicolas@test.fr";
-        const string testPassword = "Test123!";
-        
-        var existingUser = await userManager.FindByEmailAsync(testEmail);
-        
-        if (existingUser == null)
-        {
-            var testUser = new ApplicationUser
-            {
-                UserName = testEmail,
-                Email = testEmail,
-                EmailConfirmed = true,
-                DisplayName = "Nicolas Test",
-                FiscalLevel = FiscalLevel.PetitNicolas,
-                CreatedAt = DateTime.UtcNow,
-                ReputationScore = 0,
-                IsVerified = true,
-                Bio = "Utilisateur de test pour la plateforme Nicolas Qui Paie"
-            };
-
-            var result = await userManager.CreateAsync(testUser, testPassword);
-            
-            if (result.Succeeded)
-            {
-                logger.LogInformation($"Utilisateur de test créé avec succès: {testEmail}");
-            }
-            else
-            {
-                logger.LogWarning($"Échec de création de l'utilisateur de test: {string.Join(", ", result.Errors.Select(e => e.Description))}");
-            }
-        }
-        else
-        {
-            logger.LogInformation($"Utilisateur de test existe déjà: {testEmail}");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Erreur lors de la création de l'utilisateur de test");
-    }
-}
-
-// Custom DbContextFactory implementation to avoid DI conflicts
-public class CustomDbContextFactory<TContext> : IDbContextFactory<TContext> where TContext : DbContext
-{
-    private readonly DbContextOptions<TContext> _options;
-
-    public CustomDbContextFactory(DbContextOptions<TContext> options)
-    {
-        _options = options;
-    }
-
-    public TContext CreateDbContext()
-    {
-        return (TContext)Activator.CreateInstance(typeof(TContext), _options)!;
-    }
-}
-
-// No-op email sender for demo purposes
-public class NoOpEmailSender : Microsoft.AspNetCore.Identity.UI.Services.IEmailSender
-{
-    public Task SendEmailAsync(string email, string subject, string htmlMessage)
-    {
-        // For demo purposes, we'll just log the email
-        Console.WriteLine($"Email to {email}: {subject}");
-        return Task.CompletedTask;
-    }
-}
+await app.RunAsync();

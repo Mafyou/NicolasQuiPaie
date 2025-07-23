@@ -1,5 +1,4 @@
 ﻿@page "/analytics"
-@using NicolasQuiPaieWeb.Data.DTOs
 @inject AnalyticsService AnalyticsService
 @inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
@@ -355,24 +354,24 @@
         }
     }
 
-    private string GetNicolasLevelLabel(FiscalLevel level)
+    private string GetNicolasLevelLabel(NicolasQuiPaieData.DTOs.FiscalLevel level)
     {
         return level switch
         {
-            FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
-            FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
-            FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
+            NicolasQuiPaieData.DTOs.FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
+            NicolasQuiPaieData.DTOs.FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
+            NicolasQuiPaieData.DTOs.FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
             _ => "Nicolas"
         };
     }
 
-    private string GetLevelColor(FiscalLevel level)
+    private string GetLevelColor(NicolasQuiPaieData.DTOs.FiscalLevel level)
     {
         return level switch
         {
-            FiscalLevel.PetitNicolas => "bg-secondary",
-            FiscalLevel.GrosNicolas => "bg-info",
-            FiscalLevel.NicolasSupreme => "bg-warning",
+            NicolasQuiPaieData.DTOs.FiscalLevel.PetitNicolas => "bg-secondary",
+            NicolasQuiPaieData.DTOs.FiscalLevel.GrosNicolas => "bg-info",
+            NicolasQuiPaieData.DTOs.FiscalLevel.NicolasSupreme => "bg-warning",
             _ => "bg-primary"
         };
     }

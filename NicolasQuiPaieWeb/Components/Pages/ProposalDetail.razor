@@ -1,7 +1,7 @@
 @page "/proposal/{id:int}"
-@using NicolasQuiPaieWeb.Data.DTOs
 @inject ProposalService ProposalService
 @inject VotingService VotingService
+@inject CommentService CommentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
@@ -49,9 +49,9 @@ else
                     <div class="card-body">
                         <!-- Category and Status -->
                         <div class="d-flex align-items-center mb-3">
-                            <span class="badge rounded-pill me-2" style="background-color: @proposal.Category.Color; color: white;">
-                                <i class="@proposal.Category.IconClass me-1"></i>
-                                @proposal.Category.Name
+                            <span class="badge rounded-pill me-2" style="background-color: @proposal.CategoryColor; color: white;">
+                                <i class="@proposal.CategoryIcon me-1"></i>
+                                @proposal.CategoryName
                             </span>
                             @if (proposal.IsFeatured)
                             {
@@ -75,7 +75,7 @@ else
                         <div class="d-flex align-items-center mb-4">
                             <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
                             <div>
-                                <div class="fw-bold">@proposal.CreatedBy.DisplayName</div>
+                                <div class="fw-bold">@proposal.CreatedByDisplayName</div>
                                 <small class="text-muted">
                                     Publié le @proposal.CreatedAt.ToString("dd MMMM yyyy à HH:mm")
                                     • @proposal.ViewsCount vues
@@ -126,7 +126,7 @@ else
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-comments me-2"></i>
-                            Commentaires (@proposal.Comments.Count())
+                            Commentaires (@comments.Count())
                         </h5>
                         <button class="btn btn-outline-primary btn-sm" @onclick="ToggleCommentForm">
                             <i class="fas fa-plus me-1"></i>
@@ -165,27 +165,35 @@ else
                                 <NotAuthorized>
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <a href="/Identity/Account/Login">Connectez-vous</a> pour commenter cette proposition.
+                                        <a href="/login">Connectez-vous</a> pour commenter cette proposition.
                                     </div>
                                 </NotAuthorized>
                             </AuthorizeView>
                         }
 
                         <!-- Comments List -->
-                        @if (proposal.Comments.Any())
+                        @if (comments.Any())
                         {
                             <div class="comments-list">
-                                @foreach (var comment in proposal.Comments.Where(c => !c.IsDeleted && c.ParentCommentId == null).OrderByDescending(c => c.CreatedAt))
+                                @foreach (var comment in comments.Where(c => !c.IsDeleted && c.ParentCommentId == null).OrderByDescending(c => c.CreatedAt))
                                 {
                                     <NicolasQuiPaieWeb.Components.Shared.CommentCard Comment="comment" />
                                 }
                             </div>
                         }
-                        else
+                        else if (!isLoadingComments)
                         {
                             <div class="text-center py-4">
                                 <i class="fas fa-comment-slash fa-2x text-muted mb-2"></i>
                                 <p class="text-muted">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Chargement des commentaires...</span>
+                                </div>
                             </div>
                         }
                     </div>
@@ -256,9 +264,11 @@ else
 @code {
     [Parameter] public int Id { get; set; }
 
-    private Proposal? proposal;
+    private ProposalDto? proposal;
     private IEnumerable<ProposalDto> relatedProposals = new List<ProposalDto>();
+    private IEnumerable<CommentDto> comments = new List<CommentDto>();
     private bool isLoading = true;
+    private bool isLoadingComments = false;
     private bool showCommentForm = false;
     private string newCommentContent = "";
     private bool isSubmittingComment = false;
@@ -267,6 +277,7 @@ else
     {
         await LoadProposal();
         await LoadRelatedProposals();
+        await LoadComments();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -275,6 +286,7 @@ else
         {
             await LoadProposal();
             await LoadRelatedProposals();
+            await LoadComments();
         }
     }
 
@@ -283,7 +295,7 @@ else
         isLoading = true;
         try
         {
-            proposal = await ProposalService.GetProposalByIdAsync(Id);
+            proposal = await ProposalService.GetProposalDtoByIdAsync(Id);
             if (proposal != null)
             {
                 await ProposalService.IncrementViewsAsync(Id);
@@ -315,6 +327,28 @@ else
         }
     }
 
+    private async Task LoadComments()
+    {
+        if (proposal != null)
+        {
+            isLoadingComments = true;
+            try
+            {
+                comments = await CommentService.GetCommentsForProposalAsync(proposal.Id);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading comments: {ex.Message}");
+                comments = new List<CommentDto>();
+            }
+            finally
+            {
+                isLoadingComments = false;
+                StateHasChanged();
+            }
+        }
+    }
+
     private void ToggleCommentForm()
     {
         showCommentForm = !showCommentForm;
@@ -326,26 +360,56 @@ else
 
     private async Task SubmitComment()
     {
-        // This would need a CommentService implementation
-        // For now, just simulate the submission
+        if (string.IsNullOrWhiteSpace(newCommentContent) || proposal == null) return;
+
         isSubmittingComment = true;
-        await Task.Delay(1000); // Simulate API call
-        newCommentContent = "";
-        showCommentForm = false;
-        isSubmittingComment = false;
-        StateHasChanged();
+        
+        try
+        {
+            var createDto = new CreateCommentDto
+            {
+                Content = newCommentContent.Trim(),
+                ProposalId = proposal.Id,
+                ParentCommentId = null
+            };
+
+            var createdComment = await CommentService.CreateCommentAsync(createDto);
+            
+            if (createdComment != null)
+            {
+                // Reload comments to show the new one
+                await LoadComments();
+                newCommentContent = "";
+                showCommentForm = false;
+            }
+            else
+            {
+                // Show error message
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la publication du commentaire.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error submitting comment: {ex.Message}");
+            await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la publication du commentaire.");
+        }
+        finally
+        {
+            isSubmittingComment = false;
+            StateHasChanged();
+        }
     }
 
-    private async Task OnVoteChanged(Vote? vote)
+    private async Task OnVoteChanged(VoteDto? vote)
     {
         // Refresh proposal data to get updated vote counts
         if (proposal != null)
         {
-            var updatedProposal = await ProposalService.GetProposalByIdAsync(proposal.Id);
+            var updatedProposal = await ProposalService.GetProposalDtoByIdAsync(proposal.Id);
             if (updatedProposal != null)
             {
-                proposal.VotesFor = updatedProposal.VotesFor;
-                proposal.VotesAgainst = updatedProposal.VotesAgainst;
+                // Update the entire proposal reference since ProposalDto is immutable
+                proposal = updatedProposal;
                 StateHasChanged();
             }
         }

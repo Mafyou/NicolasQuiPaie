@@ -1,4 +1,6 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CommentService CommentService
+@inject IJSRuntime JSRuntime
 
 <div class="comment-card mb-3">
     <div class="d-flex">
@@ -12,8 +14,8 @@
             <!-- Header -->
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div>
-                    <strong class="me-2">@Comment.User.DisplayName</strong>
-                    <span class="nicolas-level-badge">@GetNicolasBadge(Comment.User.FiscalLevel)</span>
+                    <strong class="me-2">@Comment.UserDisplayName</strong>
+                    <span class="nicolas-level-badge">@GetNicolasBadge(FiscalLevel.PetitNicolas)</span>
                     <small class="text-muted ms-2">
                         @Comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")
                     </small>
@@ -43,7 +45,7 @@
                                 {
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <button class="dropdown-item text-danger">
+                                        <button class="dropdown-item text-danger" @onclick="DeleteComment">
                                             <i class="fas fa-trash me-2"></i>Supprimer
                                         </button>
                                     </li>
@@ -64,9 +66,17 @@
                 <div class="d-flex align-items-center gap-3">
                     <!-- Likes -->
                     <button class="btn btn-sm btn-outline-danger @(userLikedComment ? "active" : "")" 
-                            @onclick="LikeComment">
-                        <i class="fas fa-heart me-1"></i>
-                        @Comment.LikesCount
+                            @onclick="LikeComment"
+                            disabled="@isLiking">
+                        @if (isLiking)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        else
+                        {
+                            <i class="fas fa-heart me-1"></i>
+                        }
+                        @currentLikesCount
                     </button>
                     
                     <!-- Reply Button -->
@@ -76,11 +86,11 @@
                     </button>
                     
                     <!-- Replies Count -->
-                    @if (Comment.Replies.Any())
+                    @if (Comment.Replies.Count > 0)
                     {
                         <span class="text-muted">
                             <i class="fas fa-comments me-1"></i>
-                            @Comment.Replies.Count() réponse(s)
+                            @Comment.Replies.Count réponse(s)
                         </span>
                     }
                 </div>
@@ -117,55 +127,48 @@
                     <NotAuthorized>
                         <div class="mt-3">
                             <small class="text-muted">
-                                <a href="/Identity/Account/Login">Connectez-vous</a> pour répondre à ce commentaire.
+                                <a href="/login">Connectez-vous</a> pour répondre à ce commentaire.
                             </small>
                         </div>
                     </NotAuthorized>
                 </AuthorizeView>
             }
             
-            <!-- Replies -->
-            @if (Comment.Replies.Any() && showReplies)
+            <!-- Nested Replies -->
+            @if (Comment.Replies.Count > 0)
             {
-                <div class="replies mt-3 ms-3 border-start ps-3">
-                    @foreach (var reply in Comment.Replies.Where(r => !r.IsDeleted).OrderBy(r => r.CreatedAt))
+                <div class="mt-3 ps-3 border-start">
+                    @foreach (var reply in Comment.Replies)
                     {
-                        <NicolasQuiPaieWeb.Components.Shared.CommentCard Comment="reply" IsReply="true" />
+                        <CommentCard Comment="reply" IsReply="true" OnCommentChanged="OnCommentChanged" />
                     }
                 </div>
-            }
-            
-            <!-- Show/Hide Replies Toggle -->
-            @if (Comment.Replies.Any() && !IsReply)
-            {
-                <button class="btn btn-sm btn-link text-primary p-0 mt-2" @onclick="ToggleReplies">
-                    @if (showReplies)
-                    {
-                        <i class="fas fa-chevron-up me-1"></i>@GetHideRepliesText()
-                    }
-                    else
-                    {
-                        <i class="fas fa-chevron-down me-1"></i>@GetShowRepliesText()
-                    }
-                </button>
             }
         </div>
     </div>
 </div>
 
 @code {
-    [Parameter] public Comment Comment { get; set; } = null!;
+    [Parameter] public CommentDto Comment { get; set; } = null!;
     [Parameter] public bool IsReply { get; set; } = false;
+    [Parameter] public EventCallback<CommentDto> OnCommentChanged { get; set; }
 
     private bool userLikedComment = false;
     private bool showReplyForm = false;
-    private bool showReplies = false;
     private string replyContent = "";
     private bool isSubmittingReply = false;
+    private bool isLiking = false;
+    private int currentLikesCount;
 
     protected override async Task OnInitializedAsync()
     {
+        currentLikesCount = Comment.LikesCount;
         await CheckUserLike();
+    }
+
+    protected override void OnParametersSet()
+    {
+        currentLikesCount = Comment.LikesCount;
     }
 
     private async Task CheckUserLike()
@@ -176,7 +179,8 @@
             var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                userLikedComment = Comment.Likes.Any(l => l.UserId == userId);
+                // TODO: Check if user liked comment via API when implemented
+                userLikedComment = false; // Placeholder
             }
         }
     }
@@ -186,15 +190,53 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
         {
-            // Redirect to login or show message
+            await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour aimer un commentaire");
             return;
         }
 
-        // This would need a CommentService implementation
-        // For now, just toggle the UI state
-        userLikedComment = !userLikedComment;
-        Comment.LikesCount += userLikedComment ? 1 : -1;
+        isLiking = true;
         StateHasChanged();
+
+        try
+        {
+            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                // TODO: Call API to like/unlike comment when endpoints are available
+                // For now, simulate the API call and update local state
+                await Task.Delay(500); // Simulate network delay
+                
+                var wasLiked = userLikedComment;
+                userLikedComment = !userLikedComment;
+                currentLikesCount += userLikedComment ? 1 : -1;
+                
+                // Ensure likes count doesn't go below 0
+                currentLikesCount = Math.Max(0, currentLikesCount);
+                
+                // TODO: Replace with actual API call
+                // var updatedComment = userLikedComment 
+                //     ? await CommentService.LikeCommentAsync(Comment.Id, userId)
+                //     : await CommentService.UnlikeCommentAsync(Comment.Id, userId);
+                // 
+                // if (updatedComment is not null)
+                // {
+                //     await OnCommentChanged.InvokeAsync(updatedComment);
+                // }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de l'action: {ex.Message}");
+            // Revert state on error
+            userLikedComment = !userLikedComment;
+            currentLikesCount += userLikedComment ? 1 : -1;
+            currentLikesCount = Math.Max(0, currentLikesCount);
+        }
+        finally
+        {
+            isLiking = false;
+            StateHasChanged();
+        }
     }
 
     private void ToggleReplyForm()
@@ -206,45 +248,99 @@
         }
     }
 
-    private void ToggleReplies()
-    {
-        showReplies = !showReplies;
-    }
-
     private async Task SubmitReply()
     {
         if (string.IsNullOrWhiteSpace(replyContent)) return;
 
-        isSubmittingReply = true;
-        
-        // This would need a CommentService implementation
-        // For now, just simulate the submission
-        await Task.Delay(1000);
-        
-        replyContent = "";
-        showReplyForm = false;
-        isSubmittingReply = false;
-        StateHasChanged();
-    }
-
-    private string GetNicolasBadge(FiscalLevel level)
-    {
-        return level switch
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
         {
-            FiscalLevel.PetitNicolas => "?? Petit Nicolas",
-            FiscalLevel.GrosNicolas => "?? Gros Nicolas",
-            FiscalLevel.NicolasSupreme => "?? Nicolas Suprême",
-            _ => "?? Petit Nicolas"
-        };
+            await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour répondre");
+            return;
+        }
+
+        isSubmittingReply = true;
+        StateHasChanged();
+
+        try
+        {
+            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var createReplyDto = new CreateCommentDto
+                {
+                    Content = replyContent.Trim(),
+                    ProposalId = Comment.ProposalId,
+                    ParentCommentId = Comment.Id
+                };
+
+                var newReply = await CommentService.CreateCommentAsync(createReplyDto);
+                
+                if (newReply is not null)
+                {
+                    // Create updated comment with new reply
+                    var updatedReplies = Comment.Replies.Append(newReply).ToList();
+                    var updatedComment = Comment with { Replies = updatedReplies };
+                    
+                    await OnCommentChanged.InvokeAsync(updatedComment);
+                    
+                    replyContent = "";
+                    showReplyForm = false;
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la création de la réponse");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de la soumission: {ex.Message}");
+        }
+        finally
+        {
+            isSubmittingReply = false;
+            StateHasChanged();
+        }
     }
 
-    private string GetHideRepliesText()
+    private async Task DeleteComment()
     {
-        return "Masquer les réponses";
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true) return;
+
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId != Comment.UserId) return;
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Êtes-vous sûr de vouloir supprimer ce commentaire ?");
+        if (!confirmed) return;
+
+        try
+        {
+            var success = await CommentService.DeleteCommentAsync(Comment.Id);
+            if (success)
+            {
+                // Create updated comment marked as deleted
+                var deletedComment = Comment with { IsDeleted = true };
+                await OnCommentChanged.InvokeAsync(deletedComment);
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la suppression du commentaire");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Erreur lors de la suppression: {ex.Message}");
+        }
     }
 
-    private string GetShowRepliesText()
+    private static string GetNicolasBadge(FiscalLevel level) => level switch
     {
-        return $"Voir les {Comment.Replies.Count()} réponse(s)";
-    }
+        FiscalLevel.PetitNicolas => "??? Petit Nicolas",
+        FiscalLevel.GrosMoyenNicolas => "?? Moyen Nicolas",
+        FiscalLevel.GrosNicolas => "?? Gros Nicolas",
+        FiscalLevel.NicolasSupreme => "?? Nicolas Suprême",
+        _ => "??? Petit Nicolas"
+    };
 }
