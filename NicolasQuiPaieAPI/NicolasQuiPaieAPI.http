@@ -1,0 +1,6 @@
+@NicolasQuiPaieAPI_HostAddress = http://localhost:5169
+
+GET {{NicolasQuiPaieAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
