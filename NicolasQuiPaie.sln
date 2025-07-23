@@ -3,31 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.36310.24
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieWeb", "NicolasQuiPaieWeb\NicolasQuiPaieWeb.csproj", "{C193BBAD-444B-4F3D-A6CF-3B43DC32F4BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieWeb", "src\Front\NicolasQuiPaieWeb\NicolasQuiPaieWeb.csproj", "{C193BBAD-444B-4F3D-A6CF-3B43DC32F4BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAPI", "NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj", "{490DF69C-7912-4B26-BDE3-44F5615A5791}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAPI", "src\Back\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj", "{490DF69C-7912-4B26-BDE3-44F5615A5791}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieData", "NicolasQuiPaieData\NicolasQuiPaieData.csproj", "{6631412E-1347-462B-ACD8-AC8D6CCF6C59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieData", "src\Shared\NicolasQuiPaieData\NicolasQuiPaieData.csproj", "{6631412E-1347-462B-ACD8-AC8D6CCF6C59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.AppHost", "NicolasQuiPaieAspire\NicolasQuiPaieAspire.AppHost\NicolasQuiPaieAspire.AppHost.csproj", "{06CE4258-F9A6-4344-AFFD-448CD80C5583}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.AppHost", "src\Front\NicolasQuiPaieAspire\NicolasQuiPaieAspire.AppHost\NicolasQuiPaieAspire.AppHost.csproj", "{06CE4258-F9A6-4344-AFFD-448CD80C5583}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.ServiceDefaults", "NicolasQuiPaieAspire\NicolasQuiPaieAspire.ServiceDefaults\NicolasQuiPaieAspire.ServiceDefaults.csproj", "{7EB2F3AB-023E-FFA5-ECBE-1BAB281ABEC1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.ServiceDefaults", "src\Front\NicolasQuiPaieAspire\NicolasQuiPaieAspire.ServiceDefaults\NicolasQuiPaieAspire.ServiceDefaults.csproj", "{7EB2F3AB-023E-FFA5-ECBE-1BAB281ABEC1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.Tests", "NicolasQuiPaieAspire\NicolasQuiPaieAspire.Tests\NicolasQuiPaieAspire.Tests.csproj", "{9FA368FA-D74B-A52E-A1D9-7CCE0491218E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAspire.Tests", "src\Front\NicolasQuiPaieAspire\NicolasQuiPaieAspire.Tests\NicolasQuiPaieAspire.Tests.csproj", "{9FA368FA-D74B-A52E-A1D9-7CCE0491218E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Front", "Front", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7C4567F1-694E-4213-BBB6-4950309F1A70}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Misc", "Misc", "{AC1C596F-D1B7-48C6-96F1-776C57B9661B}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Back", "Back", "{AC1C596F-D1B7-48C6-96F1-776C57B9661B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAPI.Infrastructure", "NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj", "{0CA38BB1-6123-44F0-AB44-123EC2F3F70E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaieAPI.Infrastructure", "src\Back\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj", "{0CA38BB1-6123-44F0-AB44-123EC2F3F70E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaie.UnitTests", "NicolasQuiPaie.UnitTests\NicolasQuiPaie.UnitTests.csproj", "{7C088BA7-02E9-4257-8F90-D0AF9D29B076}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaie.UnitTests", "src\Tests\NicolasQuiPaie.UnitTests\NicolasQuiPaie.UnitTests.csproj", "{7C088BA7-02E9-4257-8F90-D0AF9D29B076}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaie.IntegrationTests", "NicolasQuiPaie.IntegrationTests\NicolasQuiPaie.IntegrationTests.csproj", "{F87A2085-E2D1-4204-B0DD-0F37723D793D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaie.IntegrationTests", "src\Tests\NicolasQuiPaie.IntegrationTests\NicolasQuiPaie.IntegrationTests.csproj", "{F87A2085-E2D1-4204-B0DD-0F37723D793D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NicolasQuiPaie.Tests", "NicolasQuiPaie.Tests\NicolasQuiPaie.Tests.csproj", "{E163E658-608C-42B0-9CE8-FB9E45B00F96}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{77DEEBFF-009D-42FB-9BEF-99A8120822FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,33 +147,20 @@ Global
 		{F87A2085-E2D1-4204-B0DD-0F37723D793D}.Release|x64.Build.0 = Release|Any CPU
 		{F87A2085-E2D1-4204-B0DD-0F37723D793D}.Release|x86.ActiveCfg = Release|Any CPU
 		{F87A2085-E2D1-4204-B0DD-0F37723D793D}.Release|x86.Build.0 = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|x64.Build.0 = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Debug|x86.Build.0 = Debug|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|x64.ActiveCfg = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|x64.Build.0 = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|x86.ActiveCfg = Release|Any CPU
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C193BBAD-444B-4F3D-A6CF-3B43DC32F4BE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{490DF69C-7912-4B26-BDE3-44F5615A5791} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
-		{6631412E-1347-462B-ACD8-AC8D6CCF6C59} = {AC1C596F-D1B7-48C6-96F1-776C57B9661B}
+		{490DF69C-7912-4B26-BDE3-44F5615A5791} = {AC1C596F-D1B7-48C6-96F1-776C57B9661B}
+		{6631412E-1347-462B-ACD8-AC8D6CCF6C59} = {77DEEBFF-009D-42FB-9BEF-99A8120822FC}
 		{06CE4258-F9A6-4344-AFFD-448CD80C5583} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{7EB2F3AB-023E-FFA5-ECBE-1BAB281ABEC1} = {AC1C596F-D1B7-48C6-96F1-776C57B9661B}
 		{9FA368FA-D74B-A52E-A1D9-7CCE0491218E} = {7C4567F1-694E-4213-BBB6-4950309F1A70}
 		{0CA38BB1-6123-44F0-AB44-123EC2F3F70E} = {AC1C596F-D1B7-48C6-96F1-776C57B9661B}
 		{7C088BA7-02E9-4257-8F90-D0AF9D29B076} = {7C4567F1-694E-4213-BBB6-4950309F1A70}
 		{F87A2085-E2D1-4204-B0DD-0F37723D793D} = {7C4567F1-694E-4213-BBB6-4950309F1A70}
-		{E163E658-608C-42B0-9CE8-FB9E45B00F96} = {7C4567F1-694E-4213-BBB6-4950309F1A70}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AD73E1BE-8B48-4313-915D-73843F58AC34}
