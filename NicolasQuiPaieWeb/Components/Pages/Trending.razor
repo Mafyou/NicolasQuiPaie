@@ -1,0 +1,532 @@
+@page "/trending"
+@using NicolasQuiPaieWeb.Data.DTOs
+@inject AnalyticsService AnalyticsService
+@inject ProposalService ProposalService
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<PageTitle>Trending - Nicolas Qui Paie</PageTitle>
+
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <div class="trending-header">
+                <h1 class="display-4 fw-bold">
+                    <i class="fas fa-fire text-warning me-3"></i>
+                    <span class="trending-text">Trending Nicolas</span>
+                </h1>
+                <p class="lead text-muted">Les propositions qui font buzz dans la communauté Nicolas</p>
+                <div class="trending-indicator">
+                    <span class="badge bg-danger fs-6 pulse-animation">
+                        <i class="fas fa-chart-line me-1"></i>
+                        EN DIRECT
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">Période d'analyse</h5>
+                            <small class="text-muted">Sélectionnez la période pour voir les tendances</small>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="timeFilter" id="1h" @onchange="() => ChangeTimeFilter(1)" checked="@(selectedHours == 1)">
+                            <label class="btn btn-outline-primary" for="1h">1h</label>
+
+                            <input type="radio" class="btn-check" name="timeFilter" id="6h" @onchange="() => ChangeTimeFilter(6)" checked="@(selectedHours == 6)">
+                            <label class="btn btn-outline-primary" for="6h">6h</label>
+
+                            <input type="radio" class="btn-check" name="timeFilter" id="24h" @onchange="() => ChangeTimeFilter(24)" checked="@(selectedHours == 24)">
+                            <label class="btn btn-outline-primary" for="24h">24h</label>
+
+                            <input type="radio" class="btn-check" name="timeFilter" id="7d" @onchange="() => ChangeTimeFilter(168)" checked="@(selectedHours == 168)">
+                            <label class="btn btn-outline-primary" for="7d">7j</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Chargement des tendances...</span>
+            </div>
+            <p class="mt-3 text-muted">Analyse des tendances en cours...</p>
+        </div>
+    }
+    else
+    {
+        <!-- Quick Stats -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm trending-stat-card">
+                    <div class="card-body text-center">
+                        <div class="trending-stat-icon mb-3">
+                            <i class="fas fa-rocket fa-2x text-danger"></i>
+                        </div>
+                        <h3 class="fw-bold text-danger">@GetTotalTrendingCount()</h3>
+                        <p class="text-muted mb-0">Propositions hot</p>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            @GetPeriodText()
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm trending-stat-card">
+                    <div class="card-body text-center">
+                        <div class="trending-stat-icon mb-3">
+                            <i class="fas fa-vote-yea fa-2x text-success"></i>
+                        </div>
+                        <h3 class="fw-bold text-success">@GetTotalRecentVotes()</h3>
+                        <p class="text-muted mb-0">Votes récents</p>
+                        <small class="text-info">
+                            <i class="fas fa-clock me-1"></i>
+                            @GetPeriodText()
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm trending-stat-card">
+                    <div class="card-body text-center">
+                        <div class="trending-stat-icon mb-3">
+                            <i class="fas fa-comments fa-2x text-info"></i>
+                        </div>
+                        <h3 class="fw-bold text-info">@GetTotalRecentComments()</h3>
+                        <p class="text-muted mb-0">Nouveaux débats</p>
+                        <small class="text-warning">
+                            <i class="fas fa-fire me-1"></i>
+                            Très actif
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm trending-stat-card">
+                    <div class="card-body text-center">
+                        <div class="trending-stat-icon mb-3">
+                            <i class="fas fa-trophy fa-2x text-warning"></i>
+                        </div>
+                        <h3 class="fw-bold text-warning">@GetTopTrendScore()</h3>
+                        <p class="text-muted mb-0">Score max</p>
+                        <small class="text-danger">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Explosif !
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Trending (Podium) -->
+        @if (trendingProposals?.Take(3)?.Any() == true)
+        {
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h2 class="fw-bold mb-4 text-center">
+                        <i class="fas fa-medal text-warning me-2"></i>
+                        Podium des Trending Nicolas
+                    </h2>
+                    
+                    <div class="podium-container">
+                        <div class="row justify-content-center">
+                            @foreach (var (trending, index) in trendingProposals.Take(3).Select((t, i) => (t, i)))
+                            {
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="podium-card position-relative @GetPodiumClass(index)">
+                                        <!-- Podium Badge -->
+                                        <div class="podium-badge">
+                                            @GetPodiumIcon(index)
+                                        </div>
+                                        
+                                        <!-- Trending Score -->
+                                        <div class="trending-score-badge">
+                                            <span class="badge bg-warning text-dark fs-6">
+                                                <i class="fas fa-fire me-1"></i>
+                                                @trending.TrendScore
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="card-body">
+                                            <!-- Category -->
+                                            <div class="mb-2">
+                                                <span class="badge rounded-pill" style="background-color: @trending.Proposal.CategoryColor; color: white;">
+                                                    <i class="@trending.Proposal.CategoryIcon me-1"></i>
+                                                    @trending.Proposal.CategoryName
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Title -->
+                                            <h5 class="card-title fw-bold">
+                                                <a href="/proposal/@trending.Proposal.Id" class="text-decoration-none text-dark">
+                                                    @trending.Proposal.Title
+                                                </a>
+                                            </h5>
+                                            
+                                            <!-- Description -->
+                                            <p class="card-text text-muted">
+                                                @if (trending.Proposal.Description.Length > 100)
+                                                {
+                                                    @(trending.Proposal.Description.Substring(0, 100) + "...")
+                                                }
+                                                else
+                                                {
+                                                    @trending.Proposal.Description
+                                                }
+                                            </p>
+                                            
+                                            <!-- Trending Metrics -->
+                                            <div class="trending-metrics">
+                                                <div class="row g-2 text-center">
+                                                    <div class="col-4">
+                                                        <div class="metric-item">
+                                                            <div class="metric-value text-success">@trending.RecentVotes</div>
+                                                            <div class="metric-label">Votes</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="metric-item">
+                                                            <div class="metric-value text-info">@trending.RecentComments</div>
+                                                            <div class="metric-label">Débats</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="metric-item">
+                                                            <div class="metric-value text-primary">@trending.Proposal.ViewsCount</div>
+                                                            <div class="metric-label">Vues</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Action Button -->
+                                            <div class="text-center mt-3">
+                                                <a href="/proposal/@trending.Proposal.Id" class="btn btn-primary">
+                                                    <i class="fas fa-arrow-right me-1"></i>
+                                                    Rejoindre le débat
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- All Trending Proposals -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Toutes les tendances
+                    </h2>
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-2">Trier par:</span>
+                        <select class="form-select form-select-sm" style="width: auto;" @onchange="ChangeSortOrder">
+                            <option value="score">Score trending</option>
+                            <option value="votes">Votes récents</option>
+                            <option value="comments">Commentaires</option>
+                            <option value="views">Vues</option>
+                        </select>
+                    </div>
+                </div>
+                
+                @if (trendingProposals?.Any() == true)
+                {
+                    <div class="trending-list">
+                        @foreach (var (trending, index) in GetSortedTrendingProposals().Select((t, i) => (t, i)))
+                        {
+                            <div class="trending-item-card mb-3">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <!-- Rank -->
+                                            <div class="col-auto">
+                                                <div class="trending-rank">
+                                                    <span class="badge @GetRankBadgeClass(index) fs-6">
+                                                        #@(index + 1)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Content -->
+                                            <div class="col">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <!-- Category and Title -->
+                                                        <div class="mb-2">
+                                                            <span class="badge rounded-pill me-2" style="background-color: @trending.Proposal.CategoryColor; color: white;">
+                                                                <i class="@trending.Proposal.CategoryIcon me-1"></i>
+                                                                @trending.Proposal.CategoryName
+                                                            </span>
+                                                            @if (index < 3)
+                                                            {
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <i class="fas fa-crown me-1"></i>TOP 3
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                        
+                                                        <h5 class="mb-2">
+                                                            <a href="/proposal/@trending.Proposal.Id" class="text-decoration-none">
+                                                                @trending.Proposal.Title
+                                                            </a>
+                                                        </h5>
+                                                        
+                                                        <p class="text-muted mb-2">
+                                                            @if (trending.Proposal.Description.Length > 200)
+                                                            {
+                                                                @(trending.Proposal.Description.Substring(0, 200) + "...")
+                                                            }
+                                                            else
+                                                            {
+                                                                @trending.Proposal.Description
+                                                            }
+                                                        </p>
+                                                        
+                                                        <!-- Author and Date -->
+                                                        <div class="d-flex align-items-center text-muted">
+                                                            <i class="fas fa-user-circle me-1"></i>
+                                                            <span class="me-3">@trending.Proposal.CreatedByDisplayName</span>
+                                                            <i class="fas fa-calendar me-1"></i>
+                                                            <span>@trending.Proposal.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Metrics -->
+                                                    <div class="trending-metrics-horizontal">
+                                                        <div class="d-flex gap-4">
+                                                            <div class="metric-item text-center">
+                                                                <div class="metric-value text-warning fw-bold">@trending.TrendScore</div>
+                                                                <div class="metric-label">Score</div>
+                                                            </div>
+                                                            <div class="metric-item text-center">
+                                                                <div class="metric-value text-success">@trending.RecentVotes</div>
+                                                                <div class="metric-label">Votes</div>
+                                                            </div>
+                                                            <div class="metric-item text-center">
+                                                                <div class="metric-value text-info">@trending.RecentComments</div>
+                                                                <div class="metric-label">Débats</div>
+                                                            </div>
+                                                            <div class="metric-item text-center">
+                                                                <div class="metric-value text-primary">@trending.Proposal.ViewsCount</div>
+                                                                <div class="metric-label">Vues</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Aucune tendance pour cette période</h4>
+                        <p class="text-muted">Essayez une période plus large ou revenez plus tard !</p>
+                        <a href="/proposals" class="btn btn-primary">
+                            <i class="fas fa-eye me-1"></i>
+                            Voir toutes les propositions
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Auto-refresh info -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <small class="text-muted">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Mise à jour automatique dans <span id="countdown">@autoRefreshCountdown</span> secondes
+                </small>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<TrendingProposalDto> trendingProposals = new();
+    private bool isLoading = true;
+    private int selectedHours = 24;
+    private string sortBy = "score";
+    private int autoRefreshCountdown = 60;
+    private Timer? autoRefreshTimer;
+    private Timer? countdownTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTrendingData();
+        StartAutoRefresh();
+    }
+
+    private async Task LoadTrendingData()
+    {
+        isLoading = true;
+        try
+        {
+            trendingProposals = (await AnalyticsService.GetTrendingProposalsAsync(selectedHours)).ToList();
+            
+            // Ensure we always have a valid list
+            if (trendingProposals == null)
+            {
+                trendingProposals = new List<TrendingProposalDto>();
+            }
+        }
+        catch (Exception)
+        {
+            trendingProposals = new List<TrendingProposalDto>();
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ChangeTimeFilter(int hours)
+    {
+        selectedHours = hours;
+        await LoadTrendingData();
+    }
+
+    private void ChangeSortOrder(ChangeEventArgs e)
+    {
+        sortBy = e.Value?.ToString() ?? "score";
+        StateHasChanged();
+    }
+
+    private void StartAutoRefresh()
+    {
+        // Countdown timer (every second)
+        countdownTimer = new Timer(async _ =>
+        {
+            autoRefreshCountdown--;
+            if (autoRefreshCountdown <= 0)
+            {
+                autoRefreshCountdown = 60;
+                await InvokeAsync(LoadTrendingData);
+            }
+            await InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private IEnumerable<TrendingProposalDto> GetSortedTrendingProposals()
+    {
+        if (trendingProposals == null || !trendingProposals.Any())
+        {
+            return Enumerable.Empty<TrendingProposalDto>();
+        }
+
+        return sortBy switch
+        {
+            "votes" => trendingProposals.OrderByDescending(t => t.RecentVotes),
+            "comments" => trendingProposals.OrderByDescending(t => t.RecentComments),
+            "views" => trendingProposals.OrderByDescending(t => t.Proposal.ViewsCount),
+            _ => trendingProposals.OrderByDescending(t => t.TrendScore)
+        };
+    }
+
+    private string GetPodiumClass(int index)
+    {
+        return index switch
+        {
+            0 => "podium-gold",
+            1 => "podium-silver",
+            2 => "podium-bronze",
+            _ => ""
+        };
+    }
+
+    private string GetPodiumIcon(int index)
+    {
+        return index switch
+        {
+            0 => "??",
+            1 => "??",
+            2 => "??",
+            _ => ""
+        };
+    }
+
+    private string GetRankBadgeClass(int index)
+    {
+        return index switch
+        {
+            0 => "bg-warning",
+            1 => "bg-secondary",
+            2 => "bg-warning bg-opacity-75",
+            _ when index < 10 => "bg-primary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetPeriodText()
+    {
+        return selectedHours switch
+        {
+            1 => "dernière heure",
+            6 => "6 dernières heures",
+            24 => "dernières 24h",
+            168 => "7 derniers jours",
+            _ => $"{selectedHours}h"
+        };
+    }
+
+    private int GetTotalTrendingCount()
+    {
+        return trendingProposals?.Count(t => t.TrendScore > 0) ?? 0;
+    }
+
+    private int GetTotalRecentVotes()
+    {
+        return trendingProposals?.Sum(t => t.RecentVotes) ?? 0;
+    }
+
+    private int GetTotalRecentComments()
+    {
+        return trendingProposals?.Sum(t => t.RecentComments) ?? 0;
+    }
+
+    private int GetTopTrendScore()
+    {
+        // Fix for InvalidOperationException: Check if collection has elements before calling Max
+        if (trendingProposals == null || !trendingProposals.Any())
+        {
+            return 0;
+        }
+
+        return trendingProposals.Max(t => t.TrendScore);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        autoRefreshTimer?.Dispose();
+        countdownTimer?.Dispose();
+    }
+}

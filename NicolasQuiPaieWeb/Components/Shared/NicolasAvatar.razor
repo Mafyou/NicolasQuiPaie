@@ -1,0 +1,113 @@
+@using NicolasQuiPaieWeb.Data.Models
+
+@if (User != null)
+{
+    <div class="nicolas-avatar-component">
+        <div class="nicolas-avatar @GetAvatarClass()">
+            @if (!string.IsNullOrEmpty(User.AvatarUrl))
+            {
+                <img src="@User.AvatarUrl" alt="@User.DisplayName" class="nicolas-avatar-img @GetAvatarBorderClass()" />
+            }
+            else
+            {
+                <div class="nicolas-avatar-img nicolas-avatar-default @GetAvatarBorderClass()">
+                    @GetInitials()
+                </div>
+            }
+            <div class="nicolas-avatar-badge @GetBadgeClass()">
+                @GetLevelEmoji()
+            </div>
+        </div>
+        
+        @if (ShowInfo)
+        {
+            <div class="avatar-info">
+                <div class="avatar-name">@User.DisplayName</div>
+                <div class="avatar-level @GetLevelClass()">@GetLevelText()</div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ApplicationUser? User { get; set; }
+    [Parameter] public bool ShowInfo { get; set; } = true;
+    [Parameter] public string Size { get; set; } = "medium"; // small, medium, large
+
+    private string GetInitials()
+    {
+        if (User?.DisplayName == null) return "N";
+        
+        var parts = User.DisplayName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+        {
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        }
+        return User.DisplayName.Length > 0 ? User.DisplayName[0].ToString().ToUpper() : "N";
+    }
+
+    private string GetLevelEmoji()
+    {
+        return User?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "??",
+            FiscalLevel.GrosNicolas => "??", 
+            FiscalLevel.NicolasSupreme => "??",
+            _ => "??"
+        };
+    }
+
+    private string GetLevelText()
+    {
+        return User?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "Petit Nicolas",
+            FiscalLevel.GrosNicolas => "Gros Nicolas",
+            FiscalLevel.NicolasSupreme => "Nicolas Suprême", 
+            _ => "Petit Nicolas"
+        };
+    }
+
+    private string GetAvatarClass()
+    {
+        return Size switch
+        {
+            "small" => "nicolas-avatar-sm",
+            "large" => "nicolas-avatar-lg", 
+            _ => "nicolas-avatar-md"
+        };
+    }
+
+    private string GetAvatarBorderClass()
+    {
+        return User?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "nicolas-avatar-petit",
+            FiscalLevel.GrosNicolas => "nicolas-avatar-gros",
+            FiscalLevel.NicolasSupreme => "nicolas-avatar-supreme",
+            _ => "nicolas-avatar-petit"
+        };
+    }
+
+    private string GetBadgeClass()
+    {
+        return User?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "nicolas-level-badge-petit",
+            FiscalLevel.GrosNicolas => "nicolas-level-badge-gros", 
+            FiscalLevel.NicolasSupreme => "nicolas-level-badge-supreme",
+            _ => "nicolas-level-badge-petit"
+        };
+    }
+
+    private string GetLevelClass()
+    {
+        return User?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "text-secondary",
+            FiscalLevel.GrosNicolas => "text-info",
+            FiscalLevel.NicolasSupreme => "text-warning",
+            _ => "text-secondary"
+        };
+    }
+}

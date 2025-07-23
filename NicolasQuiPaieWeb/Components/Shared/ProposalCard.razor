@@ -1,0 +1,237 @@
+﻿@using NicolasQuiPaieWeb.Data.DTOs
+@inject VotingService VotingService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<div class="card proposal-card border-0 shadow-sm h-100">
+    <div class="card-body">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="d-flex align-items-center">
+                <span class="badge rounded-pill me-2" style="background-color: @Proposal.CategoryColor; color: white;">
+                    <i class="@Proposal.CategoryIcon me-1"></i>
+                    @Proposal.CategoryName
+                </span>
+                @if (Proposal.IsFeatured)
+                {
+                    <span class="badge bg-warning text-dark">
+                        <i class="fas fa-star me-1"></i>Featured
+                    </span>
+                }
+                @if (Proposal.IsHot)
+                {
+                    <span class="badge bg-danger ms-1">
+                        <i class="fas fa-fire me-1"></i>Hot
+                    </span>
+                }
+            </div>
+            <small class="text-muted">@Proposal.CreatedAt.ToString("dd/MM/yyyy")</small>
+        </div>
+
+        <!-- Title and Description -->
+        <h5 class="card-title fw-bold mb-2">
+            <a href="/proposal/@Proposal.Id" class="text-decoration-none text-dark">
+                @Proposal.Title
+            </a>
+        </h5>
+        
+        <p class="card-text text-muted mb-3">
+            @if (Proposal.Description.Length > 150)
+            {
+                @(Proposal.Description.Substring(0, 150) + "...")
+            }
+            else
+            {
+                @Proposal.Description
+            }
+        </p>
+
+        <!-- Author -->
+        <div class="d-flex align-items-center mb-3">
+            <i class="fas fa-user-circle text-primary me-2"></i>
+            <small class="text-muted">
+                Par <strong>@Proposal.CreatedByDisplayName</strong>
+                <span class="nicolas-level-badge ms-1">🥉 Petit Nicolas</span>
+            </small>
+        </div>
+
+        <!-- Voting Section -->
+        <div class="row g-2 mb-3">
+            <div class="col-12">
+                <!-- Progress Bar -->
+                <div class="progress mb-2" style="height: 8px;">
+                    @{
+                        var forPercentage = Proposal.TotalVotes > 0 ? (double)Proposal.VotesFor / Proposal.TotalVotes * 100 : 0;
+                        var againstPercentage = 100 - forPercentage;
+                    }
+                    <div class="progress-bar bg-success" style="width: @(forPercentage)%"></div>
+                    <div class="progress-bar bg-danger" style="width: @(againstPercentage)%"></div>
+                </div>
+
+                <!-- Vote Counts -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span class="text-success me-3">
+                            <i class="fas fa-thumbs-up me-1"></i>
+                            <strong>@Proposal.VotesFor</strong>
+                        </span>
+                        <span class="text-danger">
+                            <i class="fas fa-thumbs-down me-1"></i>
+                            <strong>@Proposal.VotesAgainst</strong>
+                        </span>
+                    </div>
+                    <div class="text-muted">
+                        <small>@Proposal.TotalVotes votes • @Proposal.ViewsCount vues</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        @if (ShowActions)
+        {
+            <AuthorizeView>
+                <Authorized>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button class="btn btn-outline-success w-100 @(userVote?.VoteType == VoteType.For ? "active" : "")"
+                                    @onclick="() => CastVote(VoteType.For)"
+                                    disabled="@isVoting">
+                                @if (isVoting && pendingVoteType == VoteType.For)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="fas fa-thumbs-up me-1"></i>
+                                Nicolas Approuve
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-outline-danger w-100 @(userVote?.VoteType == VoteType.Against ? "active" : "")"
+                                    @onclick="() => CastVote(VoteType.Against)"
+                                    disabled="@isVoting">
+                                @if (isVoting && pendingVoteType == VoteType.Against)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="fas fa-thumbs-down me-1"></i>
+                                Nicolas Refuse
+                            </button>
+                        </div>
+                    </div>
+                </Authorized>
+                <NotAuthorized>
+                    <div class="text-center">
+                        <a href="/Identity/Account/Login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            Connectez-vous pour voter
+                        </a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+        }
+
+        <!-- Comments and Share -->
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <a href="/proposal/@Proposal.Id" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-comments me-1"></i>
+                @(CommentsCount ?? 0) commentaires
+            </a>
+            
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ShareProposal">
+                    <i class="fas fa-share me-1"></i>
+                    Partager
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProposalDto Proposal { get; set; } = null!;
+    [Parameter] public bool ShowActions { get; set; } = true;
+    [Parameter] public int? CommentsCount { get; set; }
+
+    private Vote? userVote;
+    private bool isVoting = false;
+    private VoteType? pendingVoteType;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ShowActions)
+        {
+            await LoadUserVote();
+        }
+    }
+
+    private async Task LoadUserVote()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                userVote = await VotingService.GetUserVoteAsync(userId, Proposal.Id);
+            }
+        }
+    }
+
+    private async Task CastVote(VoteType voteType)
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo("/Identity/Account/Login");
+            return;
+        }
+
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return;
+
+        isVoting = true;
+        pendingVoteType = voteType;
+
+        try
+        {
+            var success = await VotingService.CastVoteAsync(userId, Proposal.Id, voteType);
+            if (success)
+            {
+                // Reload user vote and update proposal counters
+                await LoadUserVote();
+                StateHasChanged();
+            }
+        }
+        catch (Exception)
+        {
+            // Handle error - could show a toast notification
+        }
+        finally
+        {
+            isVoting = false;
+            pendingVoteType = null;
+        }
+    }
+
+    private async Task ShareProposal()
+    {
+        var url = $"{Navigation.BaseUri}proposal/{Proposal.Id}";
+        var text = $"Découvrez cette proposition sur Nicolas Qui Paie : {Proposal.Title}";
+        
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.share", new
+            {
+                title = Proposal.Title,
+                text = text,
+                url = url
+            });
+        }
+        catch
+        {
+            // Fallback to clipboard
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+        }
+    }
+}

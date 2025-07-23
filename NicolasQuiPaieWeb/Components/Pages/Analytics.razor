@@ -1,0 +1,394 @@
+﻿@page "/analytics"
+@using NicolasQuiPaieWeb.Data.DTOs
+@inject AnalyticsService AnalyticsService
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+<PageTitle>Nicolas Analytics - Baromètre National</PageTitle>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="fw-bold">
+                <i class="fas fa-chart-line text-primary me-2"></i>
+                Nicolas Analytics
+            </h1>
+            <p class="lead text-muted">Le baromètre en temps réel de la démocratie souveraine numérique</p>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement des statistiques...</span>
+            </div>
+        </div>
+    }
+    else if (stats != null)
+    {
+        <!-- Ras-le-bol Meter -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-lg ras-le-bol-card">
+                    <div class="card-body text-center py-5">
+                        <h2 class="fw-bold mb-4">
+                            <i class="fas fa-thermometer-three-quarters text-danger me-2"></i>
+                            Baromètre du Ras-le-bol National
+                        </h2>
+                        
+                        <div class="ras-le-bol-meter mb-4">
+                            <div class="meter-container position-relative">
+                                <div class="meter-background"></div>
+                                <div class="meter-fill" style="width: @(stats.RasLebolMeter)%"></div>
+                                <div class="meter-needle" style="left: @(stats.RasLebolMeter)%"></div>
+                            </div>
+                            <div class="meter-labels d-flex justify-content-between mt-2">
+                                <small class="text-success">😊 Satisfait</small>
+                                <small class="text-warning">😐 Mitigé</small>
+                                <small class="text-danger">😠 Ras-le-bol</small>
+                            </div>
+                        </div>
+                        
+                        <h1 class="display-4 fw-bold text-danger">@Math.Round(stats.RasLebolMeter, 1)%</h1>
+                        <p class="lead">des Nicolas expriment leur mécontentement</p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="metric-box">
+                                    <h4 class="text-success">@(100 - Math.Round(stats.RasLebolMeter, 1))%</h4>
+                                    <small class="text-muted">Nicolas approuvent</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="metric-box">
+                                    <h4 class="text-danger">@Math.Round(stats.RasLebolMeter, 1)%</h4>
+                                    <small class="text-muted">Nicolas refusent</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="row g-4 mb-5">
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h3 class="fw-bold text-primary">@stats.TotalUsers.ToString("N0")</h3>
+                        <p class="text-muted mb-2">Nicolas Inscrits</p>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            @stats.ActiveUsers actifs ce mois
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-lightbulb fa-3x text-warning mb-3"></i>
+                        <h3 class="fw-bold text-warning">@stats.TotalProposals.ToString("N0")</h3>
+                        <p class="text-muted mb-2">Propositions Créées</p>
+                        <small class="text-info">
+                            <i class="fas fa-fire me-1"></i>
+                            @stats.ActiveProposals actives
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-vote-yea fa-3x text-success mb-3"></i>
+                        <h3 class="fw-bold text-success">@stats.TotalVotes.ToString("N0")</h3>
+                        <p class="text-muted mb-2">Votes Exprimés</p>
+                        <small class="text-muted">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Démocratie active
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="card border-0 shadow-sm metric-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-comments fa-3x text-info mb-3"></i>
+                        <h3 class="fw-bold text-info">@stats.TotalComments.ToString("N0")</h3>
+                        <p class="text-muted mb-2">Commentaires</p>
+                        <small class="text-muted">
+                            <i class="fas fa-discussion me-1"></i>
+                            Débats citoyens
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Tendances des votes -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Tendances des votes (7 derniers jours)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="voteTrendsChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribution Nicolas -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-pie-chart me-2"></i>
+                            Répartition des Nicolas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var level in stats.NicolasLevelDistribution)
+                        {
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="nicolas-level-label">@GetNicolasLevelLabel(level.Level)</span>
+                                    <strong>@level.Count</strong>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar @GetLevelColor(level.Level)" 
+                                         style="width: @(level.Percentage)%"></div>
+                                </div>
+                                <small class="text-muted">@Math.Round(level.Percentage, 1)%</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Top Categories -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tags me-2"></i>
+                            Catégories les plus actives
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var category in stats.TopCategories)
+                        {
+                            <div class="category-stat mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <i class="@category.CategoryIcon me-2" style="color: @category.CategoryColor;"></i>
+                                        <span class="fw-bold">@category.CategoryName</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">@category.VoteCount</div>
+                                        <small class="text-muted">votes</small>
+                                    </div>
+                                </div>
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar" 
+                                         style="background-color: @category.CategoryColor; width: @(GetCategoryPercentage(category.VoteCount))%">
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trending Proposals -->
+            <div class="col-lg-6 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-fire me-2"></i>
+                            Propositions tendances (24h)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (trendingProposals?.Any() == true)
+                        {
+                            @foreach (var trending in trendingProposals.Take(5))
+                            {
+                                <div class="trending-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <a href="/proposal/@trending.Proposal.Id" class="text-decoration-none">
+                                                <h6 class="mb-1">@trending.Proposal.Title</h6>
+                                            </a>
+                                            <div class="d-flex gap-3">
+                                                <small class="text-success">
+                                                    <i class="fas fa-arrow-up me-1"></i>
+                                                    @trending.RecentVotes votes
+                                                </small>
+                                                <small class="text-info">
+                                                    <i class="fas fa-comments me-1"></i>
+                                                    @trending.RecentComments commentaires
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="trend-score">
+                                            <span class="badge bg-warning">@trending.TrendScore</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">Aucune proposition tendance</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Contributors -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-trophy me-2"></i>
+                            Top Contributors du mois
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @if (topContributors?.Any() == true)
+                        {
+                            <div class="row">
+                                @foreach (var (contributor, index) in topContributors.Take(6).Select((c, i) => (c, i)))
+                                {
+                                    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                        <div class="contributor-card text-center">
+                                            @if (index == 0)
+                                            {
+                                                <div class="crown mb-2">👑</div>
+                                            }
+                                            <i class="fas fa-user-circle fa-3x text-primary mb-2"></i>
+                                            <h6 class="fw-bold">@contributor.UserDisplayName</h6>
+                                            <div class="contributor-stats">
+                                                <small class="text-muted d-block">@contributor.ProposalsCount propositions</small>
+                                                <small class="text-muted d-block">@contributor.VotesCount votes</small>
+                                                <small class="text-muted d-block">@contributor.CommentsCount commentaires</small>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="badge bg-success">@contributor.TotalScore pts</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DashboardStatsDto? stats;
+    private List<TrendingProposalDto> trendingProposals = new();
+    private List<TopContributorDto> topContributors = new();
+    private bool isLoading = true;
+    private IJSObjectReference? chartModule;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAnalytics();
+        await InitializeCharts();
+    }
+
+    private async Task LoadAnalytics()
+    {
+        try
+        {
+            stats = await AnalyticsService.GetDashboardStatsAsync();
+            trendingProposals = await AnalyticsService.GetTrendingProposalsAsync();
+            topContributors = await AnalyticsService.GetTopContributorsAsync();
+        }
+        catch (Exception)
+        {
+            // Log error and show default values
+            stats = new DashboardStatsDto();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task InitializeCharts()
+    {
+        try
+        {
+            chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/charts.js");
+            
+            if (stats?.DailyVoteTrends?.Any() == true)
+            {
+                await chartModule.InvokeVoidAsync("initializeVoteTrendsChart", 
+                    stats.DailyVoteTrends.Select(d => d.Date.ToString("dd/MM")).ToArray(),
+                    stats.DailyVoteTrends.Select(d => d.VotesFor).ToArray(),
+                    stats.DailyVoteTrends.Select(d => d.VotesAgainst).ToArray());
+            }
+        }
+        catch (Exception)
+        {
+            // Charts failed to load, continue without them
+        }
+    }
+
+    private string GetNicolasLevelLabel(FiscalLevel level)
+    {
+        return level switch
+        {
+            FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
+            FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
+            FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
+            _ => "Nicolas"
+        };
+    }
+
+    private string GetLevelColor(FiscalLevel level)
+    {
+        return level switch
+        {
+            FiscalLevel.PetitNicolas => "bg-secondary",
+            FiscalLevel.GrosNicolas => "bg-info",
+            FiscalLevel.NicolasSupreme => "bg-warning",
+            _ => "bg-primary"
+        };
+    }
+
+    private double GetCategoryPercentage(int voteCount)
+    {
+        if (stats?.TopCategories?.Any() != true) return 0;
+        var maxVotes = stats.TopCategories.Max(c => c.VoteCount);
+        return maxVotes > 0 ? (double)voteCount / maxVotes * 100 : 0;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (chartModule != null)
+        {
+            await chartModule.DisposeAsync();
+        }
+    }
+}

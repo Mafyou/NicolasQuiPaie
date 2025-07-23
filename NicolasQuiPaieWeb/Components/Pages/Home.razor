@@ -1,7 +1,430 @@
 ﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using NicolasQuiPaieWeb.Data.DTOs
+@inject ProposalService ProposalService
+@inject AnalyticsService AnalyticsService
+@inject UserManager<ApplicationUser> UserManager
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Nicolas Qui Paie - La Démocratie Souveraine Numérique</PageTitle>
 
-<h1>Hello, world!</h1>
+<!-- Hero Section -->
+<div class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4 text-nicolas-red">
+                    Nicolas Qui Paie !
+                </h1>
+                <p class="lead mb-4">
+                    La plateforme citoyenne où <strong>Nicolas</strong> décide vraiment ! 
+                    Votez sur les dépenses publiques, proposez vos idées et participez à la démocratie souveraine numérique.
+                </p>
+                <div class="hero-stats mb-4">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="fw-bold">@dashboardStats.TotalUsers.ToString("N0")</h3>
+                                <small>Nicolas Inscrits</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="fw-bold">@dashboardStats.TotalVotes.ToString("N0")</h3>
+                                <small>Votes Exprimés</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-item">
+                                <h3 class="fw-bold">@dashboardStats.ActiveProposals</h3>
+                                <small>Propositions Actives</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <AuthorizeView>
+            <Authorized>
+                <!-- Utilisateur connecté -->
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="/create-proposal" class="btn btn-warning btn-lg">
+                        <i class="fas fa-lightbulb me-2"></i>Proposer une Idée
+                    </a>
+                    <a href="/proposals" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-vote-yea me-2"></i>Voter sur les Propositions
+                    </a>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <!-- Utilisateur non connecté -->
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="/proposals" class="btn btn-warning btn-lg">
+                        <i class="fas fa-vote-yea me-2"></i>Découvrir les Propositions
+                    </a>
+                    <a href="/Identity/Account/Register" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Rejoindre les Nicolas
+                    </a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-illustration">
+                    <i class="fas fa-coins fa-10x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-Welcome to your new app.
+@if (isLoading)
+{
+    <div class="container py-5">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-3 text-muted">Chargement des données...</p>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Ras-le-bol Meter -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-lg ras-le-bol-card">
+                        <div class="card-body text-center py-5">
+                            <h2 class="fw-bold mb-4">
+                                <i class="fas fa-thermometer-three-quarters text-danger me-2"></i>
+                                Baromètre du Ras-le-bol
+                            </h2>
+                            
+                            <div class="ras-le-bol-meter mb-4">
+                                <div class="meter-container position-relative">
+                                    <div class="meter-background"></div>
+                                    <div class="meter-fill" style="width: @(dashboardStats.RasLebolMeter)%"></div>
+                                    <div class="meter-needle" style="left: @(dashboardStats.RasLebolMeter)%"></div>
+                                </div>
+                            </div>
+                            
+                            <h1 class="display-4 fw-bold text-danger">@Math.Round(dashboardStats.RasLebolMeter, 1)%</h1>
+                            <p class="lead">des Nicolas expriment leur mécontentement</p>
+                            
+                            <a href="/analytics" class="btn btn-outline-primary">
+                                <i class="fas fa-chart-line me-1"></i>Voir les Statistiques Complètes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trending Proposals -->
+    @if (trendingProposals?.Any() == true)
+    {
+        <section class="py-5">
+            <div class="container">
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <h2 class="fw-bold">
+                            <i class="fas fa-fire text-warning me-2"></i>
+                            Propositions Trending
+                        </h2>
+                        <p class="text-muted">Les sujets qui font débat chez les Nicolas</p>
+                    </div>
+                </div>
+                
+                <div class="row g-4">
+                    @foreach (var proposal in trendingProposals.Take(4))
+                    {
+                        <div class="col-lg-6 col-md-6">
+                            <div class="card border-0 shadow-sm h-100 proposal-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <span class="badge bg-primary">@proposal.CategoryName</span>
+                                        <div class="proposal-stats">
+                                            <small class="text-success me-2">
+                                                <i class="fas fa-thumbs-up me-1"></i>@proposal.VotesFor
+                                            </small>
+                                            <small class="text-danger">
+                                                <i class="fas fa-thumbs-down me-1"></i>@proposal.VotesAgainst
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <h5 class="card-title">
+                                        <a href="/proposal/@proposal.Id" class="text-decoration-none">
+                                            @proposal.Title
+                                        </a>
+                                    </h5>
+                                    
+                                    <p class="card-text text-muted">
+                                        @(proposal.Description.Length > 120 ? proposal.Description.Substring(0, 120) + "..." : proposal.Description)
+                                    </p>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user-circle me-1"></i>
+                                            Par @proposal.CreatedByDisplayName
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            @proposal.CreatedAt.ToString("dd/MM/yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="/proposals" class="btn btn-primary btn-lg">
+                        <i class="fas fa-vote-yea me-2"></i>Voir Toutes les Propositions
+                    </a>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- Nicolas du Mois -->
+    @if (topContributor != null)
+    {
+        <section class="py-5 bg-primary text-white">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <h2 class="fw-bold mb-3">
+                            <i class="fas fa-crown text-warning me-2"></i>
+                            Nicolas du Mois
+                        </h2>
+                        <h3 class="display-5 fw-bold mb-3">@topContributor.UserDisplayName</h3>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                                    <span>@topContributor.ProposalsCount propositions</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-vote-yea text-warning me-2"></i>
+                                    <span>@topContributor.VotesCount votes</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-comments text-warning me-2"></i>
+                                    <span>@topContributor.CommentsCount commentaires</span>
+                                </div>
+                            </div>
+                        </div>
+                        <blockquote class="blockquote">
+                            <p class="mb-0 fst-italic">"@GetNicolasQuote(topContributor)"</p>
+                        </blockquote>
+                    </div>
+                    <div class="col-lg-4 text-center">
+                        <div class="nicolas-avatar">
+                            <i class="fas fa-user-circle fa-8x text-warning"></i>
+                            <div class="mt-2">
+                                <span class="badge bg-warning text-dark fs-6">
+                                    @GetNicolasBadge(topContributor.UserFiscalLevel)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- Call to Action -->
+    <section class="py-5 bg-light">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-4">Rejoignez la Révolution Nicolas !</h2>
+            <p class="lead text-muted mb-4">
+                Participez à la première démocratie souveraine numérique où chaque Nicolas compte.
+            </p>
+            
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/create-proposal" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-lightbulb me-2"></i>Créer une Proposition
+                    </a>
+                    <a href="/trending" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-fire me-2"></i>Voir les Trending
+                    </a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/Identity/Account/Register" class="btn btn-primary btn-lg me-3">
+                        <i class="fas fa-user-plus me-2"></i>Créer un Compte
+                    </a>
+                    <a href="/Identity/Account/Login" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Se Connecter
+                    </a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </section>
+}
+
+@code {
+    private IEnumerable<ProposalDto> trendingProposals = new List<ProposalDto>();
+    private DashboardStatsDto dashboardStats = new DashboardStatsDto();
+    private TopContributorDto? topContributor;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        isLoading = true;
+        
+        try
+        {
+            // Charger les données depuis les services avec debug
+            Console.WriteLine("🔍 Début du chargement des données dashboard...");
+            
+            // 🚨 DIAGNOSTIC: Comparaison UserManager vs DbContext
+            var userManagerCount = UserManager.Users.Count();
+            Console.WriteLine($"📊 UserManager.Users.Count(): {userManagerCount}");
+            
+            using (var dbContext = await DbContextFactory.CreateDbContextAsync())
+            {
+                var dbContextUserCount = await dbContext.Users.CountAsync();
+                Console.WriteLine($"📊 DbContext.Users.CountAsync(): {dbContextUserCount}");
+                
+                // Afficher quelques utilisateurs pour debug
+                var dbUsers = await dbContext.Users.Take(5).Select(u => new { u.Id, u.UserName, u.Email }).ToListAsync();
+                Console.WriteLine($"📊 Utilisateurs dans DbContext:");
+                foreach (var user in dbUsers)
+                {
+                    Console.WriteLine($"   👤 {user.UserName} - {user.Email} - ID: {user.Id}");
+                }
+            }
+            
+            trendingProposals = await ProposalService.GetTrendingProposalsAsync(4);
+            Console.WriteLine($"✅ Propositions trending: {trendingProposals?.Count() ?? 0}");
+            
+            dashboardStats = await AnalyticsService.GetDashboardStatsAsync();
+            Console.WriteLine($"✅ Dashboard stats chargées:");
+            Console.WriteLine($"   - TotalUsers: {dashboardStats.TotalUsers}");
+            Console.WriteLine($"   - TotalVotes: {dashboardStats.TotalVotes}");
+            Console.WriteLine($"   - ActiveProposals: {dashboardStats.ActiveProposals}");
+            Console.WriteLine($"   - RasLebolMeter: {dashboardStats.RasLebolMeter:F1}%");
+            
+            var topContributors = await AnalyticsService.GetTopContributorsAsync(1);
+            Console.WriteLine($"✅ Top contributeurs: {topContributors?.Count ?? 0}");
+            
+            topContributor = topContributors?.FirstOrDefault();
+            
+            if (topContributor != null)
+            {
+                Console.WriteLine($"🏆 Nicolas du mois: {topContributor.UserDisplayName} (Score: {topContributor.TotalScore})");
+            }
+            else
+            {
+                Console.WriteLine("⚠️ Aucun top contributeur trouvé");
+            }
+            
+            // 🔧 SOLUTION TEMPORAIRE: Si dashboard stats montre 0 utilisateurs mais UserManager en a
+            if (dashboardStats.TotalUsers == 0 && userManagerCount > 0)
+            {
+                Console.WriteLine("🚨 PROBLÈME DÉTECTÉ: DbContext.Users vide mais UserManager a des utilisateurs!");
+                Console.WriteLine("🔧 Affichage des données UserManager comme fallback...");
+                
+                // Utiliser UserManager comme source de vérité temporaire
+                dashboardStats.TotalUsers = userManagerCount;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log error détaillé
+            Console.WriteLine($"❌ Erreur lors du chargement des données: {ex.Message}");
+            Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+            
+            // Valeurs par défaut avec fallback UserManager
+            trendingProposals = new List<ProposalDto>();
+            dashboardStats = new DashboardStatsDto();
+            topContributor = null;
+            
+            try
+            {
+                // Fallback: au moins afficher le nombre d'utilisateurs depuis UserManager
+                dashboardStats.TotalUsers = UserManager.Users.Count();
+                Console.WriteLine($"🔧 Fallback activé: TotalUsers depuis UserManager = {dashboardStats.TotalUsers}");
+            }
+            catch (Exception fallbackEx)
+            {
+                Console.WriteLine($"❌ Échec du fallback UserManager: {fallbackEx.Message}");
+            }
+        }
+        finally
+        {
+            isLoading = false;
+            Console.WriteLine($"🏁 Chargement terminé. TotalUsers final: {dashboardStats.TotalUsers}");
+            StateHasChanged();
+        }
+    }
+
+    private string GetNicolasBadge(FiscalLevel level)
+    {
+        return level switch
+        {
+            FiscalLevel.PetitNicolas => "Petit Nicolas",
+            FiscalLevel.GrosNicolas => "Gros Nicolas",
+            FiscalLevel.NicolasSupreme => "Nicolas Suprême",
+            _ => "Petit Nicolas"
+        };
+    }
+
+    private string GetNicolasQuote(TopContributorDto? contributor)
+    {
+        if (contributor == null) 
+            return "Soyez le premier à contribuer à la démocratie numérique !";
+        
+        var quotes = new[]
+        {
+            "C'est en débattant ensemble qu'on trouve les vraies solutions !",
+            "Chaque vote compte dans notre démocratie souveraine numérique.",
+            "L'engagement citoyen commence par une proposition, un vote, un débat.",
+            "Together, nous construisons l'avenir fiscal de la France.",
+            "La participation citoyenne, c'est l'essence de la démocratie.",
+            "Merci de faire vivre notre communauté Nicolas !"
+        };
+
+        var index = (contributor.TotalScore % quotes.Length);
+        return quotes[index];
+    }
+
+    private async Task DiagnosticUsers()
+    {
+        try
+        {
+            Console.WriteLine("🔍 DIAGNOSTIC UTILISATEURS...");
+            
+            // Vérifier directement avec UserManager
+            var allUsers = UserManager.Users.ToList();
+            Console.WriteLine($"📊 UserManager.Users.Count(): {allUsers.Count}");
+            
+            foreach (var user in allUsers.Take(5))
+            {
+                Console.WriteLine($"👤 User: {user.UserName} - {user.Email} - Created: {user.CreatedAt}");
+            }
+            
+            // Recharger les stats
+            await LoadDashboardData();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Erreur diagnostic: {ex.Message}");
+        }
+    }
+}

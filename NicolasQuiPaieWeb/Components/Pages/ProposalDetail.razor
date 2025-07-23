@@ -1,0 +1,375 @@
+@page "/proposal/{id:int}"
+@using NicolasQuiPaieWeb.Data.DTOs
+@inject ProposalService ProposalService
+@inject VotingService VotingService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>@(proposal?.Title ?? "Proposition") - Nicolas Qui Paie</PageTitle>
+
+@if (isLoading)
+{
+    <div class="container py-5">
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    </div>
+}
+else if (proposal == null)
+{
+    <div class="container py-5">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+            <h3>Proposition introuvable</h3>
+            <p class="text-muted">Cette proposition n'existe pas ou a été supprimée.</p>
+            <a href="/proposals" class="btn btn-primary">Retour aux propositions</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container py-4">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="/proposals">Propositions</a></li>
+                <li class="breadcrumb-item active">@proposal.Title</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-lg-8">
+                <!-- Proposal Header -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <!-- Category and Status -->
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="badge rounded-pill me-2" style="background-color: @proposal.Category.Color; color: white;">
+                                <i class="@proposal.Category.IconClass me-1"></i>
+                                @proposal.Category.Name
+                            </span>
+                            @if (proposal.IsFeatured)
+                            {
+                                <span class="badge bg-warning text-dark me-1">
+                                    <i class="fas fa-star me-1"></i>Featured
+                                </span>
+                            }
+                            @if (proposal.IsHot)
+                            {
+                                <span class="badge bg-danger me-1">
+                                    <i class="fas fa-fire me-1"></i>Hot
+                                </span>
+                            }
+                            <span class="badge bg-secondary">@proposal.Status</span>
+                        </div>
+
+                        <!-- Title -->
+                        <h1 class="fw-bold mb-3">@proposal.Title</h1>
+
+                        <!-- Author and Date -->
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-user-circle fa-2x text-primary me-3"></i>
+                            <div>
+                                <div class="fw-bold">@proposal.CreatedBy.DisplayName</div>
+                                <small class="text-muted">
+                                    Publié le @proposal.CreatedAt.ToString("dd MMMM yyyy à HH:mm")
+                                    • @proposal.ViewsCount vues
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="proposal-content">
+                            <p class="lead">@proposal.Description</p>
+                        </div>
+
+                        <!-- Share Buttons -->
+                        <div class="d-flex gap-2 mt-4">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="ShareOnTwitter">
+                                <i class="fab fa-twitter me-1"></i>
+                                Twitter
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" @onclick="ShareOnWhatsApp">
+                                <i class="fab fa-whatsapp me-1"></i>
+                                WhatsApp
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" @onclick="CopyLink">
+                                <i class="fas fa-link me-1"></i>
+                                Copier le lien
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voting Component -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-vote-yea me-2"></i>
+                            Exprimez votre vote
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <NicolasQuiPaieWeb.Components.Shared.VotingComponent 
+                            Proposal="proposal" 
+                            OnVoteChanged="OnVoteChanged" />
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>
+                            Commentaires (@proposal.Comments.Count())
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" @onclick="ToggleCommentForm">
+                            <i class="fas fa-plus me-1"></i>
+                            Commenter
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Comment Form -->
+                        @if (showCommentForm)
+                        {
+                            <AuthorizeView>
+                                <Authorized>
+                                    <div class="mb-4 p-3 bg-light rounded">
+                                        <div class="mb-3">
+                                            <label class="form-label">Votre commentaire</label>
+                                            <textarea class="form-control" rows="3" 
+                                                    @bind="newCommentContent" 
+                                                    placeholder="Partagez votre opinion..."></textarea>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-primary" 
+                                                    @onclick="SubmitComment"
+                                                    disabled="@(isSubmittingComment || string.IsNullOrWhiteSpace(newCommentContent))">
+                                                @if (isSubmittingComment)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                                }
+                                                Publier
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @onclick="ToggleCommentForm">
+                                                Annuler
+                                            </button>
+                                        </div>
+                                    </div>
+                                </Authorized>
+                                <NotAuthorized>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <a href="/Identity/Account/Login">Connectez-vous</a> pour commenter cette proposition.
+                                    </div>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                        }
+
+                        <!-- Comments List -->
+                        @if (proposal.Comments.Any())
+                        {
+                            <div class="comments-list">
+                                @foreach (var comment in proposal.Comments.Where(c => !c.IsDeleted && c.ParentCommentId == null).OrderByDescending(c => c.CreatedAt))
+                                {
+                                    <NicolasQuiPaieWeb.Components.Shared.CommentCard Comment="comment" />
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-comment-slash fa-2x text-muted mb-2"></i>
+                                <p class="text-muted">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Quick Stats -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Statistiques</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center g-3">
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h4 class="text-primary mb-1">@proposal.TotalVotes</h4>
+                                    <small class="text-muted">Votes</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-item">
+                                    <h4 class="text-info mb-1">@proposal.ViewsCount</h4>
+                                    <small class="text-muted">Vues</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="stat-item">
+                                    <h4 class="text-success mb-1">@Math.Round(proposal.ApprovalRate, 1)%</h4>
+                                    <small class="text-muted">Taux d'approbation</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Proposals -->
+                @if (relatedProposals?.Any() == true)
+                {
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">Propositions similaires</h6>
+                        </div>
+                        <div class="card-body">
+                            @foreach (var related in relatedProposals)
+                            {
+                                <div class="mb-3 pb-3 border-bottom">
+                                    <a href="/proposal/@related.Id" class="text-decoration-none">
+                                        <h6 class="mb-1">@related.Title</h6>
+                                    </a>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">@related.TotalVotes votes</small>
+                                        <span class="badge" style="background-color: @related.CategoryColor; color: white;">
+                                            @related.CategoryName
+                                        </span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Proposal? proposal;
+    private IEnumerable<ProposalDto> relatedProposals = new List<ProposalDto>();
+    private bool isLoading = true;
+    private bool showCommentForm = false;
+    private string newCommentContent = "";
+    private bool isSubmittingComment = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProposal();
+        await LoadRelatedProposals();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (proposal?.Id != Id)
+        {
+            await LoadProposal();
+            await LoadRelatedProposals();
+        }
+    }
+
+    private async Task LoadProposal()
+    {
+        isLoading = true;
+        try
+        {
+            proposal = await ProposalService.GetProposalByIdAsync(Id);
+            if (proposal != null)
+            {
+                await ProposalService.IncrementViewsAsync(Id);
+            }
+        }
+        catch (Exception)
+        {
+            proposal = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadRelatedProposals()
+    {
+        if (proposal != null)
+        {
+            try
+            {
+                var allProposals = await ProposalService.GetActiveProposalsAsync(0, 10, proposal.CategoryId.ToString());
+                relatedProposals = allProposals.Where(p => p.Id != proposal.Id).Take(3);
+            }
+            catch (Exception)
+            {
+                relatedProposals = new List<ProposalDto>();
+            }
+        }
+    }
+
+    private void ToggleCommentForm()
+    {
+        showCommentForm = !showCommentForm;
+        if (!showCommentForm)
+        {
+            newCommentContent = "";
+        }
+    }
+
+    private async Task SubmitComment()
+    {
+        // This would need a CommentService implementation
+        // For now, just simulate the submission
+        isSubmittingComment = true;
+        await Task.Delay(1000); // Simulate API call
+        newCommentContent = "";
+        showCommentForm = false;
+        isSubmittingComment = false;
+        StateHasChanged();
+    }
+
+    private async Task OnVoteChanged(Vote? vote)
+    {
+        // Refresh proposal data to get updated vote counts
+        if (proposal != null)
+        {
+            var updatedProposal = await ProposalService.GetProposalByIdAsync(proposal.Id);
+            if (updatedProposal != null)
+            {
+                proposal.VotesFor = updatedProposal.VotesFor;
+                proposal.VotesAgainst = updatedProposal.VotesAgainst;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task ShareOnTwitter()
+    {
+        var url = Navigation.Uri;
+        var text = $"Découvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title}";
+        var twitterUrl = $"https://twitter.com/intent/tweet?text={Uri.EscapeDataString(text)}&url={Uri.EscapeDataString(url)}&hashtags=JeSuisNicolas,NicolasQuiPaie";
+        await JSRuntime.InvokeVoidAsync("window.open", twitterUrl, "_blank");
+    }
+
+    private async Task ShareOnWhatsApp()
+    {
+        var url = Navigation.Uri;
+        var text = $"Découvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title} {url}";
+        var whatsappUrl = $"https://wa.me/?text={Uri.EscapeDataString(text)}";
+        await JSRuntime.InvokeVoidAsync("window.open", whatsappUrl, "_blank");
+    }
+
+    private async Task CopyLink()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Navigation.Uri);
+        // Could show a toast notification here
+    }
+}

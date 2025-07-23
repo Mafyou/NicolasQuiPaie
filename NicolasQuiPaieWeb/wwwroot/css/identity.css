@@ -1,0 +1,107 @@
+/* Identity Pages Specific Styles */
+
+/* Override Bootstrap defaults for better contrast */
+.container .row .col-md-6 .card,
+.container .row .col-lg-5 .card {
+    background-color: #ffffff;
+    color: #212529;
+}
+
+.container .card-body h1,
+.container .card-body h2,
+.container .card-body h3,
+.container .card-body h4,
+.container .card-body h5,
+.container .card-body h6 {
+    color: #212529 !important;
+}
+
+.container .card-body p,
+.container .card-body small,
+.container .card-body span {
+    color: #6c757d !important;
+}
+
+.container .card-body strong {
+    color: #212529 !important;
+}
+
+/* Form floating labels */
+.form-floating > label {
+    color: #6c757d !important;
+    background-color: transparent;
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #0d6efd !important;
+    transform: scale(.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* Alert styles */
+.alert-info {
+    background-color: #cff4fc;
+    border-color: #b6effb;
+    color: #055160;
+}
+
+.alert-info .fw-bold,
+.alert-info h6 {
+    color: #055160 !important;
+}
+
+.alert-info small {
+    color: #055160 !important;
+}
+
+/* Badge preview section */
+.card.bg-light {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.badge-preview {
+    color: #212529 !important;
+}
+
+.badge-preview .fw-bold,
+.badge-preview small {
+    color: #212529 !important;
+}
+
+/* Text utilities */
+.text-center small.text-dark {
+    color: #212529 !important;
+}
+
+/* Links */
+.text-decoration-none {
+    color: #0d6efd;
+}
+
+.text-decoration-none:hover {
+    color: #0a58ca;
+}
+
+/* Blockquote section */
+.bg-light blockquote p {
+    color: #495057 !important;
+}
+
+.bg-light .blockquote-footer {
+    color: #6c757d !important;
+}
+
+/* Button focus states */
+.btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Form control focus */
+.form-control:focus {
+    color: #212529;
+    background-color: #fff;
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}

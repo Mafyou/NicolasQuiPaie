@@ -1,0 +1,107 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary nicolas-navbar">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="fas fa-coins me-2"></i>
+            <span class="fw-bold">Nicolas Qui Paie</span>
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/"><i class="fas fa-home me-1"></i>Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/proposals"><i class="fas fa-vote-yea me-1"></i>Propositions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/trending"><i class="fas fa-fire me-1"></i>Trending</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/analytics"><i class="fas fa-chart-line me-1"></i>Analytics</a>
+                </li>
+            </ul>
+            
+            <AuthorizeView>
+                <Authorized>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i>
+                                @context.User.Identity?.Name
+                                <span class="nicolas-badge ms-2">@GetCurrentUserBadge()</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Mon Profil</a></li>
+                                <li><a class="dropdown-item" href="/create-proposal"><i class="fas fa-plus me-2"></i>Nouvelle Proposition</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="/Identity/Account/Logout">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Déconnexion
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </Authorized>
+                <NotAuthorized>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Identity/Account/Login">
+                                <i class="fas fa-sign-in-alt me-1"></i>Connexion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-outline-light btn-sm ms-2" href="/Identity/Account/Register">
+                                <i class="fas fa-user-plus me-1"></i>Rejoindre les Nicolas
+                            </a>
+                        </li>
+                    </ul>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private ApplicationUser? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentUser();
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                currentUser = await UserManager.FindByIdAsync(userId);
+            }
+        }
+    }
+
+    private string GetCurrentUserBadge()
+    {
+        if (currentUser == null) return "🥉 Petit Nicolas";
+        
+        return currentUser.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
+            FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
+            FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
+            _ => "🥉 Petit Nicolas"
+        };
+    }
+}

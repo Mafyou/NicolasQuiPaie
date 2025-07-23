@@ -1,9 +1,17 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="page">
+    <NicolasQuiPaieWeb.Components.Layout.NavMenu />
+    
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+<div id="blazor-error-ui">
+    Une erreur s'est produite. Cette application peut ne plus répondre jusqu'à ce qu'elle soit rechargée.
+    <a href="" class="reload">Recharger</a>
+    <a class="dismiss">🗙</a>
 </div>

@@ -1,0 +1,790 @@
+﻿@page "/profile"
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using NicolasQuiPaieWeb.Data.DTOs
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject UserManager<ApplicationUser> UserManager
+@inject BadgeService BadgeService
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@attribute [Authorize]
+
+<PageTitle>Mon Profil - Nicolas Qui Paie</PageTitle>
+
+<div class="container py-4">
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-3 text-muted">Chargement de votre profil...</p>
+        </div>
+    }
+    else if (currentUser != null)
+    {
+        <div class="row">
+            <!-- Profile Header -->
+            <div class="col-12 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center">
+                                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                                <h4 class="fw-bold">@currentUser.DisplayName</h4>
+                                <div class="nicolas-level-badge-large">
+                                    @GetNicolasBadge(currentUser.FiscalLevel)
+                                </div>
+                                <small class="text-muted">Membre depuis @currentUser.CreatedAt.ToString("dd/MM/yyyy")</small>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="row g-4">
+                                    <div class="col-md-3">
+                                        <div class="stat-card text-center">
+                                            <h3 class="text-primary">@userStats.ProposalsCount</h3>
+                                            <small class="text-muted">Propositions</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-card text-center">
+                                            <h3 class="text-success">@userStats.VotesCount</h3>
+                                            <small class="text-muted">Votes</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-card text-center">
+                                            <h3 class="text-info">@userStats.CommentsCount</h3>
+                                            <small class="text-muted">Commentaires</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="stat-card text-center">
+                                            <h3 class="text-warning">@currentUser.ReputationScore</h3>
+                                            <small class="text-muted">Réputation</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="col-lg-8">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+                            <i class="fas fa-user me-1"></i>Informations
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="proposals-tab" data-bs-toggle="tab" data-bs-target="#proposals" type="button" role="tab">
+                            <i class="fas fa-lightbulb me-1"></i>Mes Propositions
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="votes-tab" data-bs-toggle="tab" data-bs-target="#votes" type="button" role="tab">
+                            <i class="fas fa-vote-yea me-1"></i>Mes Votes
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="badges-tab" data-bs-toggle="tab" data-bs-target="#badges" type="button" role="tab">
+                            <i class="fas fa-medal me-1"></i>Badges
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="profileTabContent">
+                    <!-- Info Tab -->
+                    <div class="tab-pane fade show active" id="info" role="tabpanel">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3">Informations personnelles</h5>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nom d'affichage</label>
+                                        <input type="text" class="form-control" @bind="editDisplayName" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" value="@currentUser.Email" readonly />
+                                        <small class="text-muted">Contact le support pour changer l'email</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Niveau Nicolas</label>
+                                        <input type="text" class="form-control" value="@GetNicolasBadge(currentUser.FiscalLevel)" readonly />
+                                        <small class="text-muted">Badge attribué automatiquement selon votre contribution</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Membre depuis</label>
+                                        <input type="text" class="form-control" value="@currentUser.CreatedAt.ToString("dd/MM/yyyy")" readonly />
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Biographie</label>
+                                        <textarea class="form-control" rows="3" @bind="editBio" placeholder="Parlez-nous de vous..." maxlength="500"></textarea>
+                                        <small class="text-muted">@(editBio?.Length ?? 0)/500 caractères</small>
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <button class="btn btn-primary" @onclick="UpdateProfile" disabled="@isUpdating">
+                                        @if (isUpdating)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-1"></span>
+                                        }
+                                        <i class="fas fa-save me-1"></i>Sauvegarder
+                                    </button>
+                                    @if (!string.IsNullOrEmpty(updateMessage))
+                                    {
+                                        <span class="ms-2 text-success">@updateMessage</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Proposals Tab -->
+                    <div class="tab-pane fade" id="proposals" role="tabpanel">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0">Mes Propositions</h5>
+                                    <a href="/create-proposal" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-plus me-1"></i>Nouvelle
+                                    </a>
+                                </div>
+                                
+                                @if (userProposals?.Any() == true)
+                                {
+                                    @foreach (var proposal in userProposals)
+                                    {
+                                        <div class="border-bottom pb-3 mb-3">
+                                            <div class="d-flex justify-content-between">
+                                                <div>
+                                                    <h6><a href="/proposal/@proposal.Id" class="text-decoration-none">@proposal.Title</a></h6>
+                                                    <small class="text-muted">@proposal.CreatedAt.ToString("dd/MM/yyyy") • @proposal.TotalVotes votes</small>
+                                                </div>
+                                                <span class="badge @GetStatusBadgeClass(proposal.Status)">@proposal.Status</span>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Vous n'avez encore créé aucune proposition.</p>
+                                        <a href="/create-proposal" class="btn btn-primary">Créer ma première proposition</a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Votes Tab -->
+                    <div class="tab-pane fade" id="votes" role="tabpanel">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3">Historique de mes votes</h5>
+                                
+                                @if (userVotes?.Any() == true)
+                                {
+                                    @foreach (var vote in userVotes.Take(10))
+                                    {
+                                        <div class="border-bottom pb-3 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6>
+                                                        @if (vote.Proposal != null)
+                                                        {
+                                                            <a href="/proposal/@vote.ProposalId" class="text-decoration-none">@vote.Proposal.Title</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Proposition supprimée</span>
+                                                        }
+                                                    </h6>
+                                                    <small class="text-muted">Voté le @vote.VotedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                                </div>
+                                                <span class="badge @GetVoteBadgeClass(vote.VoteType)">
+                                                    @GetVoteText(vote.VoteType)
+                                                </span>
+                                            </div>
+                                        </div>
+                                    }
+                                    @if (userVotes.Count > 10)
+                                    {
+                                        <div class="text-center">
+                                            <small class="text-muted">Et @(userVotes.Count - 10) autres votes...</small>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-vote-yea fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Vous n'avez pas encore voté.</p>
+                                        <a href="/proposals" class="btn btn-primary">Découvrir les propositions</a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Badges Tab -->
+                    <div class="tab-pane fade" id="badges" role="tabpanel">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="fw-bold mb-3">Système de Badges Nicolas</h5>
+                                
+                                <!-- Current Badge -->
+                                <div class="alert alert-info mb-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="badge-icon me-3">@GetBadgeEmoji(currentUser.FiscalLevel)</div>
+                                        <div>
+                                            <h6 class="fw-bold mb-1">Votre badge actuel : @GetNicolasBadge(currentUser.FiscalLevel)</h6>
+                                            <p class="mb-0">@BadgeService.GetBadgeDescription(currentUser.FiscalLevel)</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Badge Explanation -->
+                                <div class="alert alert-warning mb-4">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    @BadgeService.GetBadgeExplanation()
+                                </div>
+
+                                <!-- Progress to Next Level -->
+                                @if (currentUser.FiscalLevel != FiscalLevel.NicolasSupreme)
+                                {
+                                    <div class="mb-4">
+                                        <h6 class="fw-bold">Progression vers le niveau supérieur</h6>
+                                        <p class="text-muted">@BadgeService.GetNextLevelCriteria(currentUser.FiscalLevel)</p>
+                                        
+                                        <!-- Progress visualization -->
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span>@GetBadgeEmoji(currentUser.FiscalLevel)</span>
+                                            <div class="flex-grow-1">
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-info" style="width: @GetProgressPercentage()%"></div>
+                                                </div>
+                                            </div>
+                                            <span>@GetNextBadgeEmoji()</span>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- All Badges -->
+                                <h6 class="fw-bold mb-3">Tous les badges Nicolas</h6>
+                                <div class="row g-3">
+                                    @foreach (FiscalLevel level in Enum.GetValues<FiscalLevel>())
+                                    {
+                                        <div class="col-md-4">
+                                            <div class="card border @(currentUser.FiscalLevel == level ? "border-primary bg-primary bg-opacity-10" : "")">
+                                                <div class="card-body text-center">
+                                                    <div class="badge-icon-large mb-2">@GetBadgeEmoji(level)</div>
+                                                    <h6 class="fw-bold">@GetNicolasBadge(level)</h6>
+                                                    <small class="text-muted">@BadgeService.GetBadgeDescription(level)</small>
+                                                    @if (currentUser.FiscalLevel == level)
+                                                    {
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-primary">Votre badge actuel</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <!-- Achievement Card -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="fas fa-trophy me-1"></i>Accomplissements
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="achievement-list">
+                            @foreach (var achievement in GetUserAchievements())
+                            {
+                                <div class="achievement-item d-flex align-items-center mb-2">
+                                    <span class="me-2">@achievement.Icon</span>
+                                    <div>
+                                        <div class="fw-bold">@achievement.Title</div>
+                                        <small class="text-muted">@achievement.Description</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Card -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-line me-1"></i>Activité récente
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Dernière connexion : @(currentUser.CreatedAt > DateTime.UtcNow.AddDays(-1) ? "Aujourd'hui" : "Il y a quelques jours")</p>
+                        <p class="text-muted">Actions cette semaine : @GetWeeklyActivity()</p>
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-info" @onclick="RefreshBadge" disabled="@isRefreshingBadge">
+                                @if (isRefreshingBadge)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="fas fa-sync-alt me-1"></i>Actualiser badge
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Error state -->
+        <div class="text-center py-5">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                <h4>Problème d'authentification</h4>
+                <p>Impossible de charger votre profil. Veuillez vous reconnecter.</p>
+                
+                @if (!string.IsNullOrEmpty(debugInfo))
+                {
+                    <div class="mt-3">
+                        <details class="text-start">
+                            <summary class="btn btn-sm btn-outline-secondary">Informations de débogage</summary>
+                            <pre class="mt-2 p-2 bg-light border rounded small">@debugInfo</pre>
+                        </details>
+                    </div>
+                }
+                
+                <div class="mt-4">
+                    <a href="/Identity/Account/Login" class="btn btn-primary me-2">
+                        <i class="fas fa-sign-in-alt me-1"></i>Se reconnecter
+                    </a>
+                    <button class="btn btn-outline-secondary" @onclick="RetryLoadProfile">
+                        <i class="fas fa-redo me-1"></i>Réessayer
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // Variables de composant utilisant les DTOs centralisés
+    private ApplicationUser? currentUser;
+    private UserStatsDto userStats = new UserStatsDto();
+    private List<ProposalDto> userProposals = new List<ProposalDto>();
+    private List<VoteDto> userVotes = new List<VoteDto>();
+    
+    // Champs d'édition
+    private string editDisplayName = "";
+    private string editBio = "";
+    
+    // État du composant
+    private bool isLoading = true;
+    private bool isUpdating = false;
+    private bool isRefreshingBadge = false;
+    private string updateMessage = "";
+    private string debugInfo = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserProfile();
+    }
+
+    private async Task RetryLoadProfile()
+    {
+        currentUser = null;
+        debugInfo = "";
+        await LoadUserProfile();
+    }
+
+    private async Task LoadUserProfile()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            await LoadCurrentUser();
+            
+            if (currentUser == null)
+            {
+                await CreateMissingUser();
+            }
+            
+            if (currentUser != null)
+            {
+                await LoadUserData();
+                editDisplayName = currentUser.DisplayName ?? "";
+                editBio = currentUser.Bio ?? "";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement du profil: {ex.Message}");
+            debugInfo = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        
+        if (authState.User.Identity?.IsAuthenticated == true)
+        {
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                currentUser = await UserManager.FindByIdAsync(userId);
+            }
+            
+            if (currentUser == null)
+            {
+                var userEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value 
+                               ?? authState.User.Identity?.Name;
+                
+                if (!string.IsNullOrEmpty(userEmail))
+                {
+                    currentUser = await UserManager.FindByEmailAsync(userEmail);
+                }
+            }
+        }
+    }
+
+    private async Task LoadUserData()
+    {
+        if (currentUser == null) return;
+
+        try
+        {
+            using var dbContext = await DbContextFactory.CreateDbContextAsync();
+            
+            // Charger statistiques
+            var proposalsCount = await dbContext.Proposals
+                .Where(p => p.CreatedById == currentUser.Id)
+                .CountAsync();
+
+            var votesCount = await dbContext.Votes
+                .Where(v => v.UserId == currentUser.Id)
+                .CountAsync();
+
+            var commentsCount = await dbContext.Comments
+                .Where(c => c.UserId == currentUser.Id && !c.IsDeleted)
+                .CountAsync();
+
+            userStats = new UserStatsDto
+            {
+                ProposalsCount = proposalsCount,
+                VotesCount = votesCount,
+                CommentsCount = commentsCount
+            };
+
+            // Charger propositions avec DTO pour éviter lazy loading
+            userProposals = await dbContext.Proposals
+                .Where(p => p.CreatedById == currentUser.Id)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(5)
+                .Select(p => new ProposalDto
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Status = p.Status,
+                    CreatedAt = p.CreatedAt,
+                    VotesFor = p.VotesFor,
+                    VotesAgainst = p.VotesAgainst
+                })
+                .ToListAsync();
+
+            // Charger votes avec DTO pour éviter lazy loading
+            userVotes = await dbContext.Votes
+                .Include(v => v.Proposal)
+                .Where(v => v.UserId == currentUser.Id)
+                .OrderByDescending(v => v.VotedAt)
+                .Take(20)
+                .Select(v => new VoteDto
+                {
+                    Id = v.Id,
+                    UserId = v.UserId,
+                    ProposalId = v.ProposalId,
+                    VoteType = v.VoteType,
+                    VotedAt = v.VotedAt,
+                    Weight = v.Weight,
+                    Comment = v.Comment,
+                    Proposal = v.Proposal != null ? new ProposalDto
+                    {
+                        Id = v.Proposal.Id,
+                        Title = v.Proposal.Title,
+                        Status = v.Proposal.Status,
+                        CreatedAt = v.Proposal.CreatedAt,
+                        VotesFor = v.Proposal.VotesFor,
+                        VotesAgainst = v.Proposal.VotesAgainst
+                    } : null
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des données: {ex.Message}");
+            userStats = new UserStatsDto();
+            userProposals = new List<ProposalDto>();
+            userVotes = new List<VoteDto>();
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        if (currentUser == null) return;
+
+        isUpdating = true;
+        updateMessage = "";
+        
+        try
+        {
+            currentUser.DisplayName = editDisplayName?.Trim();
+            currentUser.Bio = editBio?.Trim();
+
+            var result = await UserManager.UpdateAsync(currentUser);
+            if (result.Succeeded)
+            {
+                updateMessage = "Profil mis à jour avec succès !";
+                _ = Task.Delay(3000).ContinueWith(_ => 
+                {
+                    updateMessage = "";
+                    InvokeAsync(StateHasChanged);
+                });
+            }
+            else
+            {
+                updateMessage = "Erreur lors de la mise à jour du profil.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour: {ex.Message}");
+            updateMessage = "Erreur lors de la mise à jour du profil.";
+        }
+        finally
+        {
+            isUpdating = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RefreshBadge()
+    {
+        if (currentUser == null) return;
+
+        isRefreshingBadge = true;
+        
+        try
+        {
+            var wasUpdated = await BadgeService.EvaluateAndUpdateUserBadgeAsync(currentUser.Id);
+            if (wasUpdated)
+            {
+                currentUser = await UserManager.FindByIdAsync(currentUser.Id);
+                updateMessage = "Badge mis à jour !";
+            }
+            else
+            {
+                updateMessage = "Votre badge est déjà à jour.";
+            }
+            
+            _ = Task.Delay(3000).ContinueWith(_ => 
+            {
+                updateMessage = "";
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour du badge: {ex.Message}");
+            updateMessage = "Erreur lors de la mise à jour du badge.";
+        }
+        finally
+        {
+            isRefreshingBadge = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateMissingUser()
+    {
+        try
+        {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                var userEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value 
+                               ?? authState.User.FindFirst("email")?.Value
+                               ?? authState.User.Identity?.Name;
+                               
+                var userName = authState.User.Identity?.Name ?? userEmail;
+                
+                if (!string.IsNullOrEmpty(userEmail))
+                {
+                    var newUser = new ApplicationUser
+                    {
+                        UserName = userEmail,
+                        Email = userEmail,
+                        EmailConfirmed = true,
+                        DisplayName = userName ?? "Nicolas",
+                        FiscalLevel = FiscalLevel.PetitNicolas,
+                        CreatedAt = DateTime.UtcNow,
+                        ReputationScore = 0,
+                        IsVerified = true
+                    };
+
+                    var result = await UserManager.CreateAsync(newUser);
+                    
+                    if (result.Succeeded)
+                    {
+                        currentUser = newUser;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création de l'utilisateur manquant: {ex.Message}");
+        }
+    }
+
+    // Méthodes helper
+    private string GetNicolasBadge(FiscalLevel level)
+    {
+        return level switch
+        {
+            FiscalLevel.PetitNicolas => "🥉 Petit Nicolas",
+            FiscalLevel.GrosNicolas => "🥈 Gros Nicolas",
+            FiscalLevel.NicolasSupreme => "🏆 Nicolas Suprême",
+            _ => "🥉 Petit Nicolas"
+        };
+    }
+
+    private string GetBadgeEmoji(FiscalLevel level)
+    {
+        return level switch
+        {
+            FiscalLevel.PetitNicolas => "🥉",
+            FiscalLevel.GrosNicolas => "🥈",
+            FiscalLevel.NicolasSupreme => "🏆",
+            _ => "🥉"
+        };
+    }
+
+    private string GetNextBadgeEmoji()
+    {
+        return currentUser?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => "🥈",
+            FiscalLevel.GrosNicolas => "🏆",
+            _ => "🏆"
+        };
+    }
+
+    private double GetProgressPercentage()
+    {
+        var totalActivity = userStats.ProposalsCount * 100 + userStats.VotesCount * 5 + userStats.CommentsCount * 8 + (currentUser?.ReputationScore ?? 0);
+        
+        return currentUser?.FiscalLevel switch
+        {
+            FiscalLevel.PetitNicolas => Math.Min(100, (double)totalActivity / 300 * 100),
+            FiscalLevel.GrosNicolas => Math.Min(100, (double)totalActivity / 1000 * 100),
+            _ => 100
+        };
+    }
+
+    private string GetStatusBadgeClass(ProposalStatus status)
+    {
+        return status switch
+        {
+            ProposalStatus.Active => "bg-success",
+            ProposalStatus.Closed => "bg-secondary",
+            ProposalStatus.Draft => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetVoteBadgeClass(VoteType voteType)
+    {
+        return voteType switch
+        {
+            VoteType.For => "bg-success",
+            VoteType.Against => "bg-danger",
+            VoteType.Abstain => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetVoteText(VoteType voteType)
+    {
+        return voteType switch
+        {
+            VoteType.For => "Pour",
+            VoteType.Against => "Contre",
+            VoteType.Abstain => "Abstention",
+            _ => "Non défini"
+        };
+    }
+
+    private List<AchievementDto> GetUserAchievements()
+    {
+        var achievements = new List<AchievementDto>();
+        
+        if (userStats.VotesCount > 0)
+            achievements.Add(new AchievementDto { Icon = "🗳️", Title = "Premier Vote", Description = "Votre premier vote sur une proposition" });
+            
+        if (userStats.ProposalsCount > 0)
+            achievements.Add(new AchievementDto { Icon = "💡", Title = "Créateur", Description = "Votre première proposition créée" });
+            
+        if (userStats.CommentsCount >= 10)
+            achievements.Add(new AchievementDto { Icon = "💬", Title = "Commentateur", Description = "10 commentaires postés" });
+            
+        if (userStats.VotesCount >= 50)
+            achievements.Add(new AchievementDto { Icon = "🎖️", Title = "Citoyen Actif", Description = "50 votes exprimés" });
+            
+        if ((currentUser?.CreatedAt.AddDays(30) ?? DateTime.MaxValue) < DateTime.UtcNow)
+            achievements.Add(new AchievementDto { Icon = "🌟", Title = "Vétéran", Description = "Membre depuis plus d'un mois" });
+
+        return achievements;
+    }
+
+    private int GetWeeklyActivity()
+    {
+        try
+        {
+            var weekAgo = DateTime.UtcNow.AddDays(-7);
+            return userVotes.Count(v => v.VotedAt >= weekAgo) + 
+                   userProposals.Count(p => p.CreatedAt >= weekAgo);
+        }
+        catch (Exception)
+        {
+            return 0;
+        }
+    }
+}
