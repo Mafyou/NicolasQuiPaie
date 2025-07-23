@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using NicolasQuiPaieAPI.Application.Interfaces;
 using NicolasQuiPaieAPI.Application.Services;
 using NicolasQuiPaieData.DTOs;
-using NicolasQuiPaieData.Models;
+using NicolasQuiPaieAPI.Infrastructure.Models;
+using InfrastructureProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
+using DtoProposalStatus = NicolasQuiPaieData.DTOs.ProposalStatus;
 
 namespace NicolasQuiPaie.UnitTests.Services
 {
@@ -38,14 +40,14 @@ namespace NicolasQuiPaie.UnitTests.Services
             // Arrange
             var proposals = new List<Proposal>
             {
-                new Proposal { Id = 1, Title = "Test Proposal 1", Status = ProposalStatus.Active },
-                new Proposal { Id = 2, Title = "Test Proposal 2", Status = ProposalStatus.Active }
+                new Proposal { Id = 1, Title = "Test Proposal 1", Status = InfrastructureProposalStatus.Active },
+                new Proposal { Id = 2, Title = "Test Proposal 2", Status = InfrastructureProposalStatus.Active }
             };
 
             var proposalDtos = new List<ProposalDto>
             {
-                new ProposalDto { Id = 1, Title = "Test Proposal 1", Status = ProposalStatus.Active },
-                new ProposalDto { Id = 2, Title = "Test Proposal 2", Status = ProposalStatus.Active }
+                new ProposalDto { Id = 1, Title = "Test Proposal 1", Status = DtoProposalStatus.Active },
+                new ProposalDto { Id = 2, Title = "Test Proposal 2", Status = DtoProposalStatus.Active }
             };
 
             _mockProposalRepository
@@ -73,8 +75,8 @@ namespace NicolasQuiPaie.UnitTests.Services
         {
             // Arrange
             var proposalId = 1;
-            var proposal = new Proposal { Id = proposalId, Title = "Test Proposal", Status = ProposalStatus.Active };
-            var proposalDto = new ProposalDto { Id = proposalId, Title = "Test Proposal", Status = ProposalStatus.Active };
+            var proposal = new Proposal { Id = proposalId, Title = "Test Proposal", Status = InfrastructureProposalStatus.Active };
+            var proposalDto = new ProposalDto { Id = proposalId, Title = "Test Proposal", Status = DtoProposalStatus.Active };
 
             _mockProposalRepository
                 .Setup(x => x.GetByIdAsync(proposalId))
@@ -134,7 +136,7 @@ namespace NicolasQuiPaie.UnitTests.Services
                 Description = createDto.Description,
                 CategoryId = createDto.CategoryId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active
+                Status = InfrastructureProposalStatus.Active
             };
 
             var createdProposal = new Proposal
@@ -144,7 +146,7 @@ namespace NicolasQuiPaie.UnitTests.Services
                 Description = createDto.Description,
                 CategoryId = createDto.CategoryId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active,
+                Status = InfrastructureProposalStatus.Active,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -155,7 +157,7 @@ namespace NicolasQuiPaie.UnitTests.Services
                 Description = createDto.Description,
                 CategoryId = createDto.CategoryId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active
+                Status = DtoProposalStatus.Active
             };
 
             _mockMapper
@@ -181,12 +183,12 @@ namespace NicolasQuiPaie.UnitTests.Services
             result.ShouldNotBeNull();
             result.Title.ShouldBe(createDto.Title);
             result.CreatedById.ShouldBe(userId);
-            result.Status.ShouldBe(ProposalStatus.Active);
+            result.Status.ShouldBe(DtoProposalStatus.Active);
 
             _mockProposalRepository.Verify(x => x.AddAsync(It.Is<Proposal>(p => 
                 p.Title == createDto.Title && 
                 p.CreatedById == userId && 
-                p.Status == ProposalStatus.Active)), Times.Once);
+                p.Status == InfrastructureProposalStatus.Active)), Times.Once);
             _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
         }
 
@@ -210,7 +212,7 @@ namespace NicolasQuiPaie.UnitTests.Services
                 Description = "Original description that is long enough to pass validation.",
                 CategoryId = 1,
                 CreatedById = userId,
-                Status = ProposalStatus.Active,
+                Status = InfrastructureProposalStatus.Active,
                 CreatedAt = DateTime.UtcNow.AddDays(-1)
             };
 
@@ -221,7 +223,7 @@ namespace NicolasQuiPaie.UnitTests.Services
                 Description = updateDto.Description,
                 CategoryId = updateDto.CategoryId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active,
+                Status = InfrastructureProposalStatus.Active,
                 CreatedAt = DateTime.UtcNow.AddDays(-1),
                 UpdatedAt = DateTime.UtcNow
             };
@@ -289,7 +291,7 @@ namespace NicolasQuiPaie.UnitTests.Services
             {
                 Id = proposalId,
                 CreatedById = differentUserId, // Different user
-                Status = ProposalStatus.Active
+                Status = InfrastructureProposalStatus.Active
             };
 
             _mockProposalRepository
@@ -318,7 +320,7 @@ namespace NicolasQuiPaie.UnitTests.Services
             {
                 Id = proposalId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active
+                Status = InfrastructureProposalStatus.Active
             };
 
             _mockProposalRepository
@@ -353,7 +355,7 @@ namespace NicolasQuiPaie.UnitTests.Services
             {
                 Id = proposalId,
                 CreatedById = userId,
-                Status = ProposalStatus.Active
+                Status = InfrastructureProposalStatus.Active
             };
 
             _mockProposalRepository
@@ -379,7 +381,7 @@ namespace NicolasQuiPaie.UnitTests.Services
             {
                 Id = proposalId,
                 CreatedById = differentUserId,
-                Status = ProposalStatus.Active
+                Status = InfrastructureProposalStatus.Active
             };
 
             _mockProposalRepository

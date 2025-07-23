@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <!-- Configuration for .NET 9 test execution -->
+  <RunConfiguration>
+    <!-- Path relative to directory that contains .runsettings file-->
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+    
+    <!-- Timeout in milliseconds for test execution -->
+    <TestSessionTimeout>300000</TestSessionTimeout>
+    
+    <!-- Maximum number of parallel test sessions -->
+    <MaxCpuCount>0</MaxCpuCount>
+    
+    <!-- Platform for test execution -->
+    <TargetPlatform>x64</TargetPlatform>
+    
+    <!-- Framework version for test execution -->
+    <TargetFrameworkVersion>net9.0</TargetFrameworkVersion>
+    
+    <!-- Treat test adapter errors as warnings -->
+    <TreatTestAdapterErrorsAsWarnings>false</TreatTestAdapterErrorsAsWarnings>
+  </RunConfiguration>
+
+  <!-- NUnit3 adapter configuration -->
+  <NUnit>
+    <!-- Verbosity level for NUnit output -->
+    <Verbosity>1</Verbosity>
+    
+    <!-- Where clause for filtering tests -->
+    <!-- <Where>cat != Integration</Where> -->
+    
+    <!-- Maximum number of worker threads -->
+    <NumberOfTestWorkers>8</NumberOfTestWorkers>
+    
+    <!-- Stop execution on first error -->
+    <StopOnError>false</StopOnError>
+    
+    <!-- Output internal trace messages -->
+    <InternalTraceLevel>Off</InternalTraceLevel>
+    
+    <!-- Random seed for test execution order -->
+    <RandomSeed>1234567890</RandomSeed>
+  </NUnit>
+
+  <!-- Data collection configuration -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <!-- Code coverage with Coverlet -->
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>opencover,cobertura,json</Format>
+          <Include>[NicolasQuiPaieAPI]*,[NicolasQuiPaieData]*,[NicolasQuiPaieAPI.Infrastructure]*</Include>
+          <Exclude>[*]*.Program,[*]*Migrations*,[*]*Tests*,[*]*Mock*</Exclude>
+          <ExcludeByAttribute>Obsolete,GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/Migrations/**,**/wwwroot/**</ExcludeByFile>
+          <SingleHit>false</SingleHit>
+          <UseSourceLink>true</UseSourceLink>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+        </Configuration>
+      </DataCollector>
+
+      <!-- Event Log data collector for debugging -->
+      <DataCollector friendlyName="Event Log">
+        <Configuration>
+          <Setting name="EventLogs" value="Application,System" />
+          <Setting name="EventSources" value="ASP.NET Core,EntityFramework" />
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+
+  <!-- Logger configuration -->
+  <LoggerRunSettings>
+    <Loggers>
+      <!-- Console logger for CI/CD -->
+      <Logger friendlyName="console" enabled="True">
+        <Configuration>
+          <Verbosity>normal</Verbosity>
+        </Configuration>
+      </Logger>
+      
+      <!-- TRX logger for detailed results -->
+      <Logger friendlyName="trx" enabled="True">
+        <Configuration>
+          <LogFileName>TestResults.trx</LogFileName>
+        </Configuration>
+      </Logger>
+      
+      <!-- HTML logger for readable reports -->
+      <Logger friendlyName="html" enabled="True">
+        <Configuration>
+          <LogFileName>TestReport.html</LogFileName>
+        </Configuration>
+      </Logger>
+    </Loggers>
+  </LoggerRunSettings>
+
+  <!-- Test platform configuration -->
+  <TestPlatform>
+    <!-- Disable app domains for .NET Core -->
+    <DisableAppDomain>True</DisableAppDomain>
+    
+    <!-- Disable parallel execution at assembly level -->
+    <DisableParallelization>False</DisableParallelization>
+  </TestPlatform>
+
+  <!-- Environment variables for tests -->
+  <EnvironmentVariables>
+    <ASPNETCORE_ENVIRONMENT>Testing</ASPNETCORE_ENVIRONMENT>
+    <DOTNET_ENVIRONMENT>Testing</DOTNET_ENVIRONMENT>
+    <ConnectionStrings__TestDatabase>Server=(localdb)\mssqllocaldb;Database=NicolasQuiPaieTestDb;Trusted_Connection=true;TrustServerCertificate=true;</ConnectionStrings__TestDatabase>
+  </EnvironmentVariables>
+
+</RunSettings>

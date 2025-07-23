@@ -49,7 +49,7 @@ namespace NicolasQuiPaie.IntegrationTests.Controllers
             proposals.Count.ShouldBeGreaterThan(0);
             
             // Should only return active proposals
-            proposals.All(p => p.Status == NicolasQuiPaieData.Models.ProposalStatus.Active).ShouldBeTrue();
+            proposals.All(p => p.Status == NicolasQuiPaieData.DTOs.ProposalStatus.Active).ShouldBeTrue();
         }
 
         [Test]

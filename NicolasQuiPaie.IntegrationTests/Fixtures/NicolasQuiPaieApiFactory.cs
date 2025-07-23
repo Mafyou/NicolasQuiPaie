@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NicolasQuiPaieData.Context;
+using NicolasQuiPaieAPI.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
-using NicolasQuiPaieData.Models;
+using NicolasQuiPaieAPI.Infrastructure.Models;
+using FiscalLevel = NicolasQuiPaieAPI.Infrastructure.Models.FiscalLevel;
+using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
 
 namespace NicolasQuiPaie.IntegrationTests.Fixtures
 {
@@ -85,122 +87,58 @@ namespace NicolasQuiPaie.IntegrationTests.Fixtures
                 Email = "testuser2@test.com",
                 EmailConfirmed = true,
                 DisplayName = "Test User 2",
-                FiscalLevel = FiscalLevel.GrosNicolas,
+                FiscalLevel = FiscalLevel.GrosMoyenNicolas,
                 ReputationScore = 250,
                 IsVerified = true,
-                CreatedAt = DateTime.UtcNow.AddDays(-15)
+                CreatedAt = DateTime.UtcNow.AddDays(-45)
             };
 
-            await userManager.CreateAsync(testUser1, "TestPassword123!");
-            await userManager.CreateAsync(testUser2, "TestPassword123!");
+            // Add users using UserManager
+            await userManager.CreateAsync(testUser1);
+            await userManager.CreateAsync(testUser2);
+
+            // Create test categories
+            var categories = new[]
+            {
+                new Category { Id = 1, Name = "Test Category 1", Description = "Test Description 1", Color = "#FF0000", IconClass = "fas fa-test" },
+                new Category { Id = 2, Name = "Test Category 2", Description = "Test Description 2", Color = "#00FF00", IconClass = "fas fa-test2" }
+            };
+
+            context.Categories.AddRange(categories);
+            await context.SaveChangesAsync();
 
             // Create test proposals
-            var proposals = new List<Proposal>
+            var proposals = new[]
             {
                 new Proposal
                 {
                     Id = 1,
                     Title = "Test Proposal 1",
-                    Description = "This is a test proposal description that is long enough to pass validation requirements for our system.",
-                    CategoryId = 1,
-                    CreatedById = testUser1.Id,
+                    Description = "This is a test proposal description for testing purposes.",
                     Status = ProposalStatus.Active,
-                    CreatedAt = DateTime.UtcNow.AddDays(-10),
-                    VotesFor = 5,
-                    VotesAgainst = 2,
-                    ViewsCount = 50,
-                    IsFeatured = false
+                    CreatedById = testUser1.Id,
+                    CategoryId = 1,
+                    CreatedAt = DateTime.UtcNow.AddDays(-5),
+                    VotesFor = 10,
+                    VotesAgainst = 5,
+                    ViewsCount = 100
                 },
                 new Proposal
                 {
                     Id = 2,
                     Title = "Test Proposal 2",
-                    Description = "This is another test proposal description that is also long enough to pass validation requirements for our testing system.",
-                    CategoryId = 2,
-                    CreatedById = testUser2.Id,
+                    Description = "This is another test proposal description for testing purposes.",
                     Status = ProposalStatus.Active,
-                    CreatedAt = DateTime.UtcNow.AddDays(-5),
-                    VotesFor = 12,
+                    CreatedById = testUser2.Id,
+                    CategoryId = 2,
+                    CreatedAt = DateTime.UtcNow.AddDays(-3),
+                    VotesFor = 15,
                     VotesAgainst = 3,
-                    ViewsCount = 120,
-                    IsFeatured = true
-                },
-                new Proposal
-                {
-                    Id = 3,
-                    Title = "Closed Test Proposal",
-                    Description = "This is a closed test proposal description that is long enough to pass validation requirements and is used for testing closed proposals.",
-                    CategoryId = 1,
-                    CreatedById = testUser1.Id,
-                    Status = ProposalStatus.Closed,
-                    CreatedAt = DateTime.UtcNow.AddDays(-20),
-                    ClosedAt = DateTime.UtcNow.AddDays(-1),
-                    VotesFor = 25,
-                    VotesAgainst = 10,
-                    ViewsCount = 300,
-                    IsFeatured = false
+                    ViewsCount = 150
                 }
             };
 
             context.Proposals.AddRange(proposals);
-
-            // Create test votes
-            var votes = new List<Vote>
-            {
-                new Vote
-                {
-                    Id = 1,
-                    UserId = testUser1.Id,
-                    ProposalId = 2,
-                    VoteType = VoteType.For,
-                    VotedAt = DateTime.UtcNow.AddDays(-3),
-                    Weight = 1,
-                    Comment = "Great idea!"
-                },
-                new Vote
-                {
-                    Id = 2,
-                    UserId = testUser2.Id,
-                    ProposalId = 1,
-                    VoteType = VoteType.Against,
-                    VotedAt = DateTime.UtcNow.AddDays(-2),
-                    Weight = 2,
-                    Comment = "I disagree with this approach"
-                }
-            };
-
-            context.Votes.AddRange(votes);
-
-            // Create test comments
-            var comments = new List<Comment>
-            {
-                new Comment
-                {
-                    Id = 1,
-                    UserId = testUser2.Id,
-                    ProposalId = 1,
-                    Content = "This is a test comment on the first proposal",
-                    CreatedAt = DateTime.UtcNow.AddDays(-8),
-                    LikesCount = 3,
-                    IsDeleted = false,
-                    IsModerated = false
-                },
-                new Comment
-                {
-                    Id = 2,
-                    UserId = testUser1.Id,
-                    ProposalId = 1,
-                    ParentCommentId = 1,
-                    Content = "This is a reply to the first comment",
-                    CreatedAt = DateTime.UtcNow.AddDays(-7),
-                    LikesCount = 1,
-                    IsDeleted = false,
-                    IsModerated = false
-                }
-            };
-
-            context.Comments.AddRange(comments);
-
             await context.SaveChangesAsync();
 
             logger.LogInformation("Test data seeded successfully");

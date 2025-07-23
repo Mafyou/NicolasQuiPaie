@@ -378,3 +378,6 @@ static async Task SeedTestUserAsync(UserManager<ApplicationUser> userManager, IL
         logger.LogError(ex, "Erreur lors de la création de l'utilisateur de test");
     }
 }
+
+// Make Program class accessible for testing
+public partial class Program { }

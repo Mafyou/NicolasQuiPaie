@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -32,22 +32,18 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" />
-    <ProjectReference Include="..\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
-    <ProjectReference Include="..\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
-    <Using Include="Moq" />
-    <Using Include="Shouldly" />
-    <Using Include="Microsoft.AspNetCore.Mvc.Testing" />
-    <Using Include="System.Net.Http.Json" />
-    <Using Include="NicolasQuiPaieData.DTOs" />
-    <Using Include="NicolasQuiPaieAPI.Infrastructure.Models" />
+    <Compile Include="..\..\Usings.cs" Link="Usings.cs" />
   </ItemGroup>
 
 </Project>

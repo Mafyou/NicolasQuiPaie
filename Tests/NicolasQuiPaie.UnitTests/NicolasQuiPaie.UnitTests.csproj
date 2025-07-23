@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <LangVersion>13.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,18 +26,19 @@
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+    <PackageReference Include="FluentValidation.TestHelper" Version="11.9.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" />
-    <ProjectReference Include="..\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
-    <ProjectReference Include="..\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
+    <ProjectReference Include="..\..\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="NUnit.Framework" />
-    <Using Include="Moq" />
-    <Using Include="Shouldly" />
+    <Compile Include="..\..\Usings.cs" Link="Usings.cs" />
   </ItemGroup>
 
 </Project>
