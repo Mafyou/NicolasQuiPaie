@@ -108,12 +108,12 @@
                 
                 <h1 class="maintenance-title">@maintenanceSettings.MaintenancePageTitle</h1>
                 
-                <p class="maintenance-message">@maintenanceSettings.MaintenancePageMessage</p>
+                <p class="maintenance-message">@maintenanceSettings.ConstructionMessage</p>
                 
                 @if (!string.IsNullOrEmpty(maintenanceSettings.ExpectedCompletionDate))
                 {
                     <div class="maintenance-details">
-                        <h4><i class="fas fa-clock me-2"></i>Retour prévu</h4>
+                        <h4><i class="fas fa-clock me-2"></i>Démarrage prévu</h4>
                         <p class="mb-0">
                             @try
                             {
