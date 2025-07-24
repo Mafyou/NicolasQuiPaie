@@ -1,4 +1,4 @@
-@page "/proposals"
+ï»¿@page "/proposals"
 @inject ProposalService ProposalService
 @inject NavigationManager Navigation
 
@@ -12,7 +12,7 @@
                 <i class="fas fa-vote-yea text-primary me-2"></i>
                 Propositions
             </h1>
-            <p class="text-muted">Découvrez et votez sur les propositions de la communauté Nicolas</p>
+            <p class="text-muted">DÃ©couvrez et votez sur les propositions de la communautÃ© Nicolas</p>
         </div>
         <div class="col-md-4 text-end">
             <a href="/create-proposal" class="btn btn-primary">
@@ -28,9 +28,9 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label">Catégorie</label>
+                            <label class="form-label">CatÃ©gorie</label>
                             <select class="form-select" @onchange="OnCategoryChanged">
-                                <option value="">Toutes les catégories</option>
+                                <option value="">Toutes les catÃ©gories</option>
                                 @foreach (var category in categories)
                                 {
                                     <option value="@category.Id">@category.Name</option>
@@ -44,9 +44,9 @@
                         <div class="col-md-4">
                             <label class="form-label">Tri</label>
                             <select class="form-select" @onchange="OnSortChanged">
-                                <option value="recent">Plus récentes</option>
+                                <option value="recent">Plus rÃ©centes</option>
                                 <option value="popular">Plus populaires</option>
-                                <option value="controversial">Plus débattues</option>
+                                <option value="controversial">Plus dÃ©battues</option>
                             </select>
                         </div>
                     </div>
@@ -93,10 +93,10 @@
     {
         <div class="text-center py-5">
             <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h4 class="text-muted">Aucune proposition trouvée</h4>
-            <p class="text-muted">Ajustez vos filtres ou créez la première proposition !</p>
+            <h4 class="text-muted">Aucune proposition trouvÃ©e</h4>
+            <p class="text-muted">Ajustez vos filtres ou crÃ©ez la premiÃ¨re proposition !</p>
             <a href="/create-proposal" class="btn btn-primary mt-3">
-                <i class="fas fa-plus me-2"></i>Créer une Proposition
+                <i class="fas fa-plus me-2"></i>CrÃ©er une Proposition
             </a>
         </div>
     }
