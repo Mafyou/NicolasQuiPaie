@@ -336,7 +336,7 @@
                     Id = authState.User.FindFirst("sub")?.Value ?? authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "",
                     Email = authState.User.FindFirst("email")?.Value ?? authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "",
                     DisplayName = authState.User.FindFirst("DisplayName")?.Value ?? authState.User.Identity?.Name ?? "Nicolas",
-                    ContributionLevel = Enum.TryParse<ContributionLevel>(authState.User.FindFirst("FiscalLevel")?.Value, out var level) ? level : ContributionLevel.PetitNicolas,
+                    ContributionLevel = Enum.TryParse<ContributionLevel>(authState.User.FindFirst("ContributionLevel")?.Value, out var level) ? level : ContributionLevel.PetitNicolas,
                     ReputationScore = int.TryParse(authState.User.FindFirst("ReputationScore")?.Value, out var score) ? score : 0,
                     IsVerified = bool.TryParse(authState.User.FindFirst("IsVerified")?.Value, out var verified) && verified,
                     CreatedAt = DateTime.TryParse(authState.User.FindFirst("CreatedAt")?.Value, out var created) ? created : DateTime.UtcNow

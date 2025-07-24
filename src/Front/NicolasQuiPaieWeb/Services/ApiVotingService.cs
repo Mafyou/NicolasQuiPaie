@@ -1,7 +1,3 @@
-using NicolasQuiPaieData.DTOs;
-using System.Net.Http.Json;
-using System.Text.Json;
-
 namespace NicolasQuiPaieWeb.Services
 {
     public class ApiVotingService
@@ -29,7 +25,7 @@ namespace NicolasQuiPaieWeb.Services
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("/api/votes", voteDto, _jsonOptions);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Vote soumis avec succès pour la proposition {ProposalId}", voteDto.ProposalId);
@@ -69,11 +65,11 @@ namespace NicolasQuiPaieWeb.Services
         /// <summary>
         /// Récupère les votes de l'utilisateur actuel via l'API
         /// </summary>
-        public async Task<IEnumerable<VoteDto>> GetUserVotesAsync()
+        public async Task<IEnumerable<VoteDto>> GetUserVotesAsync(string userId)
         {
             try
             {
-                var response = await _httpClient.GetFromJsonAsync<List<VoteDto>>("/api/votes/user", _jsonOptions);
+                var response = await _httpClient.GetFromJsonAsync<List<VoteDto>>($"/api/votes/user/{userId}", _jsonOptions);
                 return response ?? new List<VoteDto>();
             }
             catch (Exception ex)
@@ -92,7 +88,7 @@ namespace NicolasQuiPaieWeb.Services
             {
                 var url = $"/api/votes/proposal/{proposalId}/user";
                 var response = await _httpClient.DeleteAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Vote supprimé avec succès pour la proposition {ProposalId}", proposalId);

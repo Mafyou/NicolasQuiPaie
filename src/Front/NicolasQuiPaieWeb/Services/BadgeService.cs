@@ -1,6 +1,4 @@
-using NicolasQuiPaieData.DTOs;
-
-namespace NicolasQuiPaieWeb.Services
+ï»¿namespace NicolasQuiPaieWeb.Services
 {
     /// <summary>
     /// Client-side placeholder service for badges - will be replaced with API calls when available
@@ -18,7 +16,7 @@ namespace NicolasQuiPaieWeb.Services
         {
             // TODO: Replace with API call when badge evaluation endpoint is available
             await Task.Delay(100); // Simulate API call
-            
+
             _logger.LogInformation("Badge evaluation for user {UserId} - placeholder implementation", userId);
             return false; // No change for now
         }
@@ -27,11 +25,11 @@ namespace NicolasQuiPaieWeb.Services
         {
             return level switch
             {
-                ContributionLevel.PetitNicolas => "?? Petit Nicolas",
-                ContributionLevel.GrosMoyenNicolas => "?? Moyen Nicolas", 
-                ContributionLevel.GrosNicolas => "?? Gros Nicolas",
-                ContributionLevel.NicolasSupreme => "?? Nicolas Suprême",
-                _ => "?? Petit Nicolas"
+                ContributionLevel.PetitNicolas => "ðŸ¥‰ Petit Nicolas",
+                ContributionLevel.GrosMoyenNicolas => "ðŸ¥ˆ Moyen Nicolas",
+                ContributionLevel.GrosNicolas => "ðŸ¥‡ Gros Nicolas",
+                ContributionLevel.NicolasSupreme => "ðŸ‘‘ Nicolas SuprÃªme",
+                _ => "ðŸ¥‰ Petit Nicolas"
             };
         }
 
@@ -39,10 +37,10 @@ namespace NicolasQuiPaieWeb.Services
         {
             return level switch
             {
-                ContributionLevel.PetitNicolas => "Badge de débutant - Reconnaissance pour vos premiers pas dans la communauté Nicolas",
-                ContributionLevel.GrosMoyenNicolas => "Badge de contributeur moyen - Participation régulière reconnue",
-                ContributionLevel.GrosNicolas => "Badge de contributeur actif - Reconnaissance de votre participation régulière et engagement",
-                ContributionLevel.NicolasSupreme => "Badge d'expert - Reconnaissance de votre expertise et contribution exceptionnelle à la communauté",
+                ContributionLevel.PetitNicolas => "Badge de dÃ©butant - Reconnaissance pour vos premiers pas dans la communautÃ© Nicolas",
+                ContributionLevel.GrosMoyenNicolas => "Badge de contributeur moyen - Participation rÃ©guliÃ¨re reconnue",
+                ContributionLevel.GrosNicolas => "Badge de contributeur actif - Reconnaissance de votre participation rÃ©guliÃ¨re et engagement",
+                ContributionLevel.NicolasSupreme => "Badge d'expert - Reconnaissance de votre expertise et contribution exceptionnelle Ã  la communautÃ©",
                 _ => "Badge de contributeur Nicolas"
             };
         }

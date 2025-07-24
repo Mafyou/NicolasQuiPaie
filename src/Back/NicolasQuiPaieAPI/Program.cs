@@ -57,8 +57,10 @@ builder.Services.AddCors(options =>
                 "http://localhost:5000",
                 "https://localhost:7398", // API dans appsettings
                 "https://localhost:7051",  // API HTTPS
-                "https://happy-ocean-06624de03.2.azurestaticapps.net" // NicolasQuiPaieWeb Azure Static Web App
+                "https://happy-ocean-06624de03.2.azurestaticapps.net", // NicolasQuiPaieWeb Azure Static Web App
+                "https://*.azurestaticapps.net"
               )
+              .SetIsOriginAllowedToAllowWildcardSubdomains() // Allow subdomains
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
