@@ -49,8 +49,25 @@
                                     </td>
                                 </tr>
                                 <tr>
+                                    <td><strong>Site complètement fermé</strong></td>
+                                    <td>
+                                        @if (maintenanceSettings.IsCompletelyDown)
+                                        {
+                                            <span class="badge bg-danger">?? SITE FERMÉ</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">?? ACCESSIBLE</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
                                     <td><strong>Message de construction</strong></td>
                                     <td><code>@maintenanceSettings.ConstructionMessage</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Message de maintenance</strong></td>
+                                    <td><code>@maintenanceSettings.MaintenancePageMessage</code></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Date prévue</strong></td>
@@ -228,9 +245,19 @@
                         <li>Testez l'API directement : <a href="@apiBaseUrl/swagger" target="_blank">@apiBaseUrl/swagger</a></li>
                     </ol>
 
+                    <h6 class="mt-4">?? Si le site entier doit être fermé :</h6>
+                    <ol>
+                        <li>Modifiez <code>wwwroot/appsettings.json</code> - <code>IsCompletelyDown</code> à <code>true</code></li>
+                        <li>Configurez le message dans <code>MaintenancePageMessage</code></li>
+                        <li>Définissez la date de retour dans <code>ExpectedCompletionDate</code></li>
+                        <li>Redéployez sur Azure Static Web Apps</li>
+                        <li>Tous les utilisateurs verront la page de maintenance complète</li>
+                    </ol>
+
                     <h6 class="mt-4">?? Si le banner de construction n'apparaît pas :</h6>
                     <ol>
                         <li>Vérifiez <code>wwwroot/appsettings.json</code> - <code>IsUnderConstruction</code> doit être <code>true</code></li>
+                        <li>Assurez-vous que <code>IsCompletelyDown</code> est à <code>false</code></li>
                         <li>Redéployez l'application sur Azure Static Web Apps</li>
                         <li>Videz le cache du navigateur (Ctrl+F5)</li>
                         <li>Vérifiez les logs de la console du navigateur (F12)</li>
