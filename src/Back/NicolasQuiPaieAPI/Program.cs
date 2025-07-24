@@ -56,7 +56,8 @@ builder.Services.AddCors(options =>
                 "https://localhost:5001",
                 "http://localhost:5000",
                 "https://localhost:7398", // API dans appsettings
-                "https://localhost:7051"  // API HTTPS
+                "https://localhost:7051",  // API HTTPS
+                "https://happy-ocean-06624de03.2.azurestaticapps.net" // NicolasQuiPaieWeb Azure Static Web App
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
