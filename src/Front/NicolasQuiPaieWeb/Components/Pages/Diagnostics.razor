@@ -251,16 +251,16 @@
                         <li>Configurez le message dans <code>MaintenancePageMessage</code></li>
                         <li>Définissez la date de retour dans <code>ExpectedCompletionDate</code></li>
                         <li>Redéployez sur Azure Static Web Apps</li>
-                        <li>Tous les utilisateurs verront la page de maintenance complète</li>
+                        <li>Le mode maintenance s'affichera directement sans redirection (plus de 404 !)</li>
                     </ol>
 
-                    <h6 class="mt-4">?? Si le banner de construction n'apparaît pas :</h6>
+                    <h6 class="mt-4">?? Si le mode maintenance ne s'affiche pas :</h6>
                     <ol>
-                        <li>Vérifiez <code>wwwroot/appsettings.json</code> - <code>IsUnderConstruction</code> doit être <code>true</code></li>
-                        <li>Assurez-vous que <code>IsCompletelyDown</code> est à <code>false</code></li>
-                        <li>Redéployez l'application sur Azure Static Web Apps</li>
-                        <li>Videz le cache du navigateur (Ctrl+F5)</li>
-                        <li>Vérifiez les logs de la console du navigateur (F12)</li>
+                        <li>Vérifiez <code>wwwroot/appsettings.json</code> - <code>IsCompletelyDown</code> doit être <code>true</code></li>
+                        <li>Videz le cache du navigateur complètement (Ctrl+Shift+Del)</li>
+                        <li>Vérifiez la console du navigateur (F12) pour les erreurs JavaScript</li>
+                        <li>Le mode maintenance s'affiche maintenant directement dans App.razor</li>
+                        <li>Auto-retry toutes les 5 minutes activé automatiquement</li>
                     </ol>
 
                     <h6 class="mt-4">?? Si les pages affichent 404 :</h6>

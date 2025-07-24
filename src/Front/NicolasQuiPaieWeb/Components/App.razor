@@ -1,13 +1,156 @@
 ﻿@using Microsoft.Extensions.Options
 @using NicolasQuiPaieWeb.Configuration
 @inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
-@inject NavigationManager Navigation
 
 <CascadingAuthenticationState>
     @if (maintenanceSettings.IsCompletelyDown)
     {
-        <!-- Redirection vers la page de maintenance -->
-        <MaintenancePage />
+        <!-- Page de maintenance complète intégrée -->
+        <div id="maintenance-mode">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+            <style>
+                #maintenance-mode {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10000;
+                }
+                
+                .maintenance-container {
+                    text-align: center;
+                    color: white;
+                    padding: 3rem;
+                    max-width: 600px;
+                    background: rgba(0, 0, 0, 0.1);
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                }
+                
+                .maintenance-icon {
+                    font-size: 5rem;
+                    margin-bottom: 2rem;
+                    animation: bounce 2s infinite;
+                }
+                
+                .maintenance-title {
+                    font-size: 2.5rem;
+                    font-weight: bold;
+                    margin-bottom: 1rem;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                }
+                
+                .maintenance-message {
+                    font-size: 1.2rem;
+                    margin-bottom: 2rem;
+                    line-height: 1.6;
+                    white-space: pre-line;
+                }
+                
+                .maintenance-details {
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 1.5rem;
+                    border-radius: 10px;
+                    margin-bottom: 2rem;
+                }
+                
+                .retry-button {
+                    background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+                    border: none;
+                    color: white;
+                    padding: 12px 30px;
+                    font-size: 1.1rem;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin: 0.5rem;
+                }
+                
+                .retry-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+                }
+                
+                .contact-info {
+                    margin-top: 2rem;
+                    font-size: 0.9rem;
+                    opacity: 0.8;
+                }
+                
+                @@keyframes bounce {
+                    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+                    40% { transform: translateY(-20px); }
+                    60% { transform: translateY(-10px); }
+                }
+                
+                .pulse {
+                    animation: pulse 2s infinite;
+                }
+                
+                @@keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+            </style>
+            
+            <div class="maintenance-container">
+                <div class="maintenance-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                
+                <h1 class="maintenance-title">@maintenanceSettings.MaintenancePageTitle</h1>
+                
+                <p class="maintenance-message">@maintenanceSettings.MaintenancePageMessage</p>
+                
+                @if (!string.IsNullOrEmpty(maintenanceSettings.ExpectedCompletionDate))
+                {
+                    <div class="maintenance-details">
+                        <h4><i class="fas fa-clock me-2"></i>Retour prévu</h4>
+                        <p class="mb-0">
+                            @try
+                            {
+                                @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("dddd dd MMMM yyyy à HH:mm", new System.Globalization.CultureInfo("fr-FR"))
+                            }
+                            catch
+                            {
+                                @maintenanceSettings.ExpectedCompletionDate
+                            }
+                        </p>
+                    </div>
+                }
+                
+                <div style="display: flex; justify-content: center; flex-wrap: wrap;">
+                    <button class="retry-button" onclick="location.reload()">
+                        <i class="fas fa-redo me-2"></i>Réessayer
+                    </button>
+                    <button class="retry-button" onclick="setTimeout(() => location.reload(), 60000)">
+                        <i class="fas fa-clock me-2"></i>Réessayer dans 1 min
+                    </button>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(maintenanceSettings.ContactMessage))
+                {
+                    <div class="contact-info">
+                        <p><i class="fas fa-info-circle me-2"></i>@maintenanceSettings.ContactMessage</p>
+                    </div>
+                }
+                
+                <div class="contact-info">
+                    <p class="pulse">
+                        <i class="fas fa-heart me-2"></i>
+                        L'équipe Nicolas Qui Paie travaille dur pour vous offrir la meilleure expérience !
+                    </p>
+                </div>
+            </div>
+        </div>
     }
     else
     {
@@ -75,21 +218,15 @@
         try
         {
             maintenanceSettings = MaintenanceOptions.Value;
-            
-            // Si le site est complètement en maintenance, forcer la redirection
-            if (maintenanceSettings.IsCompletelyDown)
-            {
-                var currentUrl = Navigation.Uri;
-                if (!currentUrl.Contains("/maintenance"))
-                {
-                    Navigation.NavigateTo("/maintenance", forceLoad: true);
-                }
-            }
         }
         catch
         {
             // Use default values if configuration fails
-            maintenanceSettings = new MaintenanceSettings();
+            maintenanceSettings = new MaintenanceSettings
+            {
+                MaintenancePageTitle = "Maintenance en cours",
+                MaintenancePageMessage = "🚧 Site temporairement indisponible pour maintenance"
+            };
         }
     }
 }
