@@ -1,0 +1,54 @@
+@using Microsoft.Extensions.Options
+@using NicolasQuiPaieWeb.Configuration
+@inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
+
+@if (maintenanceSettings.IsUnderConstruction)
+{
+    <div class="alert alert-warning border-0 rounded-0 mb-0 under-construction-banner" role="alert">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-hard-hat fa-lg me-3 text-warning construction-icon"></i>
+                        <div>
+                            <strong class="d-block">@maintenanceSettings.ConstructionMessage</strong>
+                            @if (!string.IsNullOrEmpty(maintenanceSettings.ExpectedCompletionDate))
+                            {
+                                <small class="text-muted d-block">
+                                    Fin prévue : @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))
+                                </small>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Merci de votre patience
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (maintenanceSettings.ShowMaintenanceNotice && !string.IsNullOrEmpty(maintenanceSettings.MaintenanceMessage))
+{
+    <div class="alert alert-info border-0 rounded-0 mb-0 maintenance-notice" role="alert">
+        <div class="container">
+            <div class="text-center">
+                <i class="fas fa-tools me-2"></i>
+                @maintenanceSettings.MaintenanceMessage
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private MaintenanceSettings maintenanceSettings = new();
+    
+    protected override void OnInitialized()
+    {
+        maintenanceSettings = MaintenanceOptions.Value;
+    }
+}

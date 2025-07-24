@@ -6,6 +6,10 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Configure API Base URL with fallback
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7051";
 
+// Configure maintenance settings
+builder.Services.Configure<MaintenanceSettings>(
+    builder.Configuration.GetSection(MaintenanceSettings.SectionName));
+
 // Configure HttpClient for API calls with timeout and base configuration
 builder.Services.AddScoped(sp => 
 {

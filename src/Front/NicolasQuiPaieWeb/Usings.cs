@@ -22,4 +22,5 @@ global using Blazored.LocalStorage;
 global using NicolasQuiPaieWeb.Components;
 global using NicolasQuiPaieWeb.Services;
 global using NicolasQuiPaieWeb.Authentication;
+global using NicolasQuiPaieWeb.Configuration;
 global using NicolasQuiPaieData.DTOs;

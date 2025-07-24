@@ -37,6 +37,27 @@ h1:focus {
     text-align: start;
 }
 
+/* Under Construction Banner Styles */
+.under-construction-banner {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-bottom: 3px solid #ffc107;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.maintenance-notice {
+    background: linear-gradient(135deg, #cce7ff 0%, #b3d9ff 100%);
+    border-bottom: 2px solid #0d6efd;
+}
+
+.construction-icon {
+    animation: construction-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes construction-pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
 /* Nicolas Qui Paie - Custom Styles */
 
 :root {
