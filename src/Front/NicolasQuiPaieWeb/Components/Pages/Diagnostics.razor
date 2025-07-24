@@ -1,8 +1,11 @@
 @page "/diagnostics"
+@using Microsoft.Extensions.Options
+@using NicolasQuiPaieWeb.Configuration
 @inject ApiHealthService ApiHealthService
 @inject IConfiguration Configuration
 @inject HttpClient HttpClient
 @inject ILogger<Diagnostics> Logger
+@inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
 
 <PageTitle>Diagnostics - Nicolas Qui Paie</PageTitle>
 
@@ -20,6 +23,63 @@
     </div>
 
     <div class="row g-4">
+        <!-- Maintenance Status -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-hard-hat me-2"></i>État de Maintenance
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Site en construction</strong></td>
+                                    <td>
+                                        @if (maintenanceSettings.IsUnderConstruction)
+                                        {
+                                            <span class="badge bg-warning text-dark">?? OUI</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">? NON</span>
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Message de construction</strong></td>
+                                    <td><code>@maintenanceSettings.ConstructionMessage</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date prévue</strong></td>
+                                    <td><code>@maintenanceSettings.ExpectedCompletionDate</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Notice de maintenance</strong></td>
+                                    <td>
+                                        @if (maintenanceSettings.ShowMaintenanceNotice)
+                                        {
+                                            <span class="badge bg-info">?? ACTIVE</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">INACTIVE</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Info :</strong> La configuration est chargée depuis <code>wwwroot/appsettings.json</code> pour Blazor WebAssembly.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- API Connectivity -->
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm">
@@ -168,6 +228,14 @@
                         <li>Testez l'API directement : <a href="@apiBaseUrl/swagger" target="_blank">@apiBaseUrl/swagger</a></li>
                     </ol>
 
+                    <h6 class="mt-4">?? Si le banner de construction n'apparaît pas :</h6>
+                    <ol>
+                        <li>Vérifiez <code>wwwroot/appsettings.json</code> - <code>IsUnderConstruction</code> doit être <code>true</code></li>
+                        <li>Redéployez l'application sur Azure Static Web Apps</li>
+                        <li>Videz le cache du navigateur (Ctrl+F5)</li>
+                        <li>Vérifiez les logs de la console du navigateur (F12)</li>
+                    </ol>
+
                     <h6 class="mt-4">?? Si les pages affichent 404 :</h6>
                     <ol>
                         <li>Vérifiez que l'application Blazor WebAssembly démarre correctement</li>
@@ -188,6 +256,13 @@
                         <strong>Conseil :</strong> L'application fonctionne en mode dégradé avec des données de démonstration 
                         lorsque l'API n'est pas disponible.
                     </div>
+
+                    <div class="alert alert-warning mt-4">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Azure Static Web Apps :</strong> Pour déployer les modifications de configuration, 
+                        committez les changements dans <code>wwwroot/appsettings.json</code> et poussez vers GitHub. 
+                        Le déploiement automatique se déclenchera.
+                    </div>
                 </div>
             </div>
         </div>
@@ -202,6 +277,7 @@
     private string apiBaseUrl = "";
     private string baseUrl = "";
     private string environment = "";
+    private MaintenanceSettings maintenanceSettings = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -209,6 +285,17 @@
         apiBaseUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7051";
         baseUrl = HttpClient.BaseAddress?.ToString() ?? "Unknown";
         environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+        
+        // Get maintenance settings
+        try
+        {
+            maintenanceSettings = MaintenanceOptions.Value;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading maintenance settings");
+            maintenanceSettings = new MaintenanceSettings();
+        }
         
         // Initial API check
         await CheckApiHealth();

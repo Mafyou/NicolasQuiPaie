@@ -1,6 +1,7 @@
 @using Microsoft.Extensions.Options
 @using NicolasQuiPaieWeb.Configuration
 @inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
+@inject ILogger<UnderConstructionBanner> Logger
 
 @if (maintenanceSettings.IsUnderConstruction)
 {
@@ -15,7 +16,14 @@
                             @if (!string.IsNullOrEmpty(maintenanceSettings.ExpectedCompletionDate))
                             {
                                 <small class="text-muted d-block">
-                                    Fin prévue : @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))
+                                    @try
+                                    {
+                                        <text>Fin prévue : @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</text>
+                                    }
+                                    catch
+                                    {
+                                        <text>Fin prévue : @maintenanceSettings.ExpectedCompletionDate</text>
+                                    }
                                 </small>
                             }
                         </div>
@@ -49,6 +57,17 @@
     
     protected override void OnInitialized()
     {
-        maintenanceSettings = MaintenanceOptions.Value;
+        try
+        {
+            maintenanceSettings = MaintenanceOptions.Value;
+            Logger.LogInformation("UnderConstructionBanner initialized. IsUnderConstruction: {IsUnderConstruction}", 
+                maintenanceSettings.IsUnderConstruction);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing UnderConstructionBanner");
+            // Use default values if configuration fails
+            maintenanceSettings = new MaintenanceSettings();
+        }
     }
 }
