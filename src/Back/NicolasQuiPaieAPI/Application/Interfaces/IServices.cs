@@ -9,6 +9,7 @@ public interface IProposalService
     Task<ProposalDto> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId);
     Task DeleteProposalAsync(int id, string userId);
     Task<bool> CanUserEditProposalAsync(int proposalId, string userId);
+    Task IncrementViewsAsync(int proposalId);
 }
 
 /// <summary>

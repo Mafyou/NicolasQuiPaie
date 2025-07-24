@@ -1,4 +1,4 @@
-@page "/proposal/{id:int}"
+ï»¿@page "/proposal/{id:int}"
 @inject ProposalService ProposalService
 @inject VotingService VotingService
 @inject CommentService CommentService
@@ -24,7 +24,7 @@ else if (proposal == null)
         <div class="text-center">
             <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
             <h3>Proposition introuvable</h3>
-            <p class="text-muted">Cette proposition n'existe pas ou a été supprimée.</p>
+            <p class="text-muted">Cette proposition n'existe pas ou a Ã©tÃ© supprimÃ©e.</p>
             <a href="/proposals" class="btn btn-primary">Retour aux propositions</a>
         </div>
     </div>
@@ -77,8 +77,8 @@ else
                             <div>
                                 <div class="fw-bold">@proposal.CreatedByDisplayName</div>
                                 <small class="text-muted">
-                                    Publié le @proposal.CreatedAt.ToString("dd MMMM yyyy à HH:mm")
-                                    • @proposal.ViewsCount vues
+                                    PubliÃ© le @proposal.CreatedAt.ToString("dd MMMM yyyy Ã  HH:mm")
+                                    â€¢ @proposal.ViewsCount vues
                                 </small>
                             </div>
                         </div>
@@ -185,7 +185,7 @@ else
                         {
                             <div class="text-center py-4">
                                 <i class="fas fa-comment-slash fa-2x text-muted mb-2"></i>
-                                <p class="text-muted">Aucun commentaire pour le moment. Soyez le premier à donner votre avis !</p>
+                                <p class="text-muted">Aucun commentaire pour le moment. Soyez le premier Ã  donner votre avis !</p>
                             </div>
                         }
                         else
@@ -418,7 +418,7 @@ else
     private async Task ShareOnTwitter()
     {
         var url = Navigation.Uri;
-        var text = $"Découvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title}";
+        var text = $"DÃ©couvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title}";
         var twitterUrl = $"https://twitter.com/intent/tweet?text={Uri.EscapeDataString(text)}&url={Uri.EscapeDataString(url)}&hashtags=JeSuisNicolas,NicolasQuiPaie";
         await JSRuntime.InvokeVoidAsync("window.open", twitterUrl, "_blank");
     }
@@ -426,7 +426,7 @@ else
     private async Task ShareOnWhatsApp()
     {
         var url = Navigation.Uri;
-        var text = $"Découvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title} {url}";
+        var text = $"DÃ©couvrez cette proposition sur Nicolas Qui Paie : {proposal?.Title} {url}";
         var whatsappUrl = $"https://wa.me/?text={Uri.EscapeDataString(text)}";
         await JSRuntime.InvokeVoidAsync("window.open", whatsappUrl, "_blank");
     }

@@ -64,7 +64,7 @@ public class VotingServiceTests
         var userId = TestDataHelper.ValidUserIds[0];
         var proposalId = 1;
 
-        var user = TestDataHelper.CreateTestUser(userId, fiscalLevel: contributionLevel);
+        var user = TestDataHelper.CreateTestUser(userId, contributionLevel: contributionLevel);
         var proposal = TestDataHelper.CreateTestProposals(("Test Proposal", userId, 1))[0];
 
         var createVoteDto = new CreateVoteDto
@@ -135,7 +135,7 @@ public class VotingServiceTests
         var userId = TestDataHelper.ValidUserIds[1];
         var proposalId = 2;
 
-        var user = TestDataHelper.CreateTestUser(userId, fiscalLevel: InfrastructureContributionLevel.GrosMoyenNicolas);
+        var user = TestDataHelper.CreateTestUser(userId, contributionLevel: InfrastructureContributionLevel.GrosMoyenNicolas);
         var proposal = TestDataHelper.CreateTestProposals(("Existing Vote Proposal", userId, 1))[0];
 
         var existingVote = new Vote

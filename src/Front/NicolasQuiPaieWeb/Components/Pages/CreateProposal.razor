@@ -1,4 +1,4 @@
-@page "/create-proposal"
+Ôªø@page "/create-proposal"
 @inject ProposalService ProposalService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
@@ -15,7 +15,7 @@
                 <i class="fas fa-plus-circle text-primary me-2"></i>
                 Nouvelle Proposition
             </h1>
-            <p class="text-muted">Soumettez votre proposition ‡ la communautÈ Nicolas pour dÈbat et vote</p>
+            <p class="text-muted">Soumettez votre proposition √† la communaut√© Nicolas pour d√©bat et vote</p>
         </div>
     </div>
 
@@ -35,11 +35,11 @@
                             </label>
                             <InputText @bind-Value="newProposal.Title" 
                                      class="form-control form-control-lg" 
-                                     placeholder="Ex: RÈduire la TVA sur les produits de premiËre nÈcessitÈ"
+                                     placeholder="Ex: R√©duire la TVA sur les produits de premi√®re n√©cessit√©"
                                      maxlength="200" />
                             <ValidationMessage For="() => newProposal.Title" class="text-danger" />
                             <div class="form-text">
-                                @(newProposal.Title?.Length ?? 0)/200 caractËres
+                                @(newProposal.Title?.Length ?? 0)/200 caract√®res
                             </div>
                         </div>
 
@@ -47,10 +47,10 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-tags me-1"></i>
-                                CatÈgorie *
+                                Cat√©gorie *
                             </label>
                             <InputSelect @bind-Value="newProposal.CategoryId" class="form-select">
-                                <option value="0">SÈlectionnez une catÈgorie</option>
+                                <option value="0">S√©lectionnez une cat√©gorie</option>
                                 @foreach (var category in categories)
                                 {
                                     <option value="@category.Id">
@@ -65,16 +65,16 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold">
                                 <i class="fas fa-align-left me-1"></i>
-                                Description dÈtaillÈe *
+                                Description d√©taill√©e *
                             </label>
                             <InputTextArea @bind-Value="newProposal.Description" 
                                          class="form-control" 
                                          rows="8"
-                                         placeholder="Expliquez votre proposition en dÈtail : contexte, objectifs, impacts attendus, etc."
+                                         placeholder="Expliquez votre proposition en d√©tail : contexte, objectifs, impacts attendus, etc."
                                          maxlength="2000" />
                             <ValidationMessage For="() => newProposal.Description" class="text-danger" />
                             <div class="form-text">
-                                @(newProposal.Description?.Length ?? 0)/2000 caractËres
+                                @(newProposal.Description?.Length ?? 0)/2000 caract√®res
                             </div>
                         </div>
 
@@ -84,7 +84,7 @@
                             <div class="mb-4">
                                 <h6 class="fw-bold">
                                     <i class="fas fa-eye me-1"></i>
-                                    AperÁu
+                                    Aper√ßu
                                 </h6>
                                 <div class="card bg-light">
                                     <div class="card-body">
@@ -121,11 +121,11 @@
                                 Conseils pour une bonne proposition
                             </h6>
                             <ul class="mb-0">
-                                <li>Soyez prÈcis et concret dans votre titre</li>
-                                <li>Expliquez clairement le problËme et votre solution</li>
-                                <li>Mentionnez les impacts fiscaux ou budgÈtaires attendus</li>
+                                <li>Soyez pr√©cis et concret dans votre titre</li>
+                                <li>Expliquez clairement le probl√®me et votre solution</li>
+                                <li>Mentionnez les impacts fiscaux ou budg√©taires attendus</li>
                                 <li>Restez respectueux et constructif</li>
-                                <li>VÈrifiez qu'une proposition similaire n'existe pas dÈj‡</li>
+                                <li>V√©rifiez qu'une proposition similaire n'existe pas d√©j√†</li>
                             </ul>
                         </div>
 
@@ -174,16 +174,16 @@
                     <h6>Comment bien formuler sa proposition ?</h6>
                     <ul class="small">
                         <li>Utilisez un titre clair et accrocheur</li>
-                        <li>Commencez par expliquer le problËme</li>
-                        <li>Proposez une solution concrËte</li>
+                        <li>Commencez par expliquer le probl√®me</li>
+                        <li>Proposez une solution concr√®te</li>
                         <li>Estimez l'impact fiscal si possible</li>
                     </ul>
                     
                     <h6 class="mt-3">Exemples de bonnes propositions :</h6>
                     <ul class="small text-muted">
-                        <li>"Supprimer la taxe d'habitation pour les retraitÈs"</li>
-                        <li>"CrÈer un crÈdit d'impÙt pour l'achat de vÈlos Èlectriques"</li>
-                        <li>"RÈduire les frais de notaire pour les primo-accÈdants"</li>
+                        <li>"Supprimer la taxe d'habitation pour les retrait√©s"</li>
+                        <li>"Cr√©er un cr√©dit d'imp√¥t pour l'achat de v√©los √©lectriques"</li>
+                        <li>"R√©duire les frais de notaire pour les primo-acc√©dants"</li>
                     </ul>
                 </div>
             </div>
@@ -193,7 +193,7 @@
                 <div class="card-header bg-light">
                     <h6 class="mb-0">
                         <i class="fas fa-clock me-1"></i>
-                        Propositions RÈcentes
+                        Propositions R√©centes
                     </h6>
                 </div>
                 <div class="card-body">
@@ -216,7 +216,7 @@
                     }
                     else
                     {
-                        <p class="text-muted small">Aucune proposition rÈcente</p>
+                        <p class="text-muted small">Aucune proposition r√©cente</p>
                     }
                 </div>
             </div>
@@ -289,7 +289,7 @@
             
             if (createdProposal != null)
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Votre proposition a ÈtÈ publiÈe avec succËs !");
+                await JSRuntime.InvokeVoidAsync("alert", "Votre proposition a √©t√© publi√©e avec succ√®s !");
                 Navigation.NavigateTo($"/proposal/{createdProposal.Id}");
             }
             else
@@ -339,7 +339,7 @@
             };
 
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "proposal_draft", System.Text.Json.JsonSerializer.Serialize(draftData));
-            await JSRuntime.InvokeVoidAsync("alert", "Brouillon sauvegardÈ avec succËs !");
+            await JSRuntime.InvokeVoidAsync("alert", "Brouillon sauvegard√© avec succ√®s !");
         }
         catch (Exception ex)
         {
@@ -371,7 +371,7 @@
                 if (draftData != null)
                 {
                     // Show option to restore draft
-                    var restore = await JSRuntime.InvokeAsync<bool>("confirm", "Un brouillon a ÈtÈ trouvÈ. Voulez-vous le restaurer ?");
+                    var restore = await JSRuntime.InvokeAsync<bool>("confirm", "Un brouillon a √©t√© trouv√©. Voulez-vous le restaurer ?");
                     if (restore)
                     {
                         // Restore draft data

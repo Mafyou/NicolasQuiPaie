@@ -1,7 +1,6 @@
 // C# 13.0 - Enhanced JWT Service Tests with latest language features
 
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using NicolasQuiPaie.UnitTests.Helpers;
 using NicolasQuiPaieAPI.Application.Services;
 using NicolasQuiPaieAPI.Infrastructure.Models;
@@ -96,8 +95,8 @@ public class JwtServiceTests
                    .ShouldBe(userData.Email);
 
         // Validate custom claims with C# 13.0 pattern matching and modern null checking
-        var fiscalLevelClaim = decodedToken.Claims.FirstOrDefault(x => x.Type == "FiscalLevel")?.Value;
-        fiscalLevelClaim.ShouldBe(userData.ContributionLevel.ToString());
+        var contributionLevelClaim = decodedToken.Claims.FirstOrDefault(x => x.Type == "ContributionLevel")?.Value;
+        contributionLevelClaim.ShouldBe($"{userData.ContributionLevel}");
 
         var reputationClaim = decodedToken.Claims.FirstOrDefault(x => x.Type == "ReputationScore")?.Value;
         reputationClaim.ShouldNotBeNull();
@@ -193,9 +192,9 @@ public class JwtServiceTests
         emailClaim.ShouldNotBeNull();
         emailClaim.ShouldBe(user.Email);
 
-        var fiscalLevelClaim = principal.FindFirst("FiscalLevel")?.Value;
-        fiscalLevelClaim.ShouldNotBeNull();
-        fiscalLevelClaim.ShouldBe(user.ContributionLevel.ToString());
+        var contributionLevelClaim = principal.FindFirst("ContributionLevel")?.Value;
+        contributionLevelClaim.ShouldNotBeNull();
+        contributionLevelClaim.ShouldBe($"{user.ContributionLevel}");
     }
 
     // C# 13.0 - Collection expressions for invalid token testing with modern patterns

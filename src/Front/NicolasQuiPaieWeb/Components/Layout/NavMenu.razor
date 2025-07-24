@@ -75,8 +75,8 @@
 @code {
     private string GetCurrentUserBadge(System.Security.Claims.ClaimsPrincipal user)
     {
-        // Try to get ContributionLevel first, then fallback to FiscalLevel for backward compatibility
-        var levelClaim = user.FindFirst("ContributionLevel")?.Value ?? user.FindFirst("FiscalLevel")?.Value;
+        // Try to get ContributionLevel
+        var levelClaim = user.FindFirst("ContributionLevel")?.Value;
         
         if (Enum.TryParse<ContributionLevel>(levelClaim, out var level))
         {

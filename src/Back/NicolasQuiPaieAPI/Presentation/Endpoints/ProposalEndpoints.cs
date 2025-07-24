@@ -74,6 +74,26 @@ public static class ProposalEndpoints
         .Produces(400)
         .Produces(401);
 
+        // POST /api/proposals/{id}/views
+        group.MapPost("/{id:int}/views", async (
+            [FromServices] IProposalService proposalService,
+            int id) =>
+        {
+            try
+            {
+                await proposalService.IncrementViewsAsync(id);
+                return Results.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(ex.Message);
+            }
+        })
+        .WithName("IncrementViews")
+        .WithSummary("Incrémente le nombre de vues d'une proposition")
+        .Produces(200)
+        .Produces(400);
+
         // PUT /api/proposals/{id}
         group.MapPut("/{id:int}", [Authorize] async (
             [FromServices] IProposalService proposalService,

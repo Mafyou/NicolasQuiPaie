@@ -1,7 +1,3 @@
-using NicolasQuiPaieData.DTOs;
-using System.Net.Http.Json;
-using System.Text.Json;
-
 namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
@@ -45,17 +41,20 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
         {
             // For now, get recent activity and convert to trending format
             var activity = await httpClient.GetFromJsonAsync<RecentActivityDto>("/api/analytics/recent-activity?take=10", _jsonOptions);
-            
+
             // Convert activity to trending proposals (simplified)
             var trending = activity?.Activities?
                 .Where(a => a.Type == "Proposal")
                 .Select(a => new TrendingProposalDto
                 {
-                    Proposal = new ProposalDto 
-                    { 
+                    Proposal = new ProposalDto
+                    {
                         Id = int.TryParse(a.RelatedItemId, out var id) ? id : 0,
                         Title = a.RelatedItemTitle ?? "",
                         CreatedByDisplayName = a.UserDisplayName,
+                        CreatedById = a.UserId,
+                        CreatedAt = a.Timestamp,
+                        Description = a.Description ?? "",
                         CategoryName = "General",
                         CategoryColor = "#007bff"
                     },
@@ -79,7 +78,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
         try
         {
             var response = await httpClient.GetFromJsonAsync<TopContributorsDto>($"/api/analytics/top-contributors?take={count}", _jsonOptions);
-            
+
             // Convert UserContributionDto to TopContributorDto
             var contributors = response?.TopProposers?.Take(count)
                 .Select(u => new TopContributorDto
@@ -93,7 +92,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
                     TotalScore = u.ReputationScore
                 })
                 .ToList() ?? [];
-            
+
             return contributors;
         }
         catch (Exception ex)

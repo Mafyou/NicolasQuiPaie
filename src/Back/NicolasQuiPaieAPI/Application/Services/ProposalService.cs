@@ -148,4 +148,30 @@ public class ProposalService : IProposalService
             return false;
         }
     }
+
+    public async Task IncrementViewsAsync(int proposalId)
+    {
+        try
+        {
+            var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId);
+            if (proposal != null)
+            {
+                proposal.ViewsCount++;
+                await _unitOfWork.Proposals.UpdateAsync(proposal);
+                await _unitOfWork.SaveChangesAsync();
+                
+                _logger.LogDebug("Views count incremented for proposal {ProposalId}. New count: {ViewsCount}", 
+                    proposalId, proposal.ViewsCount);
+            }
+            else
+            {
+                _logger.LogWarning("Attempted to increment views for non-existent proposal {ProposalId}", proposalId);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de l'incrémentation des vues pour la proposition {ProposalId}", proposalId);
+            // Don't throw here as view counting is not critical functionality
+        }
+    }
 }
