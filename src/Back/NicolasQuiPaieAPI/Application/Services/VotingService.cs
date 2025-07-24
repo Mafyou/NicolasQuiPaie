@@ -1,7 +1,7 @@
 namespace NicolasQuiPaieAPI.Application.Services;
 
 /// <summary>
-/// Enhanced voting service with C# 13.0 improvements and advanced features
+/// Enhanced voting service with C# 13.0 improvements and democratic voting (1 vote = 1 voice)
 /// </summary>
 public class VotingService(
     IUnitOfWork unitOfWork,
@@ -10,7 +10,7 @@ public class VotingService(
     IUserRepository userRepository) : IVotingService
 {
     /// <summary>
-    /// Casts a vote with proper weight calculation based on contribution level
+    /// Casts a vote with democratic equality: 1 Nicolas = 1 voice regardless of contribution level
     /// </summary>
     public async Task<VoteDto> CastVoteAsync(CreateVoteDto voteDto, string userId)
     {
@@ -21,7 +21,7 @@ public class VotingService(
         {
             await unitOfWork.BeginTransactionAsync();
 
-            // Get user to calculate vote weight
+            // Get user for reputation updates and badge tracking
             var user = await userRepository.GetByIdAsync(userId);
             if (user is null)
             {
@@ -47,14 +47,14 @@ public class VotingService(
             // Update proposal vote counts
             await unitOfWork.Proposals.UpdateVoteCountsAsync(voteDto.ProposalId);
 
-            // Update user reputation
+            // Update user reputation and badge progression
             await UpdateUserReputationAsync(user, voteDto.VoteType);
 
             await unitOfWork.SaveChangesAsync();
             await unitOfWork.CommitTransactionAsync();
 
-            logger.LogInformation("Vote cast successfully for proposal {ProposalId} by user {UserId} with weight {Weight}",
-                voteDto.ProposalId, userId, resultVote.Weight);
+            logger.LogInformation("Democratic vote cast successfully for proposal {ProposalId} by user {UserId} with equal weight (1 voice)",
+                voteDto.ProposalId, userId);
 
             return resultVote;
         }
@@ -173,7 +173,7 @@ public class VotingService(
         existingVote.VoteType = (Infrastructure.Models.VoteType)(int)voteDto.VoteType;
         existingVote.Comment = voteDto.Comment;
         existingVote.VotedAt = DateTime.UtcNow;
-        existingVote.Weight = CalculateVoteWeight(user.ContributionLevel);
+        existingVote.Weight = 1; // Democratic equality: 1 Nicolas = 1 voice
 
         var updatedVote = await unitOfWork.Votes.UpdateAsync(existingVote);
         return updatedVote.ToVoteDto();
@@ -191,7 +191,7 @@ public class VotingService(
             VoteType = (Infrastructure.Models.VoteType)(int)voteDto.VoteType,
             Comment = voteDto.Comment,
             VotedAt = DateTime.UtcNow,
-            Weight = CalculateVoteWeight(user.ContributionLevel)
+            Weight = 1 // Democratic equality: 1 Nicolas = 1 voice, regardless of contribution level
         };
 
         var createdVote = await unitOfWork.Votes.AddAsync(vote);
@@ -199,19 +199,8 @@ public class VotingService(
     }
 
     /// <summary>
-    /// Calculates vote weight based on user's contribution level
-    /// </summary>
-    private static int CalculateVoteWeight(Infrastructure.Models.ContributionLevel contributionLevel) => contributionLevel switch
-    {
-        Infrastructure.Models.ContributionLevel.PetitNicolas => 1,
-        Infrastructure.Models.ContributionLevel.GrosMoyenNicolas => 2,
-        Infrastructure.Models.ContributionLevel.GrosNicolas => 3,
-        Infrastructure.Models.ContributionLevel.NicolasSupreme => 5,
-        _ => 1
-    };
-
-    /// <summary>
-    /// Updates user reputation based on voting activity
+    /// Updates user reputation based on voting activity (for badge progression only)
+    /// This affects the contribution level badges but NOT the vote weight
     /// </summary>
     private async Task UpdateUserReputationAsync(ApplicationUser user, NicolasQuiPaieData.DTOs.VoteType voteType)
     {
@@ -228,14 +217,14 @@ public class VotingService(
 
         user.ReputationScore += reputationChange;
 
-        // Check for contribution level upgrade
+        // Check for contribution level upgrade (badge progression only)
         await CheckAndUpdateContributionLevelAsync(user);
 
         await userRepository.UpdateAsync(user);
     }
 
     /// <summary>
-    /// Adjusts reputation when a vote is removed
+    /// Adjusts reputation when a vote is removed (affects badges only)
     /// </summary>
     private async Task AdjustReputationForVoteRemovalAsync(ApplicationUser user, Infrastructure.Models.VoteType removedVoteType)
     {
@@ -252,7 +241,8 @@ public class VotingService(
     }
 
     /// <summary>
-    /// Checks and updates user's contribution level based on reputation
+    /// Checks and updates user's contribution level based on reputation (for badge display only)
+    /// Note: This only affects the badge shown to the user, NOT their vote weight
     /// </summary>
     private static async Task CheckAndUpdateContributionLevelAsync(ApplicationUser user)
     {
@@ -267,7 +257,7 @@ public class VotingService(
         if (newLevel != user.ContributionLevel)
         {
             user.ContributionLevel = newLevel;
-            // Could trigger badge notification here
+            // Could trigger badge notification here (badges are for recognition only)
         }
 
         await Task.CompletedTask;

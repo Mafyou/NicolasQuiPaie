@@ -4,7 +4,7 @@
 
 ### 🎯 Mission
 Créer le premier espace démocratique numérique où chaque citoyen peut :
-- 🗳️ **Voter** avec un système de poids démocratique basé sur les niveaux de contribution
+- 🗳️ **Voter** avec un système égalitaire : 1 Nicolas = 1 voix, avec des badges de reconnaissance
 - 💬 **Débattre** de manière constructive sur les politiques publiques  
 - 📊 **Visualiser** l'opinion publique en temps réel
 
@@ -56,7 +56,7 @@ public record CreateProposalDto
 ```
 
 ```csharp
-// Advanced service with dependency injection and vote weighting
+// Advanced service with dependency injection for democratic voting
 public class VotingService(
     IUnitOfWork unitOfWork,
     IVoteRepository voteRepository,
@@ -69,19 +69,10 @@ public class VotingService(
         ArgumentException.ThrowIfNullOrEmpty(userId);
         
         var user = await userRepository.GetByIdAsync(userId);
-        var weight = CalculateVoteWeight(user.ContributionLevel);
+        // Tous les votes comptent égal : 1 Nicolas = 1 voix
+        var weight = 1; // Système démocratique égalitaire
         // ... implementation
     }
-    
-    // C# 13.0 - Switch expressions for vote weighting
-    private static int CalculateVoteWeight(ContributionLevel contributionLevel) => contributionLevel switch
-    {
-        ContributionLevel.PetitNicolas => 1,
-        ContributionLevel.GrosMoyenNicolas => 2,
-        ContributionLevel.GrosNicolas => 3,
-        ContributionLevel.NicolasSupreme => 5,
-        _ => 1
-    };
 }
 ```
 
@@ -89,10 +80,10 @@ public class VotingService(
 // Collection expressions and modern async patterns
 public static readonly object[][] ContributionLevelTestCases =
 [
-    [ContributionLevel.PetitNicolas, 1],
-    [ContributionLevel.GrosMoyenNicolas, 2],
-    [ContributionLevel.GrosNicolas, 3],
-    [ContributionLevel.NicolasSupreme, 5]
+    [ContributionLevel.PetitNicolas, 1],        // Tous égaux : 1 vote = 1 voix
+    [ContributionLevel.GrosMoyenNicolas, 1],    // Tous égaux : 1 vote = 1 voix
+    [ContributionLevel.GrosNicolas, 1],         // Tous égaux : 1 vote = 1 voix
+    [ContributionLevel.NicolasSupreme, 1]       // Tous égaux : 1 vote = 1 voix
 ];
 
 // Modern collection usage with ReadOnlyList
@@ -139,32 +130,34 @@ public async Task<IReadOnlyList<VoteDto>> GetVotesAsync(int proposalId)
 
 ---
 
-## 🎭 Système de Niveaux Nicolas
+## 🎭 Système de Badges Nicolas
 
-Le système de vote pondéré basé sur la contribution citoyenne :
+Le système de badges basé sur la contribution citoyenne (SANS impact sur le vote) :
 
 ```csharp
 public enum ContributionLevel
 {
-    PetitNicolas = 1,        // Poids de vote : 1x - Nouveaux citoyens
-    GrosMoyenNicolas = 2,    // Poids de vote : 2x - Contributeurs actifs  
-    GrosNicolas = 3,         // Poids de vote : 3x - Citoyens engagés
-    NicolasSupreme = 4       // Poids de vote : 5x - Experts de la communauté
+    PetitNicolas = 1,        // Badge de débutant - Nouveaux citoyens
+    GrosMoyenNicolas = 2,    // Badge d'engagement - Contributeurs actifs  
+    GrosNicolas = 3,         // Badge d'expertise - Citoyens engagés
+    NicolasSupreme = 4       // Badge d'excellence - Experts de la communauté
 }
 ```
 
-### 📊 Niveaux de Contribution
-- 🥉 **Petit Nicolas** (Poids de vote : 1x) - Nouveaux citoyens découvrant la plateforme
-- 🥈 **Gros Moyen Nicolas** (Poids de vote : 2x) - Contributeurs actifs avec engagement régulier
-- 🥇 **Gros Nicolas** (Poids de vote : 3x) - Citoyens engagés avec contributions de qualité
-- 👑 **Nicolas Suprême** (Poids de vote : 5x) - Experts reconnus de la communauté
+### 📊 Badges de Contribution (Reconnaissance uniquement)
+- 🥉 **Petit Nicolas** - Nouveaux citoyens découvrant la plateforme
+- 🥈 **Gros Moyen Nicolas** - Contributeurs actifs avec engagement régulier
+- 🥇 **Gros Nicolas** - Citoyens engagés avec contributions de qualité
+- 👑 **Nicolas Suprême** - Experts reconnus de la communauté
+
+⚖️ **Principe fondamental : 1 Nicolas = 1 voix, peu importe le badge !**
 
 ---
 
 ## 🎮 Fonctionnalités Principales
 
-### 🗳️ **Système de Vote Avancé**
-- **Vote pondéré** basé sur le niveau de contribution
+### 🗳️ **Système de Vote Démocratique**
+- **Vote égalitaire** : chaque vote compte exactement pareil (poids = 1)
 - **Changement de vote** autorisé avec historique
 - **Commentaires** sur les votes pour justification
 - **Métriques temps réel** des résultats
@@ -195,7 +188,7 @@ public enum ContributionLevel
 ### 📊 **Analytics Dashboard**
 - **Métriques globales** : utilisateurs, votes, propositions actives
 - **Tendances** : évolution des votes par période
-- **Répartition des niveaux** : distribution des contributeurs
+- **Répartition des badges** : distribution des niveaux de contribution
 - **Baromètre de mécontentement** : mesure du ras-le-bol citoyen
 
 ---
@@ -351,7 +344,7 @@ POST   /api/categories                      # Créer (Admin)
 ```csharp
 [Test]
 [TestCaseSource(nameof(ContributionLevelTestCases))]
-public async Task CastVoteAsync_ShouldApplyCorrectWeight_BasedOnContributionLevel(
+public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
     ContributionLevel contributionLevel, int expectedWeight)
 {
     // Arrange
@@ -366,7 +359,7 @@ public async Task CastVoteAsync_ShouldApplyCorrectWeight_BasedOnContributionLeve
     
     // Assert
     result.ShouldNotBeNull();
-    result.Weight.ShouldBe(expectedWeight);
+    result.Weight.ShouldBe(1); // Tous les votes sont égaux
     _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
 }
 ```

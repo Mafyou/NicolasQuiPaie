@@ -1,4 +1,4 @@
-// C# 13.0 - Enhanced Voting Service Tests with latest language features
+// C# 13.0 - Enhanced Voting Service Tests with latest language features - Democratic Edition
 
 using AutoMapper;
 using Microsoft.Extensions.Logging;
@@ -12,7 +12,7 @@ using InfrastructureContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.
 namespace Tests.NicolasQuiPaie.UnitTests.Services;
 
 /// <summary>
-/// C# 13.0 - Voting service tests using primary constructors, collection expressions, and field keyword
+/// C# 13.0 - Democratic voting service tests ensuring equal voting rights for all Nicolas
 /// </summary>
 [TestFixture]
 public class VotingServiceTests
@@ -54,10 +54,10 @@ public class VotingServiceTests
             _mockUserRepository.Object);
     }
 
-    // C# 13.0 - Collection expressions in test data
+    // C# 13.0 - Collection expressions in test data - All votes are equal!
     [Test]
     [TestCaseSource(nameof(ContributionLevelTestCases))]
-    public async Task CastVoteAsync_ShouldApplyCorrectWeight_BasedOnContributionLevel(
+    public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
         InfrastructureContributionLevel contributionLevel, int expectedWeight)
     {
         // Arrange
@@ -80,7 +80,7 @@ public class VotingServiceTests
             VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For,
             UserId = userId,
             ProposalId = proposalId,
-            Weight = expectedWeight,
+            Weight = 1, // Always 1 for democratic equality
             VotedAt = DateTime.UtcNow,
             Comment = createVoteDto.Comment
         };
@@ -109,26 +109,25 @@ public class VotingServiceTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.Weight.ShouldBe(expectedWeight);
+        result.Weight.ShouldBe(1); // Democratic equality: all votes weigh the same
         result.UserId.ShouldBe(userId);
         result.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
 
         _mockVoteRepository.Verify(x => x.AddAsync(
-            It.Is<Vote>(v => v.Weight == expectedWeight && v.UserId == userId)), Times.Once);
+            It.Is<Vote>(v => v.Weight == 1 && v.UserId == userId)), Times.Once);
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
         _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Once);
     }
 
-    // C# 13.0 - Collection expressions for test case data
+    // C# 13.0 - Collection expressions for equal democratic voting test cases
     public static readonly object[][] ContributionLevelTestCases =
     [
-        [InfrastructureContributionLevel.PetitNicolas, 1],
-        [InfrastructureContributionLevel.GrosMoyenNicolas, 2],
-        [InfrastructureContributionLevel.GrosNicolas, 3],
-        [InfrastructureContributionLevel.NicolasSupreme, 5]
+        [InfrastructureContributionLevel.PetitNicolas, 1],      // Equal weight
+        [InfrastructureContributionLevel.GrosMoyenNicolas, 1],  // Equal weight
+        [InfrastructureContributionLevel.GrosNicolas, 1],       // Equal weight
+        [InfrastructureContributionLevel.NicolasSupreme, 1]     // Equal weight
     ];
 
-    // Fix ambiguous VoteType and record usage in CastVoteAsync_ShouldUpdateExistingVote_WhenUserHasAlreadyVoted
     [Test]
     public async Task CastVoteAsync_ShouldUpdateExistingVote_WhenUserHasAlreadyVoted()
     {
@@ -145,7 +144,7 @@ public class VotingServiceTests
             VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.Against,
             UserId = userId,
             ProposalId = proposalId,
-            Weight = 2,
+            Weight = 1, // Democratic equality
             VotedAt = DateTime.UtcNow.AddDays(-1)
         };
 
@@ -156,14 +155,14 @@ public class VotingServiceTests
             Comment = "Updated vote comment"
         };
 
-        // Manually update properties instead of 'with' expression
+        // Updated vote still has weight = 1
         var updatedVote = new Vote
         {
             Id = existingVote.Id,
             VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For,
             UserId = existingVote.UserId,
             ProposalId = existingVote.ProposalId,
-            Weight = 2, // GrosMoyenNicolas weight
+            Weight = 1, // Democratic equality
             VotedAt = DateTime.UtcNow,
             Comment = updateVoteDto.Comment
         };
@@ -193,10 +192,10 @@ public class VotingServiceTests
         // Assert
         result.ShouldNotBeNull();
         result.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
-        result.Weight.ShouldBe(2);
+        result.Weight.ShouldBe(1); // Democratic equality
 
         _mockVoteRepository.Verify(x => x.UpdateAsync(
-            It.Is<Vote>(v => v.VoteType == NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For && v.Comment == updateVoteDto.Comment)), Times.Once);
+            It.Is<Vote>(v => v.VoteType == NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For && v.Comment == updateVoteDto.Comment && v.Weight == 1)), Times.Once);
         _mockVoteRepository.Verify(x => x.AddAsync(It.IsAny<Vote>()), Times.Never);
         _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Once);
     }
@@ -260,7 +259,6 @@ public class VotingServiceTests
         _mockUnitOfWork.Verify(x => x.RollbackTransactionAsync(), Times.Once);
     }
 
-    // Fix ambiguous VoteType and explicit cast in GetUserVoteAsync_ShouldReturnVoteDto_WhenVoteExists
     [Test]
     public async Task GetUserVoteForProposalAsync_ShouldReturnVoteDto_WhenVoteExists()
     {
@@ -274,7 +272,7 @@ public class VotingServiceTests
             VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For,
             UserId = userId,
             ProposalId = proposalId,
-            Weight = 3,
+            Weight = 1, // Democratic equality
             VotedAt = DateTime.UtcNow.AddHours(-2),
             Comment = "Great proposal!"
         };
@@ -289,7 +287,7 @@ public class VotingServiceTests
         result.ShouldNotBeNull();
         result.Id.ShouldBe(existingVote.Id);
         result.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
-        result.Weight.ShouldBe(3);
+        result.Weight.ShouldBe(1); // Democratic equality
         result.Comment.ShouldBe("Great proposal!");
     }
 
@@ -312,7 +310,6 @@ public class VotingServiceTests
     }
 
     // C# 13.0 - Modern async test with collection expressions
-    // Fix ambiguous VoteType and explicit cast in GetVotesForProposalAsync_ShouldReturnAllVotes_ForSpecificProposal
     [Test]
     public async Task GetVotesForProposalAsync_ShouldReturnAllVotes_ForSpecificProposal()
     {
@@ -321,8 +318,8 @@ public class VotingServiceTests
         var votes = new List<Vote>
         {
             new() { Id = 1, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For, UserId = "user1", ProposalId = proposalId, Weight = 1, VotedAt = DateTime.UtcNow },
-            new() { Id = 2, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.Against, UserId = "user2", ProposalId = proposalId, Weight = 2, VotedAt = DateTime.UtcNow },
-            new() { Id = 3, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For, UserId = "user3", ProposalId = proposalId, Weight = 3, VotedAt = DateTime.UtcNow }
+            new() { Id = 2, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.Against, UserId = "user2", ProposalId = proposalId, Weight = 1, VotedAt = DateTime.UtcNow },
+            new() { Id = 3, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For, UserId = "user3", ProposalId = proposalId, Weight = 1, VotedAt = DateTime.UtcNow }
         };
 
         _mockVoteRepository.Setup(x => x.GetVotesForProposalAsync(proposalId))
@@ -336,7 +333,36 @@ public class VotingServiceTests
         result.Count().ShouldBe(3);
         // Count the actual "For" votes (2 out of 3)
         result.Count(v => v.VoteType == NicolasQuiPaieData.DTOs.VoteType.For).ShouldBe(2);
-        result.Sum(v => v.Weight).ShouldBe(6); // 1 + 2 + 3
+        result.Sum(v => v.Weight).ShouldBe(3); // All weights are 1: 1 + 1 + 1 = 3
+        
+        // Verify democratic equality: all votes should have weight = 1
+        result.All(v => v.Weight == 1).ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task GetVotesForProposalAsync_ShouldShowDemocraticEquality_InVoteDistribution()
+    {
+        // Arrange - Test scenario with different contribution levels but equal voting power
+        var proposalId = 1;
+        var votes = new List<Vote>
+        {
+            // Petit Nicolas vote
+            new() { Id = 1, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For, UserId = "petit-nicolas", ProposalId = proposalId, Weight = 1, VotedAt = DateTime.UtcNow },
+            // Nicolas Supreme vote - same weight!
+            new() { Id = 2, VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType.For, UserId = "nicolas-supreme", ProposalId = proposalId, Weight = 1, VotedAt = DateTime.UtcNow }
+        };
+
+        _mockVoteRepository.Setup(x => x.GetVotesForProposalAsync(proposalId))
+                          .ReturnsAsync(votes);
+
+        // Act
+        var result = await _votingService.GetVotesForProposalAsync(proposalId);
+
+        // Assert - Democratic principle verified
+        result.ShouldNotBeNull();
+        result.Count().ShouldBe(2);
+        result.All(v => v.Weight == 1).ShouldBeTrue("All Nicolas should have equal voting power");
+        result.Sum(v => v.Weight).ShouldBe(2, "Total vote count should equal number of voters (democratic equality)");
     }
 
     [TearDown]
