@@ -139,11 +139,11 @@
                                 <div class="mb-3">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <span class="fw-medium">@GetNicolasLevelLabel(level.Level)</span>
-                                        <span class="badge @GetLevelColor(level.Level)">@level.Count</span>
+                                        <span class="badge @GetLevelColorClass(level.Level)">@level.Count.ToString("N0")</span>
                                     </div>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar @GetLevelColor(level.Level)" 
-                                             style="width: @level.Percentage%"></div>
+                                    <div class="progress" style="height: 10px; background-color: #e9ecef;">
+                                        <div class="progress-bar @GetLevelColorClass(level.Level)" 
+                                             style="width: @level.Percentage.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; min-width: 2px;"></div>
                                     </div>
                                     <small class="text-muted">@level.Percentage.ToString("F1")%</small>
                                 </div>
@@ -174,7 +174,7 @@
                     <div class="card-body">
                         @if (stats?.TopCategories?.Any() == true)
                         {
-                            @foreach (var category in stats.TopCategories.Take(5))
+                            @foreach (var category in stats.TopCategories.Take(6))
                             {
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="badge rounded-pill me-3" style="background-color: @category.CategoryColor;">
@@ -182,13 +182,14 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <div class="fw-medium">@category.CategoryName</div>
-                                        <div class="progress mt-1" style="height: 6px;">
+                                        <div class="progress mt-1" style="height: 8px; background-color: #e9ecef;">
                                             <div class="progress-bar" 
-                                                 style="width: @GetCategoryPercentage(category.VoteCount)%; background-color: @category.CategoryColor;"></div>
+                                                 style="width: @GetCategoryPercentage(category.VoteCount).ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%; background-color: @category.CategoryColor; min-width: 2px;"></div>
                                         </div>
+                                        <small class="text-muted">@GetCategoryPercentage(category.VoteCount).ToString("F1")% du maximum</small>
                                     </div>
                                     <div class="text-end ms-3">
-                                        <div class="fw-bold">@category.VoteCount</div>
+                                        <div class="fw-bold">@category.VoteCount.ToString("N0")</div>
                                         <small class="text-muted">votes</small>
                                     </div>
                                 </div>
@@ -329,9 +330,19 @@
                     ReputationScore = tc.TotalScore
                 }).ToList()
             };
+
+            if (stats?.TopCategories?.Any() == true)
+            {
+                var maxVotes = stats.TopCategories.Max(c => c.VoteCount);
+                foreach (var cat in stats.TopCategories)
+                {
+                    var percentage = maxVotes > 0 ? (double)cat.VoteCount / maxVotes * 100 : 0;
+                }
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] LoadData failed: {ex.Message}");
             // Log error and show default values
             stats = new DashboardStatsDto();
             trendingProposals = [];
@@ -394,11 +405,24 @@
         return maxVotes > 0 ? (double)voteCount / maxVotes * 100 : 0;
     }
 
+    private string GetLevelColorClass(ContributionLevel level)
+    {
+        return level switch
+        {
+            ContributionLevel.PetitNicolas => "bg-secondary",
+            ContributionLevel.GrosMoyenNicolas => "bg-primary",
+            ContributionLevel.GrosNicolas => "bg-info",
+            ContributionLevel.NicolasSupreme => "bg-warning",
+            _ => "bg-secondary"
+        };
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (chartModule != null)
         {
             await chartModule.DisposeAsync();
+            chartModule = null;
         }
     }
 }
