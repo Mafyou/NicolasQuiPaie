@@ -309,7 +309,7 @@ namespace NicolasQuiPaieWeb.Services
                 {
                     Id = 12,
                     Title = "FIN DE L'IMMIGRATION DE MASSE",
-                    Description = "Au-delà de la fin des aides sociales et de la préservation de notre identité, demandons l'arrêt des mécanismes de régulation trop permissifs ainsi que l'expulsion des étrangers clandestins, délinquants ou inactifs de longue durée.",
+                    Description = "Au-delà de la fin des aides sociales et de la préservation de notre identité, demandons l'arrêt des mécanismes de régulation trop permissifs. Exigeons également l'expulsion des étrangers clandestins, délinquants ou inactifs de longue durée.",
                     CategoryId = 11,
                     CategoryName = "Immigration",
                     CategoryColor = "#8E2A2A",
