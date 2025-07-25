@@ -1,5 +1,4 @@
 ﻿using NicolasQuiPaieAPI.Extensions;
-using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +60,8 @@ builder.Services.AddCors(options =>
                 "https://localhost:7398", // API dans appsettings
                 "https://localhost:7051",  // API HTTPS
                 "https://happy-ocean-06624de03.2.azurestaticapps.net", // NicolasQuiPaieWeb Azure Static Web App
-                "https://*.azurestaticapps.net"
+                "https://*.azurestaticapps.net",
+                "https://nicolasquipaie.eu"
               )
               .SetIsOriginAllowedToAllowWildcardSubdomains() // Allow subdomains
               .AllowAnyHeader()
@@ -259,7 +259,7 @@ if (app.Environment.IsDevelopment())
 // 🎯 Initialize database using extension method
 await app.InitializeDatabaseAsync();
 
-Log.Information("🚀 Nicolas Qui Paie API started in {Environment} mode. Swagger: {SwaggerEnabled}. SQL Logging: Enabled with custom ApiLog table", 
+Log.Information("🚀 Nicolas Qui Paie API started in {Environment} mode. Swagger: {SwaggerEnabled}. SQL Logging: Enabled with custom ApiLog table",
     app.Environment.EnvironmentName, app.Environment.IsDevelopment() ? "Available" : "Disabled");
 
 await app.RunAsync(); // C# 13.0 - Use async version
