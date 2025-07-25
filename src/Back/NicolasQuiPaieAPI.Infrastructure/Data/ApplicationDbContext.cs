@@ -16,6 +16,7 @@ namespace NicolasQuiPaieAPI.Infrastructure.Data
         public DbSet<Vote> Votes { get; set; } = null!;
         public DbSet<Comment> Comments { get; set; } = null!;
         public DbSet<CommentLike> CommentLikes { get; set; } = null!;
+        public DbSet<ApiLog> ApiLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -27,6 +28,7 @@ namespace NicolasQuiPaieAPI.Infrastructure.Data
             ConfigureComment(builder);
             ConfigureCommentLike(builder);
             ConfigureCategory(builder);
+            ConfigureApiLog(builder);
 
             // Données de test
             SeedData(builder);
@@ -140,6 +142,35 @@ namespace NicolasQuiPaieAPI.Infrastructure.Data
 
                 entity.HasIndex(e => e.Name).IsUnique();
                 entity.HasIndex(e => e.SortOrder);
+            });
+        }
+
+        private static void ConfigureApiLog(ModelBuilder builder)
+        {
+            builder.Entity<ApiLog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Message).HasMaxLength(4000);
+                entity.Property(e => e.MessageTemplate).HasMaxLength(2000);
+                entity.Property(e => e.Level).IsRequired();
+                entity.Property(e => e.TimeStamp).IsRequired();
+                entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+                
+                // Additional properties constraints
+                entity.Property(e => e.UserId).HasMaxLength(450);
+                entity.Property(e => e.UserName).HasMaxLength(256);
+                entity.Property(e => e.RequestPath).HasMaxLength(2048);
+                entity.Property(e => e.RequestMethod).HasMaxLength(10);
+                entity.Property(e => e.ClientIP).HasMaxLength(45);
+                entity.Property(e => e.UserAgent).HasMaxLength(1000);
+                entity.Property(e => e.Source).HasMaxLength(100);
+
+                // Indexes for efficient querying
+                entity.HasIndex(e => e.TimeStamp);
+                entity.HasIndex(e => e.Level);
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => new { e.Level, e.TimeStamp });
             });
         }
 

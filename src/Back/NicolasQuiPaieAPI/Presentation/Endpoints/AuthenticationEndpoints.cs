@@ -38,15 +38,42 @@ public static class AuthenticationEndpoints
 
     private static async Task<IResult> LoginAsync(
         [FromBody] LoginRequestDto request,
+        [FromServices] ILogger<Program> logger,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        HttpContext context)
     {
+        var clientIp = context.Connection.RemoteIpAddress?.ToString();
+
         try
         {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                logger.LogWarning("Login attempt with empty email from IP: {ClientIP}", clientIp);
+                return Results.BadRequest(new AuthResponseDto
+                {
+                    Success = false,
+                    Errors = ["Email is required"]
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                logger.LogWarning("Login attempt with empty password for email {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
+                return Results.BadRequest(new AuthResponseDto
+                {
+                    Success = false,
+                    Errors = ["Password is required"]
+                });
+            }
+
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user is null)
             {
+                logger.LogWarning("Login attempt with non-existent email: {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
@@ -57,6 +84,8 @@ public static class AuthenticationEndpoints
             var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
+                logger.LogWarning("Failed login attempt for user {UserId} ({Email}) from IP: {ClientIP}", 
+                    user.Id, request.Email, clientIp);
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
@@ -66,6 +95,10 @@ public static class AuthenticationEndpoints
 
             var token = jwtService.GenerateToken(user);
             var refreshToken = jwtService.GenerateRefreshToken();
+
+            // Update last login time
+            user.LastLoginAt = DateTime.UtcNow;
+            await userManager.UpdateAsync(user);
 
             return Results.Ok(new AuthResponseDto
             {
@@ -87,24 +120,49 @@ public static class AuthenticationEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new AuthResponseDto
-            {
-                Success = false,
-                Errors = [$"Login failed: {ex.Message}"]
-            });
+            logger.LogError(ex, "Critical error during login for email {Email} from IP: {ClientIP}", 
+                request.Email, clientIp);
+            return Results.Problem("Login failed");
         }
     }
 
     private static async Task<IResult> RegisterAsync(
         [FromBody] RegisterRequestDto request,
+        [FromServices] ILogger<Program> logger,
         UserManager<ApplicationUser> userManager,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        HttpContext context)
     {
+        var clientIp = context.Connection.RemoteIpAddress?.ToString();
+
         try
         {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                logger.LogWarning("Registration attempt with empty email from IP: {ClientIP}", clientIp);
+                return Results.BadRequest(new AuthResponseDto
+                {
+                    Success = false,
+                    Errors = ["Email is required"]
+                });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password))
+            {
+                logger.LogWarning("Registration attempt with empty password for email {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
+                return Results.BadRequest(new AuthResponseDto
+                {
+                    Success = false,
+                    Errors = ["Password is required"]
+                });
+            }
+
             var existingUser = await userManager.FindByEmailAsync(request.Email);
             if (existingUser is not null)
             {
+                logger.LogWarning("Registration attempt with existing email: {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
@@ -129,6 +187,8 @@ public static class AuthenticationEndpoints
             var result = await userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
             {
+                logger.LogError("User creation failed for email {Email} from IP: {ClientIP}. Errors: {Errors}", 
+                    request.Email, clientIp, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
@@ -159,28 +219,41 @@ public static class AuthenticationEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new AuthResponseDto
-            {
-                Success = false,
-                Errors = [$"Registration failed: {ex.Message}"]
-            });
+            logger.LogError(ex, "Critical error during registration for email {Email} from IP: {ClientIP}", 
+                request.Email, clientIp);
+            return Results.Problem("Registration failed");
         }
     }
 
     private static async Task<IResult> RefreshTokenAsync(
         [FromBody] RefreshTokenRequestDto request,
+        [FromServices] ILogger<Program> logger,
         UserManager<ApplicationUser> userManager,
-        IJwtService jwtService)
+        IJwtService jwtService,
+        HttpContext context)
     {
+        var clientIp = context.Connection.RemoteIpAddress?.ToString();
+
         try
         {
             // Validate the refresh token format
             if (string.IsNullOrEmpty(request.RefreshToken))
             {
+                logger.LogWarning("Token refresh attempt with empty refresh token from IP: {ClientIP}", clientIp);
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
                     Errors = ["Invalid refresh token"]
+                });
+            }
+
+            if (string.IsNullOrEmpty(request.UserId))
+            {
+                logger.LogWarning("Token refresh attempt with empty user ID from IP: {ClientIP}", clientIp);
+                return Results.BadRequest(new AuthResponseDto
+                {
+                    Success = false,
+                    Errors = ["User ID required for token refresh"]
                 });
             }
 
@@ -199,18 +272,11 @@ public static class AuthenticationEndpoints
                 // For demo purposes, we'll assume the token is valid if it's a valid GUID
                 // In production, lookup this token in the database
 
-                if (string.IsNullOrEmpty(request.UserId))
-                {
-                    return Results.BadRequest(new AuthResponseDto
-                    {
-                        Success = false,
-                        Errors = ["User ID required for token refresh"]
-                    });
-                }
-
                 var user = await userManager.FindByIdAsync(request.UserId);
                 if (user is null)
                 {
+                    logger.LogWarning("Token refresh attempt for non-existent user: {UserId} from IP: {ClientIP}", 
+                        request.UserId, clientIp);
                     return Results.BadRequest(new AuthResponseDto
                     {
                         Success = false,
@@ -240,8 +306,9 @@ public static class AuthenticationEndpoints
                     }
                 });
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
+                logger.LogWarning(ex, "Token refresh attempt with invalid token format from IP: {ClientIP}", clientIp);
                 return Results.BadRequest(new AuthResponseDto
                 {
                     Success = false,
@@ -251,30 +318,42 @@ public static class AuthenticationEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new AuthResponseDto
-            {
-                Success = false,
-                Errors = [$"Token refresh failed: {ex.Message}"]
-            });
+            logger.LogError(ex, "Critical error during token refresh for user {UserId} from IP: {ClientIP}", 
+                request.UserId, clientIp);
+            return Results.Problem("Token refresh failed");
         }
     }
 
     // C# 13.0 - Lambda expression with static modifier
-    private static Task<IResult> LogoutAsync() =>
+    private static Task<IResult> LogoutAsync(
+        [FromServices] ILogger<Program> logger,
+        HttpContext context) =>
         // With JWT, logout is handled client-side by removing the token
         Task.FromResult(Results.Ok(new { message = "Logged out successfully" }));
 
     private static async Task<IResult> ForgotPasswordAsync(
         [FromBody] PasswordResetRequestDto request,
+        [FromServices] ILogger<Program> logger,
         UserManager<ApplicationUser> userManager,
-        IEmailService emailService)
+        IEmailService emailService,
+        HttpContext context)
     {
+        var clientIp = context.Connection.RemoteIpAddress?.ToString();
+
         try
         {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                logger.LogWarning("Password reset attempt with empty email from IP: {ClientIP}", clientIp);
+                return Results.BadRequest(new { message = "Email is required" });
+            }
+
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user is null)
             {
-                // For security, don't reveal if email exists or not
+                // For security, don't reveal if email exists or not, but log the attempt
+                logger.LogWarning("Password reset attempt for non-existent email: {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
                 return Results.Ok(new { message = "If the email exists, a password reset link has been sent" });
             }
 
@@ -291,19 +370,47 @@ public static class AuthenticationEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { message = $"Error processing password reset: {ex.Message}" });
+            logger.LogError(ex, "Critical error processing password reset for email {Email} from IP: {ClientIP}", 
+                request.Email, clientIp);
+            return Results.Problem("Error processing password reset");
         }
     }
 
     private static async Task<IResult> ResetPasswordAsync(
         [FromBody] PasswordResetConfirmDto request,
-        UserManager<ApplicationUser> userManager)
+        [FromServices] ILogger<Program> logger,
+        UserManager<ApplicationUser> userManager,
+        HttpContext context)
     {
+        var clientIp = context.Connection.RemoteIpAddress?.ToString();
+
         try
         {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                logger.LogWarning("Password reset confirmation with empty email from IP: {ClientIP}", clientIp);
+                return Results.BadRequest(new { message = "Email is required" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Token))
+            {
+                logger.LogWarning("Password reset confirmation with empty token for email {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
+                return Results.BadRequest(new { message = "Reset token is required" });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                logger.LogWarning("Password reset confirmation with empty password for email {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
+                return Results.BadRequest(new { message = "New password is required" });
+            }
+
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user is null)
             {
+                logger.LogWarning("Password reset attempt for non-existent user: {Email} from IP: {ClientIP}", 
+                    request.Email, clientIp);
                 return Results.BadRequest(new { message = "Invalid reset request" });
             }
 
@@ -311,10 +418,15 @@ public static class AuthenticationEndpoints
 
             if (result.Succeeded)
             {
+                // Warning level for password reset as it's a security-sensitive action
+                logger.LogWarning("Password reset successful for user {UserId} ({Email}) from IP: {ClientIP}", 
+                    user.Id, request.Email, clientIp);
                 return Results.Ok(new { message = "Password reset successfully" });
             }
             else
             {
+                logger.LogError("Password reset failed for user {UserId} ({Email}) from IP: {ClientIP}. Errors: {Errors}", 
+                    user.Id, request.Email, clientIp, string.Join(", ", result.Errors.Select(e => e.Description)));
                 return Results.BadRequest(new
                 {
                     message = "Password reset failed",
@@ -324,7 +436,9 @@ public static class AuthenticationEndpoints
         }
         catch (Exception ex)
         {
-            return Results.BadRequest(new { message = $"Error resetting password: {ex.Message}" });
+            logger.LogError(ex, "Critical error resetting password for email {Email} from IP: {ClientIP}", 
+                request.Email, clientIp);
+            return Results.Problem("Error resetting password");
         }
     }
 }

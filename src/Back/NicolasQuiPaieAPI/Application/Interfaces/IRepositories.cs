@@ -17,6 +17,7 @@ public interface IUnitOfWork : IDisposable
     ICommentRepository Comments { get; }
     ICategoryRepository Categories { get; }
     IUserRepository Users { get; }
+    IApiLogRepository ApiLogs { get; }
     Task<int> SaveChangesAsync();
     Task BeginTransactionAsync();
     Task CommitTransactionAsync();
@@ -56,4 +57,20 @@ public interface IUserRepository
     Task<ApplicationUser?> GetByEmailAsync(string email);
     Task<ApplicationUser> UpdateAsync(ApplicationUser user);
     Task<IEnumerable<ApplicationUser>> GetTopContributorsAsync(int take = 10);
+}
+
+public interface IApiLogRepository : IRepository<ApiLog>
+{
+    /// <summary>
+    /// Gets the latest logs, optionally filtering for logs at least as critical as the specified level
+    /// </summary>
+    /// <param name="take">Maximum number of logs to retrieve</param>
+    /// <param name="level">Minimum log level (inclusive) - returns logs at this level and above</param>
+    /// <returns>Collection of logs ordered by timestamp (newest first)</returns>
+    Task<IEnumerable<ApiLog>> GetLatestLogsAsync(int take = 100, NicolasQuiPaieAPI.Infrastructure.Models.LogLevel? level = null);
+    Task<IEnumerable<ApiLog>> GetLogsByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level, int take = 100);
+    Task<IEnumerable<ApiLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate, int take = 100);
+    Task<int> GetLogCountByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level);
+    Task<DateTime?> GetOldestLogDateAsync();
+    Task<DateTime?> GetNewestLogDateAsync();
 }

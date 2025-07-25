@@ -206,3 +206,63 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
             .ToListAsync();
     }
 }
+
+public class ApiLogRepository(ApplicationDbContext context) : BaseRepository<ApiLog>(context), IApiLogRepository
+{
+    public async Task<IEnumerable<ApiLog>> GetLatestLogsAsync(int take = 100, NicolasQuiPaieAPI.Infrastructure.Models.LogLevel? level = null)
+    {
+        var query = _context.ApiLogs.AsQueryable();
+        
+        if (level.HasValue)
+        {
+            // Filter for logs that are at least as critical as the specified level
+            // (level value or higher in the enum hierarchy)
+            query = query.Where(l => l.Level >= level.Value);
+        }
+
+        return await query
+            .OrderByDescending(l => l.TimeStamp)
+            .Take(take)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ApiLog>> GetLogsByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level, int take = 100)
+    {
+        return await _context.ApiLogs
+            .Where(l => l.Level == level)
+            .OrderByDescending(l => l.TimeStamp)
+            .Take(take)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ApiLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate, int take = 100)
+    {
+        return await _context.ApiLogs
+            .Where(l => l.TimeStamp >= startDate && l.TimeStamp <= endDate)
+            .OrderByDescending(l => l.TimeStamp)
+            .Take(take)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetLogCountByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level)
+    {
+        return await _context.ApiLogs
+            .CountAsync(l => l.Level == level);
+    }
+
+    public async Task<DateTime?> GetOldestLogDateAsync()
+    {
+        return await _context.ApiLogs
+            .OrderBy(l => l.TimeStamp)
+            .Select(l => l.TimeStamp)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<DateTime?> GetNewestLogDateAsync()
+    {
+        return await _context.ApiLogs
+            .OrderByDescending(l => l.TimeStamp)
+            .Select(l => l.TimeStamp)
+            .FirstOrDefaultAsync();
+    }
+}

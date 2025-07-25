@@ -1,49 +1,52 @@
+ï»¿using NicolasQuiPaieAPI.Extensions;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuration Serilog
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .WriteTo.File("logs/nicolas-qui-paie-.txt", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
-
-builder.Host.UseSerilog();
+// ðŸ”§ Configure Serilog with custom ApiLog table mapping
+builder.AddCustomSerilog();
 
 // Add services to the container
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+
+// Configuration Swagger - ONLY in Development
+if (builder.Environment.IsDevelopment())
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
+    builder.Services.AddSwaggerGen(c =>
     {
-        Title = "Nicolas Qui Paie API",
-        Version = "v1",
-        Description = "API pour la plateforme de démocratie participative Nicolas Qui Paie"
-    });
-
-    // Configuration JWT pour Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        c.SwaggerDoc("v1", new OpenApiInfo
         {
-            new OpenApiSecurityScheme
+            Title = "Nicolas Qui Paie API",
+            Version = "v1",
+            Description = "API pour la plateforme de dÃ©mocratie participative Nicolas Qui Paie - Mode DÃ©veloppement"
+        });
+
+        // Configuration JWT pour Swagger
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            []
-        }
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                []
+            }
+        });
     });
-});
+}
 
 // Configuration CORS
 builder.Services.AddCors(options =>
@@ -140,15 +143,16 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 // Configuration FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProposalDtoValidator>();
 
-// Injection des dépendances - Repositories
+// Injection des dÃ©pendances - Repositories
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProposalRepository, ProposalRepository>();
 builder.Services.AddScoped<IVoteRepository, VoteRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IApiLogRepository, ApiLogRepository>();
 
-// Injection des dépendances - Services
+// Injection des dÃ©pendances - Services
 builder.Services.AddScoped<IProposalService, ProposalService>();
 builder.Services.AddScoped<IVotingService, VotingService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -160,11 +164,13 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
+    // Swagger ONLY available in Development mode
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nicolas Qui Paie API v1");
-        c.RoutePrefix = string.Empty; // Swagger UI à la racine
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Nicolas Qui Paie API v1 - Development");
+        c.RoutePrefix = string.Empty; // Swagger UI Ã  la racine
+        c.DocumentTitle = "Nicolas Qui Paie API - Development Mode";
     });
 
     // Use development CORS in development
@@ -186,189 +192,77 @@ if (!disableHttpsRedirection)
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mappage des endpoints
-app.MapAuthenticationEndpoints();
-app.MapProposalEndpoints();
-app.MapVotingEndpoints();
-app.MapCategoryEndpoints();
-app.MapCommentEndpoints();
-app.MapAnalyticsEndpoints();
+// ðŸ”§ Add custom Serilog request logging middleware
+app.UseCustomSerilogRequestLogging();
 
-// Endpoint de santé
-app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))
-   .WithTags("Health")
-   .WithSummary("Vérification de l'état de l'API");
+// ðŸŽ¯ Map all API endpoints using extension method
+app.MapApiEndpoints();
 
 // Default root endpoint and swagger redirects
-app.MapGet("/", () => Results.Content("""
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Nicolas Qui Paie API</title>
-    <meta http-equiv="refresh" content="0; url=/">
-</head>
-<body>
-    <h1>Welcome to Nicolas Qui Paie API</h1>
-    <p>Redirecting to Swagger documentation...</p>
-    <p>If you are not redirected automatically, <a href="/">click here</a>.</p>
-</body>
-</html>
-""", "text/html"))
-   .WithTags("Root")
-   .WithSummary("API Documentation Homepage");
-
-// Handle common swagger URL variations
-app.MapGet("/swagger", () => Results.Redirect("/"))
-   .WithTags("Root")
-   .WithSummary("Redirect Swagger to root");
-
-app.MapGet("/Swagger", () => Results.Redirect("/"))
-   .WithTags("Root")
-   .WithSummary("Redirect Swagger (capital S) to root");
-
-// Initialisation de la base de données - Skip in testing environment
-var disableDbInitialization = app.Configuration.GetValue<bool>("DisableDbInitialization");
-if (!disableDbInitialization)
+app.MapGet("/", () =>
 {
-    await using var scope = app.Services.CreateAsyncScope(); // C# 13.0 - await using improvement
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-
-    try
+    if (app.Environment.IsDevelopment())
     {
-        await context.Database.EnsureCreatedAsync(); // C# 13.0 - Use async version
-
-        // Seed categories first
-        await SeedCategoriesAsync(context, logger);
-
-        // Seed test user for development
-        await SeedTestUserAsync(userManager, logger);
-
-        logger.LogInformation("Base de données initialisée avec succès");
+        return Results.Content("""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nicolas Qui Paie API - Development</title>
+            <meta http-equiv="refresh" content="0; url=/">
+        </head>
+        <body>
+            <h1>Welcome to Nicolas Qui Paie API - Development Mode</h1>
+            <p>Redirecting to Swagger documentation...</p>
+            <p>If you are not redirected automatically, <a href="/">click here</a>.</p>
+            <hr>
+            <p><strong>Available endpoints:</strong></p>
+            <ul>
+                <li><a href="/swagger">Swagger Documentation</a></li>
+                <li><a href="/health">Health Check</a></li>
+                <li><a href="/api/logs">API Logs</a></li>
+                <li><a href="/swagger/index.html">Test Logging (POST)</a></li>
+            </ul>
+            <p><em>Logging Level: Warning, Error, Fatal only</em></p>
+            <p><em>SQL Logging: Enabled with custom ApiLog table mapping</em></p>
+        </body>
+        </html>
+        """, "text/html");
     }
-    catch (Exception ex)
+    else
     {
-        logger.LogError(ex, "Erreur lors de l'initialisation de la base de données");
+        return Results.Ok(new
+        {
+            Status = "Nicolas Qui Paie API",
+            Environment = "Production",
+            Timestamp = DateTime.UtcNow,
+            Message = "API is running. Swagger documentation is only available in development mode.",
+            LoggingLevel = "Warning, Error, Fatal only",
+            SqlLoggingEnabled = true
+        });
     }
+})
+.WithTags("Root")
+.WithSummary("API root endpoint");
+
+// Handle swagger redirects only in development
+if (app.Environment.IsDevelopment())
+{
+    app.MapGet("/swagger", () => Results.Redirect("/"))
+       .WithTags("Root")
+       .WithSummary("Redirect Swagger to root");
+
+    app.MapGet("/Swagger", () => Results.Redirect("/"))
+       .WithTags("Root")
+       .WithSummary("Redirect Swagger (capital S) to root");
 }
+
+// ðŸŽ¯ Initialize database using extension method
+await app.InitializeDatabaseAsync();
+
+Log.Warning("ðŸš€ Nicolas Qui Paie API started in {Environment} mode. Swagger: {SwaggerEnabled}. SQL Logging: Enabled with custom ApiLog table", 
+    app.Environment.EnvironmentName, app.Environment.IsDevelopment() ? "Available" : "Disabled");
 
 await app.RunAsync(); // C# 13.0 - Use async version
-
-// Seed categories method
-static async Task SeedCategoriesAsync(ApplicationDbContext context, ILogger<Program> logger)
-{
-    try
-    {
-        if (!await context.Categories.AnyAsync()) // C# 13.0 - Use async version
-        {
-            Category[] categories = [ // C# 13.0 - Collection expressions
-                new()
-                {
-                    Name = "Fiscalité",
-                    Description = "Propositions concernant les impôts et taxes",
-                    Color = "#FF6B6B",
-                    IconClass = "fas fa-coins",
-                    IsActive = true
-                },
-                new()
-                {
-                    Name = "Dépenses Publiques",
-                    Description = "Propositions sur l'utilisation des deniers publics",
-                    Color = "#4ECDC4",
-                    IconClass = "fas fa-hand-holding-usd",
-                    IsActive = true
-                },
-                new()
-                {
-                    Name = "Social",
-                    Description = "Propositions sociales et de solidarité",
-                    Color = "#45B7D1",
-                    IconClass = "fas fa-users",
-                    IsActive = true
-                },
-                new()
-                {
-                    Name = "Économie",
-                    Description = "Propositions économiques et de relance",
-                    Color = "#FFA07A",
-                    IconClass = "fas fa-chart-line",
-                    IsActive = true
-                },
-                new()
-                {
-                    Name = "Environnement",
-                    Description = "Propositions écologiques et environnementales",
-                    Color = "#98D8C8",
-                    IconClass = "fas fa-leaf",
-                    IsActive = true
-                }
-            ];
-
-            context.Categories.AddRange(categories);
-            await context.SaveChangesAsync();
-            logger.LogInformation("Créé {Count} catégories par défaut", categories.Length);
-        }
-        else
-        {
-            logger.LogInformation("Catégories déjà présentes en base");
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Erreur lors de la création des catégories par défaut");
-    }
-}
-
-// Seed test user method
-static async Task SeedTestUserAsync(UserManager<ApplicationUser> userManager, ILogger<Program> logger)
-{
-    try
-    {
-        const string testEmail = "nicolas@test.fr";
-        const string testPassword = "Test123!";
-
-        var existingUser = await userManager.FindByEmailAsync(testEmail);
-
-        if (existingUser is null) // C# 13.0 - Use 'is null' pattern
-        {
-            // C# 13.0 - Object initialization with contribution level
-            var testUser = new ApplicationUser
-            {
-                UserName = testEmail,
-                Email = testEmail,
-                EmailConfirmed = true,
-                DisplayName = "Nicolas Test API",
-                ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel.PetitNicolas,
-                CreatedAt = DateTime.UtcNow,
-                ReputationScore = 0,
-                IsVerified = true,
-                Bio = "Utilisateur de test pour l'API Nicolas Qui Paie - Niveau de contribution initial"
-            };
-
-            var result = await userManager.CreateAsync(testUser, testPassword);
-
-            if (result.Succeeded)
-            {
-                logger.LogInformation("Utilisateur de test créé avec succès: {Email} - Niveau de contribution: {Level}",
-                    testEmail, testUser.ContributionLevel);
-            }
-            else
-            {
-                logger.LogWarning("Échec de création de l'utilisateur de test: {Errors}",
-                    string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
-        }
-        else
-        {
-            logger.LogInformation("Utilisateur de test existe déjà: {Email}", testEmail);
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Erreur lors de la création de l'utilisateur de test");
-    }
-}
 
 // Make Program class accessible for testing
 public partial class Program { }
