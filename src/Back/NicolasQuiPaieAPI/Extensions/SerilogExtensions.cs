@@ -75,12 +75,12 @@ public static class SerilogExtensions
         // Verify Serilog configuration
         try
         {
-            Log.Warning("?? Serilog SQL Server configuration test - this should appear in ApiLogs table");
-            Console.WriteLine("? Serilog configured successfully with custom ApiLog table mapping");
+            Log.Warning("✅ Serilog SQL Server configuration test - this should appear in ApiLogs table");
+            Console.WriteLine("✅ Serilog configured successfully with custom ApiLog table mapping");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"? Serilog configuration error: {ex.Message}");
+            Console.WriteLine($"❌ Serilog configuration error: {ex.Message}");
             throw;
         }
 
