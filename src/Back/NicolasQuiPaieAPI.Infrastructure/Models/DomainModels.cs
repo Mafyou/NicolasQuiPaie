@@ -24,6 +24,16 @@ namespace NicolasQuiPaieAPI.Infrastructure.Models
         For = 1
     }
 
+    public enum LogLevel
+    {
+        Verbose = 0,
+        Debug = 1,
+        Information = 2,
+        Warning = 3,
+        Error = 4,
+        Fatal = 5
+    }
+
     public class ApplicationUser : IdentityUser
     {
         public string? DisplayName { get; set; }
@@ -140,5 +150,30 @@ namespace NicolasQuiPaieAPI.Infrastructure.Models
         // Navigation properties
         public virtual ApplicationUser User { get; set; } = null!;
         public virtual Comment Comment { get; set; } = null!;
+    }
+
+    /// <summary>
+    /// Entity model for API logs that corresponds to Serilog's structure
+    /// </summary>
+    public class ApiLog
+    {
+        public int Id { get; set; }
+        public string? Message { get; set; }
+        public string? MessageTemplate { get; set; }
+        public LogLevel Level { get; set; }
+        public DateTime TimeStamp { get; set; }
+        public string? Exception { get; set; }
+        public string? Properties { get; set; }
+
+        // Additional properties for enriched logging
+        public string? UserId { get; set; }
+        public string? UserName { get; set; }
+        public string? RequestPath { get; set; }
+        public string? RequestMethod { get; set; }
+        public int? StatusCode { get; set; }
+        public long? Duration { get; set; }
+        public string? ClientIP { get; set; }
+        public string? UserAgent { get; set; }
+        public string? Source { get; set; }
     }
 }

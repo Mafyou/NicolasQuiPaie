@@ -1,0 +1,358 @@
+﻿@page "/log42"
+@using NicolasQuiPaieData.DTOs
+@inject ApiLogsService ApiLogsService
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+
+<PageTitle>Log42 - Monitoring API - Nicolas Qui Paie</PageTitle>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center mb-4">
+                <i class="fas fa-terminal fa-2x text-success me-3"></i>
+                <div>
+                    <h1 class="mb-0">Log42 📊</h1>
+                    <p class="text-muted mb-0">Monitoring en temps réel des logs API - La réponse à tout !</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtres et Contrôles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Niveau de log minimum:</label>
+                            <select class="form-select" @bind="selectedLogLevel" @bind:after="RefreshLogs">
+                                @foreach (var level in availableLogLevels)
+                                {
+                                    <option value="@level">@level</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Nombre d'entrées:</label>
+                            <select class="form-select" @bind="takeCount" @bind:after="RefreshLogs">
+                                <option value="25">25 entrées</option>
+                                <option value="50">50 entrées</option>
+                                <option value="100">100 entrées</option>
+                                <option value="250">250 entrées</option>
+                                <option value="500">500 entrées</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Actions:</label>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" @onclick="RefreshLogs" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                    }
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    Actualiser
+                                </button>
+                                <button class="btn btn-sm btn-warning" @onclick="CreateWarningTest">⚠️</button>
+                                <button class="btn btn-sm btn-danger" @onclick="CreateErrorTest">❌</button>
+                                <button class="btn btn-sm btn-dark" @onclick="CreateFatalTest">💀</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Summary -->
+    @if (logsResponse != null)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Statistiques
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary mb-0">@logsResponse.TotalReturned</h4>
+                                <small class="text-muted">Logs affichés</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-warning mb-0">@selectedLogLevel</h4>
+                                <small class="text-muted">Niveau minimum</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-info mb-0">@lastRefreshTime.ToString("HH:mm:ss")</h4>
+                                <small class="text-muted">Dernière MAJ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Logs Display -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Logs API
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (isLoading && logsResponse == null)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Chargement...</span>
+                            </div>
+                            <p class="mt-3 text-muted">Chargement des logs...</p>
+                        </div>
+                    }
+                    else if (logsResponse?.Logs?.Length > 0)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Niveau</th>
+                                        <th>Timestamp</th>
+                                        <th>Message</th>
+                                        <th>Utilisateur</th>
+                                        <th>Requête</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var log in logsResponse.Logs)
+                                    {
+                                        <tr class="@GetRowClass(log.Level)">
+                                            <td>
+                                                <span class="badge @GetLevelBadgeClass(log.Level)">
+                                                    @log.Level
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small>@log.TimeStamp.ToString("HH:mm:ss dd/MM")</small>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(log.Message))
+                                                {
+                                                    <span class="@GetLogLevelColor(log.Level)">
+                                                        @(log.Message.Length > 80 ? log.Message.Substring(0, 80) + "..." : log.Message)
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(log.UserName))
+                                                {
+                                                    <small><i class="fas fa-user me-1"></i>@log.UserName</small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">Anonyme</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(log.RequestMethod) && !string.IsNullOrEmpty(log.RequestPath))
+                                                {
+                                                    <small>
+                                                        <span class="badge bg-secondary">@log.RequestMethod</span>
+                                                        <br><span class="text-muted">@(log.RequestPath?.Length > 15 ? log.RequestPath.Substring(0, 15) + "..." : log.RequestPath)</span>
+                                                    </small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (log.StatusCode.HasValue)
+                                                {
+                                                    <span class="badge @GetStatusCodeClass(log.StatusCode.Value)">
+                                                        @log.StatusCode
+                                                    </span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else if (logsResponse != null)
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun log trouvé</h5>
+                            <p class="text-muted">Aucun log trouvé pour le niveau "@selectedLogLevel"</p>
+                            <button class="btn btn-outline-primary" @onclick="ShowAllLogs">
+                                <i class="fas fa-eye me-2"></i>Voir tous les logs
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                            <h5 class="text-warning">Erreur de connexion</h5>
+                            <p class="text-muted">Impossible de récupérer les logs. Vérifiez que l'API est accessible.</p>
+                            <button class="btn btn-warning" @onclick="RefreshLogs">
+                                <i class="fas fa-redo me-2"></i>Réessayer
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center">
+                    <p class="mb-2">
+                        <i class="fas fa-robot me-2"></i>
+                        <strong>Log42</strong> - La réponse ultime au monitoring des logs API
+                    </p>
+                    <small class="text-muted">
+                        "Ne paniquez pas ! Tous vos logs sont sous surveillance." - Guide du voyageur galactique du debugging
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ApiLogsResponseDto? logsResponse;
+    private bool isLoading = false;
+    private string selectedLogLevel = "Warning";
+    private int takeCount = 100;
+    private DateTime lastRefreshTime = DateTime.Now;
+
+    private readonly string[] availableLogLevels = ["All", "Warning", "Error", "Fatal"];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshLogs();
+    }
+
+    private async Task RefreshLogs()
+    {
+        if (isLoading) return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var level = selectedLogLevel == "All" ? null : selectedLogLevel;
+            logsResponse = await ApiLogsService.GetLogsAsync(level, takeCount);
+            lastRefreshTime = DateTime.Now;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du rafraîchissement des logs: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateWarningTest()
+    {
+        await CreateTestLog("Warning");
+    }
+
+    private async Task CreateErrorTest()
+    {
+        await CreateTestLog("Error");
+    }
+
+    private async Task CreateFatalTest()
+    {
+        await CreateTestLog("Fatal");
+    }
+
+    private async Task CreateTestLog(string level)
+    {
+        try
+        {
+            var message = $"Test log créé depuis Log42 à {DateTime.Now:HH:mm:ss}";
+            var success = await ApiLogsService.CreateTestLogAsync(message, level);
+            
+            if (success)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", $"Log de test ({level}) créé avec succès !");
+                await Task.Delay(1000);
+                await RefreshLogs();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la création du log de test.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la création du log de test: {ex.Message}");
+        }
+    }
+
+    private async Task ShowAllLogs()
+    {
+        selectedLogLevel = "All";
+        await RefreshLogs();
+    }
+
+    private string GetLevelBadgeClass(string level) => level.ToLower() switch
+    {
+        "verbose" => "bg-secondary",
+        "debug" => "bg-info",
+        "information" => "bg-primary",
+        "warning" => "bg-warning text-dark",
+        "error" => "bg-danger",
+        "fatal" => "bg-dark",
+        _ => "bg-secondary"
+    };
+
+    private string GetRowClass(string level) => level.ToLower() switch
+    {
+        "error" => "table-danger",
+        "fatal" => "table-dark",
+        "warning" => "table-warning",
+        _ => ""
+    };
+
+    private string GetStatusCodeClass(int statusCode) => statusCode switch
+    {
+        >= 200 and < 300 => "bg-success",
+        >= 300 and < 400 => "bg-info",
+        >= 400 and < 500 => "bg-warning text-dark",
+        >= 500 => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private string GetLogLevelColor(string level) => level.ToLower() switch
+    {
+        "verbose" => "text-muted",
+        "debug" => "text-info",
+        "information" => "text-primary",
+        "warning" => "text-warning",
+        "error" => "text-danger",
+        "fatal" => "text-danger fw-bold",
+        _ => "text-secondary"
+    };
+}

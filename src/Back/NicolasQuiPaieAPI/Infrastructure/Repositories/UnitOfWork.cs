@@ -9,6 +9,7 @@ public class UnitOfWork(ApplicationDbContext context) : IUnitOfWork
     public ICommentRepository Comments { get; } = new CommentRepository(context);
     public ICategoryRepository Categories { get; } = new CategoryRepository(context);
     public IUserRepository Users { get; } = new UserRepository(context);
+    public IApiLogRepository ApiLogs { get; } = new ApiLogRepository(context);
 
     public async Task<int> SaveChangesAsync()
     {

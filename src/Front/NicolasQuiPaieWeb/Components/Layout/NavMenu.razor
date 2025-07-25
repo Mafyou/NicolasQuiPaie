@@ -29,6 +29,26 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/analytics"><i class="fas fa-chart-line me-1"></i>Analytics</a>
                 </li>
+                
+                <!-- Developer Tools Section - Only for Sata77@gmail.com -->
+                <AuthorizeView>
+                    <Authorized>
+                        @if (IsDeveloperUser(context.User))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cogs me-1"></i>Dev Tools
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/log42"><i class="fas fa-terminal me-2"></i>Log42 📊</a></li>
+                                    <li><a class="dropdown-item" href="/diagnostics"><i class="fas fa-stethoscope me-2"></i>Diagnostics</a></li>
+                                    <li><a class="dropdown-item" href="/api-example"><i class="fas fa-plug me-2"></i>API Test</a></li>
+                                </ul>
+                            </li>
+                        }
+                    </Authorized>
+                </AuthorizeView>
+                
                 <li class="nav-item">
                     <a class="nav-link" href="/about"><i class="fas fa-info-circle me-1"></i>À Propos</a>
                 </li>
@@ -93,6 +113,13 @@
             };
         }
         return "🥉 Petit Nicolas";
+    }
+
+    private bool IsDeveloperUser(System.Security.Claims.ClaimsPrincipal user)
+    {
+        // Check if the user email matches the developer email
+        var userEmail = user.FindFirst("email")?.Value ?? user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+        return string.Equals(userEmail, "Sata77@gmail.com", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task HandleLogout()

@@ -41,6 +41,7 @@ builder.Services.AddScoped<ApiProposalService>();
 builder.Services.AddScoped<ApiVotingService>();
 builder.Services.AddScoped<ApiCommentService>();
 builder.Services.AddScoped<ApiAnalyticsService>();
+builder.Services.AddScoped<ApiLogsService>(); // Added new logs service
 
 // Add Client-side wrapper services (for backward compatibility)
 builder.Services.AddScoped<ProposalService>();
@@ -56,9 +57,9 @@ builder.Services.AddScoped<ApiHealthService>();
 // Add logging with enhanced configuration
 builder.Services.AddLogging(logging =>
 {
-    logging.SetMinimumLevel(LogLevel.Information);
-    logging.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
-    logging.AddFilter("Microsoft.AspNetCore.Components.WebAssembly", LogLevel.Warning);
+    logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Information);
+    logging.AddFilter("System.Net.Http.HttpClient", Microsoft.Extensions.Logging.LogLevel.Warning);
+    logging.AddFilter("Microsoft.AspNetCore.Components.WebAssembly", Microsoft.Extensions.Logging.LogLevel.Warning);
 });
 
 var app = builder.Build();

@@ -11,81 +11,212 @@ public static class VotingEndpoints
         // POST /api/votes
         group.MapPost("/", [Authorize] async (
             [FromServices] IVotingService votingService,
+            [FromServices] ILogger<Program> logger,
             [FromBody] CreateVoteDto voteDto,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Results.Unauthorized();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
             try
             {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    logger.LogWarning("Unauthorized vote attempt for proposal {ProposalId} from IP: {ClientIP}", 
+                        voteDto.ProposalId, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (voteDto.ProposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for vote: {ProposalId} by user {UserId}", 
+                        voteDto.ProposalId, userId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
                 var vote = await votingService.CastVoteAsync(voteDto, userId);
                 return Results.Created($"/api/votes/{vote.Id}", vote);
             }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogWarning(ex, "Invalid vote operation for proposal {ProposalId} by user {UserId}: {Message}", 
+                    voteDto.ProposalId, userId, ex.Message);
+                return Results.BadRequest(ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogError(ex, "Invalid arguments for vote on proposal {ProposalId} by user {UserId}", 
+                    voteDto.ProposalId, userId);
+                return Results.BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                logger.LogError(ex, "Critical error casting vote for proposal {ProposalId} by user {UserId}", 
+                    voteDto.ProposalId, userId);
+                return Results.Problem("Error casting vote");
             }
         })
         .WithName("CastVote")
         .WithSummary("Voter pour une proposition")
         .Produces<VoteDto>(201)
         .Produces(400)
-        .Produces(401);
+        .Produces(401)
+        .Produces(500);
 
         // GET /api/votes/proposal/{proposalId}
         group.MapGet("/proposal/{proposalId:int}", async (
             [FromServices] IVotingService votingService,
+            [FromServices] ILogger<Program> logger,
             int proposalId) =>
         {
-            var votes = await votingService.GetVotesForProposalAsync(proposalId);
-            return Results.Ok(votes);
+            try
+            {
+                if (proposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for votes retrieval: {ProposalId}", proposalId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
+                var votes = await votingService.GetVotesForProposalAsync(proposalId);
+                var votesList = votes.ToList();
+
+                if (votesList.Count == 0)
+                {
+                    logger.LogWarning("No votes found for proposal: {ProposalId}", proposalId);
+                }
+
+                return Results.Ok(votesList);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogError(ex, "Invalid arguments retrieving votes for proposal: {ProposalId}", proposalId);
+                return Results.BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving votes for proposal: {ProposalId}", proposalId);
+                return Results.Problem("Error retrieving votes");
+            }
         })
         .WithName("GetVotesForProposal")
-        .WithSummary("RÈcupËre les votes d'une proposition")
-        .Produces<IEnumerable<VoteDto>>();
+        .WithSummary("R√©cup√®re les votes d'une proposition")
+        .Produces<IEnumerable<VoteDto>>()
+        .Produces(400)
+        .Produces(500);
 
         // GET /api/votes/user/{userId}/proposal/{proposalId}
         group.MapGet("/user/{userId}/proposal/{proposalId:int}", [Authorize] async (
             [FromServices] IVotingService votingService,
+            [FromServices] ILogger<Program> logger,
             string userId,
             int proposalId,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (currentUserId != userId)
-                return Results.Forbid();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
-            var vote = await votingService.GetUserVoteForProposalAsync(userId, proposalId);
-            return vote != null ? Results.Ok(vote) : Results.NotFound();
+            try
+            {
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    logger.LogWarning("Unauthorized user vote retrieval attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}", 
+                        userId, proposalId, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (currentUserId != userId)
+                {
+                    logger.LogWarning("Forbidden user vote access: user {CurrentUserId} trying to access votes of user {TargetUserId} for proposal {ProposalId}", 
+                        currentUserId, userId, proposalId);
+                    return Results.Forbid();
+                }
+
+                if (proposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for user vote retrieval: {ProposalId} by user {UserId}", 
+                        proposalId, userId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
+                var vote = await votingService.GetUserVoteForProposalAsync(userId, proposalId);
+                
+                if (vote == null)
+                {
+                    logger.LogWarning("No vote found for user {UserId} on proposal {ProposalId}", userId, proposalId);
+                    return Results.NotFound();
+                }
+
+                return Results.Ok(vote);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving user vote: user {UserId}, proposal {ProposalId}", userId, proposalId);
+                return Results.Problem("Error retrieving user vote");
+            }
         })
         .WithName("GetUserVoteForProposal")
-        .WithSummary("RÈcupËre le vote d'un utilisateur pour une proposition")
+        .WithSummary("R√©cup√®re le vote d'un utilisateur pour une proposition")
         .Produces<VoteDto>()
+        .Produces(400)
         .Produces(401)
         .Produces(403)
-        .Produces(404);
+        .Produces(404)
+        .Produces(500);
 
         // DELETE /api/votes/user/{userId}/proposal/{proposalId}
         group.MapDelete("/user/{userId}/proposal/{proposalId:int}", [Authorize] async (
             [FromServices] IVotingService votingService,
+            [FromServices] ILogger<Program> logger,
             string userId,
             int proposalId,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (currentUserId != userId)
-                return Results.Forbid();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
             try
             {
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    logger.LogWarning("Unauthorized vote removal attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}", 
+                        userId, proposalId, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (currentUserId != userId)
+                {
+                    logger.LogWarning("Forbidden vote removal: user {CurrentUserId} trying to remove vote of user {TargetUserId} for proposal {ProposalId}", 
+                        currentUserId, userId, proposalId);
+                    return Results.Forbid();
+                }
+
+                if (proposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for vote removal: {ProposalId} by user {UserId}", 
+                        proposalId, userId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
                 await votingService.RemoveVoteAsync(userId, proposalId);
+
+                // Information level for vote removal as it's a successful operation
+                logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}", 
+                    userId, proposalId, clientIp);
+
                 return Results.NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogError(ex, "Vote not found for removal: user {UserId}, proposal {ProposalId}", userId, proposalId);
+                return Results.NotFound();
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                logger.LogError(ex, "Critical error removing vote: user {UserId}, proposal {ProposalId}", userId, proposalId);
+                return Results.Problem("Error removing vote");
             }
         })
         .WithName("RemoveVote")
@@ -93,25 +224,65 @@ public static class VotingEndpoints
         .Produces(204)
         .Produces(400)
         .Produces(401)
-        .Produces(403);
+        .Produces(403)
+        .Produces(404)
+        .Produces(500);
 
         // GET /api/votes/user/{userId}
         group.MapGet("/user/{userId}", [Authorize] async (
             [FromServices] IVotingService votingService,
+            [FromServices] ILogger<Program> logger,
             string userId,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (currentUserId != userId)
-                return Results.Forbid();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
-            var votes = await votingService.GetUserVotesAsync(userId);
-            return Results.Ok(votes);
+            try
+            {
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    logger.LogWarning("Unauthorized user votes retrieval attempt for user {TargetUserId} from IP: {ClientIP}", 
+                        userId, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (currentUserId != userId)
+                {
+                    logger.LogWarning("Forbidden user votes access: user {CurrentUserId} trying to access votes of user {TargetUserId}", 
+                        currentUserId, userId);
+                    return Results.Forbid();
+                }
+
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    logger.LogWarning("Empty user ID for votes retrieval by user {CurrentUserId}", currentUserId);
+                    return Results.BadRequest("Invalid user ID");
+                }
+
+                var votes = await votingService.GetUserVotesAsync(userId);
+                var votesList = votes.ToList();
+
+                if (votesList.Count == 0)
+                {
+                    logger.LogWarning("No votes found for user: {UserId}", userId);
+                }
+
+                return Results.Ok(votesList);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving votes for user: {UserId}", userId);
+                return Results.Problem("Error retrieving user votes");
+            }
         })
         .WithName("GetUserVotes")
-        .WithSummary("RÈcupËre tous les votes d'un utilisateur")
+        .WithSummary("R√©cup√®re tous les votes d'un utilisateur")
         .Produces<IEnumerable<VoteDto>>()
+        .Produces(400)
         .Produces(401)
-        .Produces(403);
+        .Produces(403)
+        .Produces(500);
     }
 }

@@ -11,12 +11,26 @@ public static class CommentEndpoints
         // GET /api/comments/proposal/{proposalId}
         group.MapGet("/proposal/{proposalId:int}", async (
             [FromServices] ICommentRepository commentRepository,
+            [FromServices] ILogger<Program> logger,
             int proposalId) =>
         {
             try
             {
+                if (proposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for comments retrieval: {ProposalId}", proposalId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
                 var comments = await commentRepository.GetCommentsForProposalAsync(proposalId);
-                var commentDtos = comments.Select(c => new CommentDto
+                var commentsList = comments.ToList();
+                
+                if (commentsList.Count == 0)
+                {
+                    logger.LogWarning("No comments found for proposal: {ProposalId}", proposalId);
+                }
+
+                var commentDtos = commentsList.Select(c => new CommentDto
                 {
                     Id = c.Id,
                     Content = c.Content,
@@ -28,31 +42,64 @@ public static class CommentEndpoints
                     ProposalId = c.ProposalId,
                     ParentCommentId = c.ParentCommentId,
                     IsDeleted = c.IsDeleted
-                });
+                }).ToList();
+
                 return Results.Ok(commentDtos);
             }
             catch (Exception ex)
             {
-                return Results.Problem($"Error retrieving comments: {ex.Message}");
+                logger.LogError(ex, "Error retrieving comments for proposal: {ProposalId}", proposalId);
+                return Results.Problem("Error retrieving comments");
             }
         })
         .WithName("GetCommentsForProposal")
         .WithSummary("Récupère les commentaires d'une proposition")
-        .Produces<IEnumerable<CommentDto>>();
+        .Produces<IEnumerable<CommentDto>>()
+        .Produces(400)
+        .Produces(500);
 
         // POST /api/comments
         group.MapPost("/", [Authorize] async (
             [FromServices] ICommentRepository commentRepository,
             [FromServices] IUnitOfWork unitOfWork,
+            [FromServices] ILogger<Program> logger,
             [FromBody] CreateCommentDto createDto,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Results.Unauthorized();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
             try
             {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    logger.LogWarning("Unauthorized comment creation attempt for proposal {ProposalId} from IP: {ClientIP}", 
+                        createDto.ProposalId, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (string.IsNullOrWhiteSpace(createDto.Content))
+                {
+                    logger.LogWarning("Comment creation with empty content by user {UserId} for proposal {ProposalId}", 
+                        userId, createDto.ProposalId);
+                    return Results.BadRequest("Comment content is required");
+                }
+
+                if (createDto.Content.Length > 1000)
+                {
+                    logger.LogWarning("Comment creation with content too long ({Length} chars) by user {UserId} for proposal {ProposalId}", 
+                        createDto.Content.Length, userId, createDto.ProposalId);
+                    return Results.BadRequest("Comment content must be 1000 characters or less");
+                }
+
+                if (createDto.ProposalId <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for comment creation: {ProposalId} by user {UserId}", 
+                        createDto.ProposalId, userId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
                 var comment = new NicolasQuiPaieAPI.Infrastructure.Models.Comment
                 {
                     Content = createDto.Content,
@@ -83,37 +130,74 @@ public static class CommentEndpoints
 
                 return Results.Created($"/api/comments/{commentDto.Id}", commentDto);
             }
+            catch (ArgumentException ex)
+            {
+                logger.LogError(ex, "Invalid arguments for comment creation by user {UserId} for proposal {ProposalId}", 
+                    userId, createDto.ProposalId);
+                return Results.BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                logger.LogError(ex, "Critical error creating comment by user {UserId} for proposal {ProposalId}", 
+                    userId, createDto.ProposalId);
+                return Results.Problem("Error creating comment");
             }
         })
         .WithName("CreateComment")
         .WithSummary("Créer un nouveau commentaire")
         .Produces<CommentDto>(201)
         .Produces(400)
-        .Produces(401);
+        .Produces(401)
+        .Produces(500);
 
         // PUT /api/comments/{id}
         group.MapPut("/{id:int}", [Authorize] async (
             [FromServices] ICommentRepository commentRepository,
             [FromServices] IUnitOfWork unitOfWork,
+            [FromServices] ILogger<Program> logger,
             int id,
             [FromBody] UpdateCommentDto updateDto,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Results.Unauthorized();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
             try
             {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    logger.LogWarning("Unauthorized comment update attempt for comment {CommentId} from IP: {ClientIP}", 
+                        id, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (id <= 0)
+                {
+                    logger.LogWarning("Invalid comment ID for update: {CommentId} by user {UserId}", id, userId);
+                    return Results.BadRequest("Invalid comment ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(updateDto.Content))
+                {
+                    logger.LogWarning("Comment update with empty content by user {UserId} for comment {CommentId}", 
+                        userId, id);
+                    return Results.BadRequest("Comment content is required");
+                }
+
                 var comment = await commentRepository.GetByIdAsync(id);
                 if (comment == null)
+                {
+                    logger.LogWarning("Comment not found for update: {CommentId} by user {UserId}", id, userId);
                     return Results.NotFound();
+                }
 
                 if (comment.UserId != userId)
+                {
+                    logger.LogWarning("Unauthorized comment update: user {UserId} trying to update comment {CommentId} owned by {OwnerUserId}", 
+                        userId, id, comment.UserId);
                     return Results.Forbid();
+                }
 
                 comment.Content = updateDto.Content;
                 comment.UpdatedAt = DateTime.UtcNow;
@@ -139,7 +223,8 @@ public static class CommentEndpoints
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                logger.LogError(ex, "Critical error updating comment {CommentId} by user {UserId}", id, userId);
+                return Results.Problem("Error updating comment");
             }
         })
         .WithName("UpdateComment")
@@ -148,27 +233,49 @@ public static class CommentEndpoints
         .Produces(400)
         .Produces(401)
         .Produces(403)
-        .Produces(404);
+        .Produces(404)
+        .Produces(500);
 
         // DELETE /api/comments/{id}
         group.MapDelete("/{id:int}", [Authorize] async (
             [FromServices] ICommentRepository commentRepository,
             [FromServices] IUnitOfWork unitOfWork,
+            [FromServices] ILogger<Program> logger,
             int id,
-            ClaimsPrincipal user) =>
+            ClaimsPrincipal user,
+            HttpContext context) =>
         {
             var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-                return Results.Unauthorized();
+            var clientIp = context.Connection.RemoteIpAddress?.ToString();
 
             try
             {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    logger.LogWarning("Unauthorized comment deletion attempt for comment {CommentId} from IP: {ClientIP}", 
+                        id, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (id <= 0)
+                {
+                    logger.LogWarning("Invalid comment ID for deletion: {CommentId} by user {UserId}", id, userId);
+                    return Results.BadRequest("Invalid comment ID");
+                }
+
                 var comment = await commentRepository.GetByIdAsync(id);
                 if (comment == null)
+                {
+                    logger.LogWarning("Comment not found for deletion: {CommentId} by user {UserId}", id, userId);
                     return Results.NotFound();
+                }
 
                 if (comment.UserId != userId)
+                {
+                    logger.LogWarning("Unauthorized comment deletion: user {UserId} trying to delete comment {CommentId} owned by {OwnerUserId}", 
+                        userId, id, comment.UserId);
                     return Results.Forbid();
+                }
 
                 comment.IsDeleted = true;
                 comment.UpdatedAt = DateTime.UtcNow;
@@ -176,11 +283,16 @@ public static class CommentEndpoints
                 await commentRepository.UpdateAsync(comment);
                 await unitOfWork.SaveChangesAsync();
 
+                // Warning level for comment deletion as it's an important action
+                logger.LogWarning("Comment deleted: {CommentId} by user {UserId} from IP: {ClientIP}", 
+                    id, userId, clientIp);
+
                 return Results.NoContent();
             }
             catch (Exception ex)
             {
-                return Results.BadRequest(ex.Message);
+                logger.LogError(ex, "Critical error deleting comment {CommentId} by user {UserId}", id, userId);
+                return Results.Problem("Error deleting comment");
             }
         })
         .WithName("DeleteComment")
@@ -189,6 +301,7 @@ public static class CommentEndpoints
         .Produces(400)
         .Produces(401)
         .Produces(403)
-        .Produces(404);
+        .Produces(404)
+        .Produces(500);
     }
 }
