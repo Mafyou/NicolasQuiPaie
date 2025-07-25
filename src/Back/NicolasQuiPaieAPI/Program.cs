@@ -259,7 +259,7 @@ if (app.Environment.IsDevelopment())
 // 🎯 Initialize database using extension method
 await app.InitializeDatabaseAsync();
 
-Log.Warning("🚀 Nicolas Qui Paie API started in {Environment} mode. Swagger: {SwaggerEnabled}. SQL Logging: Enabled with custom ApiLog table", 
+Log.Information("🚀 Nicolas Qui Paie API started in {Environment} mode. Swagger: {SwaggerEnabled}. SQL Logging: Enabled with custom ApiLog table", 
     app.Environment.EnvironmentName, app.Environment.IsDevelopment() ? "Available" : "Disabled");
 
 await app.RunAsync(); // C# 13.0 - Use async version
