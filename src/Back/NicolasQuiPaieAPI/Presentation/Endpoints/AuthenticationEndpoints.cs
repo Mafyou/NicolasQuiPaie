@@ -419,7 +419,7 @@ public static class AuthenticationEndpoints
             if (result.Succeeded)
             {
                 // Warning level for password reset as it's a security-sensitive action
-                logger.LogWarning("Password reset successful for user {UserId} ({Email}) from IP: {ClientIP}", 
+                logger.LogInformation("Password reset successful for user {UserId} ({Email}) from IP: {ClientIP}", 
                     user.Id, request.Email, clientIp);
                 return Results.Ok(new { message = "Password reset successfully" });
             }
