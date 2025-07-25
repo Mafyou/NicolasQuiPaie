@@ -45,7 +45,7 @@ public static class SerilogExtensions
         // Customize standard columns to match your ApiLog entity
         columnOptions.Id.ColumnName = "Id";
         columnOptions.Level.ColumnName = "Level";
-        columnOptions.Level.StoreAsEnum = true; // Store as int to match your LogLevel enum
+        columnOptions.Level.StoreAsEnum = true; // Store as int to match NicolasQuiPaieAPI.Infrastructure.Models.LogLevel enum
         columnOptions.Message.ColumnName = "Message";
         columnOptions.Message.DataLength = 4000; // Match your entity constraint
         columnOptions.TimeStamp.ColumnName = "TimeStamp";
