@@ -122,15 +122,27 @@ namespace NicolasQuiPaieWeb.Services
                 var url = $"/api/proposals/{proposalId}/views";
                 var response = await _httpClient.PostAsync(url, null);
 
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Échec de l'incrémentation des vues pour la proposition {ProposalId}. Status: {StatusCode}",
+                    _logger.LogDebug("Views count incremented successfully for proposal {ProposalId}", proposalId);
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    _logger.LogDebug("Proposal {ProposalId} not found for view increment", proposalId);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to increment views for proposal {ProposalId}. Status: {StatusCode}", 
                                      proposalId, response.StatusCode);
                 }
             }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(ex, "Network error while incrementing views for proposal {ProposalId}", proposalId);
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de l'incrémentation des vues pour la proposition {ProposalId}", proposalId);
+                _logger.LogError(ex, "Unexpected error while incrementing views for proposal {ProposalId}", proposalId);
             }
         }
 

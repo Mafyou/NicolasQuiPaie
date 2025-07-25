@@ -1,4 +1,6 @@
 using NicolasQuiPaieData.DTOs;
+using NicolasQuiPaieWeb.Configuration;
+using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -99,19 +101,68 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
 }
 
 /// <summary>
-/// Client-side wrapper service for comment operations
+/// Client-side wrapper service for comment operations with read-only mode support
 /// </summary>
-public class CommentService(ApiCommentService apiCommentService)
+public class CommentService
 {
+    private readonly ApiCommentService _apiCommentService;
+    private readonly SampleDataService _sampleDataService;
+    private readonly ILogger<CommentService> _logger;
+    private readonly MaintenanceSettings _maintenanceSettings;
+
+    public CommentService(
+        ApiCommentService apiCommentService,
+        SampleDataService sampleDataService,
+        ILogger<CommentService> logger,
+        IOptionsMonitor<MaintenanceSettings> maintenanceOptions)
+    {
+        _apiCommentService = apiCommentService;
+        _sampleDataService = sampleDataService;
+        _logger = logger;
+        _maintenanceSettings = maintenanceOptions.CurrentValue;
+    }
+
     public async Task<IEnumerable<CommentDto>> GetCommentsForProposalAsync(int proposalId)
-        => await apiCommentService.GetCommentsForProposalAsync(proposalId);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            _logger.LogInformation("Using sample data for comments (read-only mode)");
+            return await _sampleDataService.GetCommentsForProposalAsync(proposalId);
+        }
+
+        return await _apiCommentService.GetCommentsForProposalAsync(proposalId);
+    }
 
     public async Task<CommentDto?> CreateCommentAsync(CreateCommentDto createDto)
-        => await apiCommentService.CreateCommentAsync(createDto);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            _logger.LogWarning("Cannot create comment in read-only mode");
+            throw new InvalidOperationException("La création de commentaires n'est pas disponible en mode démonstration.");
+        }
+
+        return await _apiCommentService.CreateCommentAsync(createDto);
+    }
 
     public async Task<CommentDto?> UpdateCommentAsync(int commentId, UpdateCommentDto updateDto)
-        => await apiCommentService.UpdateCommentAsync(commentId, updateDto);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            _logger.LogWarning("Cannot update comment in read-only mode");
+            throw new InvalidOperationException("La modification de commentaires n'est pas disponible en mode démonstration.");
+        }
+
+        return await _apiCommentService.UpdateCommentAsync(commentId, updateDto);
+    }
 
     public async Task<bool> DeleteCommentAsync(int commentId)
-        => await apiCommentService.DeleteCommentAsync(commentId);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            _logger.LogWarning("Cannot delete comment in read-only mode");
+            throw new InvalidOperationException("La suppression de commentaires n'est pas disponible en mode démonstration.");
+        }
+
+        return await _apiCommentService.DeleteCommentAsync(commentId);
+    }
 }

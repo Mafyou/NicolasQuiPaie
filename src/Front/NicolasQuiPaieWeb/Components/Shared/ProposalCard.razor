@@ -1,7 +1,11 @@
-﻿@inject VotingService VotingService
+﻿@using NicolasQuiPaieData.DTOs
+@using System.IdentityModel.Tokens.Jwt
+@using System.Security.Claims
+@inject VotingService VotingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+@inject ProposalService ProposalService
 
 <div class="card proposal-card border-0 shadow-sm h-100">
     <div class="card-body">
@@ -151,6 +155,7 @@
     [Parameter] public ProposalDto Proposal { get; set; } = null!;
     [Parameter] public bool ShowActions { get; set; } = true;
     [Parameter] public int? CommentsCount { get; set; }
+    [Parameter] public EventCallback<ProposalDto> OnProposalUpdated { get; set; }
 
     private VoteDto? userVote;
     private bool isVoting = false;
@@ -169,7 +174,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = GetUserIdFromClaims(authState.User);
             if (!string.IsNullOrEmpty(userId))
             {
                 userVote = await VotingService.GetUserVoteAsync(userId, Proposal.Id);
@@ -179,26 +184,43 @@
 
     private async Task CastVote(VoteType voteType)
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated != true)
-        {
-            Navigation.NavigateTo("/login");
-            return;
-        }
-
-        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return;
-
-        isVoting = true;
-        pendingVoteType = voteType;
-
         try
         {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated != true)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var userId = GetUserIdFromClaims(authState.User);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return;
+            }
+
+            isVoting = true;
+            pendingVoteType = voteType;
+            StateHasChanged();
+
             var success = await VotingService.CastVoteAsync(userId, Proposal.Id, voteType);
+            
             if (success)
             {
-                // Reload user vote and update proposal counters
+                // Reload user vote to update button states
                 await LoadUserVote();
+                
+                // Refresh proposal data to get updated vote counts
+                var updatedProposal = await ProposalService.GetProposalDtoByIdAsync(Proposal.Id);
+                if (updatedProposal != null)
+                {
+                    // Update the proposal reference with fresh data from the API
+                    Proposal = updatedProposal;
+                    
+                    // Notify parent component if callback is provided
+                    await OnProposalUpdated.InvokeAsync(updatedProposal);
+                }
+                
                 StateHasChanged();
             }
         }
@@ -210,6 +232,7 @@
         {
             isVoting = false;
             pendingVoteType = null;
+            StateHasChanged();
         }
     }
 
@@ -232,5 +255,19 @@
             // Fallback to clipboard
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
         }
+    }
+
+    /// <summary>
+    /// Helper method to extract user ID from JWT claims with multiple fallback options
+    /// </summary>
+    private static string? GetUserIdFromClaims(ClaimsPrincipal user)
+    {
+        // Try multiple claim types in order of preference:
+        // 1. "sub" - Standard JWT subject claim
+        // 2. ClaimTypes.NameIdentifier - ASP.NET Core standard
+        // 3. JwtRegisteredClaimNames.Sub - JWT standard constant
+        return user.FindFirst("sub")?.Value ?? 
+               user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+               user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
     }
 }

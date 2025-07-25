@@ -31,7 +31,7 @@ public static class TestDataHelper
     public static ApplicationUser CreateTestUser(
         string id = "test-user-id",
         string email = "test@nicolas.fr",
-        ContributionLevel fiscalLevel = ContributionLevel.PetitNicolas,
+        ContributionLevel contributionLevel = ContributionLevel.PetitNicolas,
         params string[] additionalClaims) =>
         new()
         {
@@ -40,8 +40,8 @@ public static class TestDataHelper
             Email = email,
             EmailConfirmed = true,
             DisplayName = $"Test User {id}",
-            ContributionLevel = fiscalLevel,
-            ReputationScore = fiscalLevel switch
+            ContributionLevel = contributionLevel,
+            ReputationScore = contributionLevel switch
             {
                 ContributionLevel.PetitNicolas => 100,
                 ContributionLevel.GrosMoyenNicolas => 250,

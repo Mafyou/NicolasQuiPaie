@@ -1,8 +1,11 @@
 ﻿@using NicolasQuiPaieData.DTOs
+@using System.IdentityModel.Tokens.Jwt
+@using System.Security.Claims
 @inject VotingService VotingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject BadgeService BadgeService
 @inject IJSRuntime JSRuntime
+@inject ProposalService ProposalService
 @implements IAsyncDisposable
 
 <div class="voting-component">
@@ -10,22 +13,27 @@
     <div class="row g-3 mb-4">
         <div class="col-md-6">
             <div class="voting-option voting-for @(userVote?.VoteType == VoteType.For ? "selected" : "")">
-                <button class="btn btn-success btn-lg w-100 position-relative"
-                        @onclick="() => CastVote(VoteType.For)"
-                        disabled="@isVoting">
-                    @if (isVoting && pendingVoteType == VoteType.For)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    <i class="fas fa-thumbs-up me-2"></i>
-                    <strong>Nicolas Approuve</strong>
+                <div class="position-relative">
+                    <button class="btn btn-success btn-lg w-100"
+                            @onclick="@(() => CastVote(VoteType.For))"
+                            @onclick:preventDefault="false"
+                            @onclick:stopPropagation="false"
+                            disabled="@isVoting"
+                            type="button"
+                            style="z-index: 10; position: relative;">
+                        @if (isVoting && pendingVoteType == VoteType.For)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="fas fa-thumbs-up me-2"></i>
+                        <strong>Nicolas Approuve</strong>
+                    </button>
                     
-                    <div class="vote-count-overlay">
-                        <span class="badge bg-light text-dark position-absolute top-0 end-0 mt-2 me-2">
-                            @Proposal.VotesFor
-                        </span>
-                    </div>
-                </button>
+                    <!-- Vote count badge moved outside button to prevent click interference -->
+                    <span class="badge bg-light text-dark position-absolute top-0 end-0 mt-1 me-1" style="pointer-events: none; z-index: 5;">
+                        @Proposal.VotesFor
+                    </span>
+                </div>
                 
                 <div class="progress mt-2" style="height: 8px;">
                     <div class="progress-bar bg-success" 
@@ -42,22 +50,27 @@
         
         <div class="col-md-6">
             <div class="voting-option voting-against @(userVote?.VoteType == VoteType.Against ? "selected" : "")">
-                <button class="btn btn-danger btn-lg w-100 position-relative"
-                        @onclick="() => CastVote(VoteType.Against)"
-                        disabled="@isVoting">
-                    @if (isVoting && pendingVoteType == VoteType.Against)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                    }
-                    <i class="fas fa-thumbs-down me-2"></i>
-                    <strong>Nicolas Refuse</strong>
+                <div class="position-relative">
+                    <button class="btn btn-danger btn-lg w-100"
+                            @onclick="@(() => CastVote(VoteType.Against))"
+                            @onclick:preventDefault="false"
+                            @onclick:stopPropagation="false"
+                            disabled="@isVoting"
+                            type="button"
+                            style="z-index: 10; position: relative;">
+                        @if (isVoting && pendingVoteType == VoteType.Against)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                        }
+                        <i class="fas fa-thumbs-down me-2"></i>
+                        <strong>Nicolas Refuse</strong>
+                    </button>
                     
-                    <div class="vote-count-overlay">
-                        <span class="badge bg-light text-dark position-absolute top-0 end-0 mt-2 me-2">
-                            @Proposal.VotesAgainst
-                        </span>
-                    </div>
-                </button>
+                    <!-- Vote count badge moved outside button to prevent click interference -->
+                    <span class="badge bg-light text-dark position-absolute top-0 end-0 mt-1 me-1" style="pointer-events: none; z-index: 5;">
+                        @Proposal.VotesAgainst
+                    </span>
+                </div>
                 
                 <div class="progress mt-2" style="height: 8px;">
                     <div class="progress-bar bg-danger" 
@@ -178,8 +191,8 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            // Get user level from JWT claims (still using FiscalLevel claim for backward compatibility)
-            var levelClaim = authState.User.FindFirst("FiscalLevel")?.Value;
+            // Get user level from JWT claims
+            var levelClaim = authState.User.FindFirst("ContributionLevel")?.Value;
             if (Enum.TryParse<ContributionLevel>(levelClaim, out var level))
             {
                 currentUserLevel = level;
@@ -192,7 +205,8 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = GetUserIdFromClaims(authState.User);
+                         
             if (!string.IsNullOrEmpty(userId))
             {
                 userVote = await VotingService.GetUserVoteAsync(userId, Proposal.Id);
@@ -214,22 +228,30 @@
 
     private async Task CastVote(VoteType voteType)
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.Identity?.IsAuthenticated != true)
-        {
-            await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour voter");
-            return;
-        }
-
-        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return;
-
-        isVoting = true;
-        pendingVoteType = voteType;
-
         try
         {
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated != true)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour voter");
+                return;
+            }
+
+            var userId = GetUserIdFromClaims(authState.User);
+                         
+            if (string.IsNullOrEmpty(userId))
+            {
+                // Debug: log all available claims
+                var claims = authState.User.Claims.Select(c => $"{c.Type}: {c.Value}").ToArray();
+                return;
+            }
+
+            isVoting = true;
+            pendingVoteType = voteType;
+            StateHasChanged(); // Force UI update
+
             var success = await VotingService.CastVoteAsync(userId, Proposal.Id, voteType);
+            
             if (success)
             {
                 await LoadUserVote();
@@ -243,7 +265,10 @@
                 });
 
                 await OnVoteChanged.InvokeAsync(userVote);
-                StateHasChanged();
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors du vote. Veuillez réessayer.");
             }
         }
         catch (Exception ex)
@@ -254,7 +279,22 @@
         {
             isVoting = false;
             pendingVoteType = null;
+            StateHasChanged(); // Force UI update
         }
+    }
+
+    /// <summary>
+    /// Helper method to extract user ID from JWT claims with multiple fallback options
+    /// </summary>
+    private static string? GetUserIdFromClaims(ClaimsPrincipal user)
+    {
+        // Try multiple claim types in order of preference:
+        // 1. "sub" - Standard JWT subject claim
+        // 2. ClaimTypes.NameIdentifier - ASP.NET Core standard
+        // 3. JwtRegisteredClaimNames.Sub - JWT standard constant
+        return user.FindFirst("sub")?.Value ?? 
+               user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
+               user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
     }
 
     private string GetCurrentNicolasLevel()

@@ -1,0 +1,48 @@
+﻿@using Microsoft.Extensions.Options
+@using NicolasQuiPaieWeb.Configuration
+@inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
+@inject NavigationManager Navigation
+
+@if (maintenanceSettings.IsReadOnlyMode)
+{
+    <div class="alert alert-warning border-0 rounded-0 mb-0 text-center" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%);">
+        <div class="container py-2">
+            <div class="d-flex align-items-center justify-content-center flex-wrap">
+                <div class="me-3">
+                    <i class="fas fa-eye text-dark me-2"></i>
+                    <strong>Mode Démonstration</strong>
+                </div>
+                <div class="text-dark small me-3">
+                    Données d'exemple • Fonctionnalités limitées
+                </div>
+                @* <button class="btn btn-dark btn-sm" @onclick="SwitchToApiMode">
+                    <i class="fas fa-sync-alt me-1"></i>
+                    Basculer vers l'API
+                </button> *@
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private MaintenanceSettings maintenanceSettings = new();
+    
+    protected override void OnInitialized()
+    {
+        try
+        {
+            maintenanceSettings = MaintenanceOptions.Value;
+        }
+        catch
+        {
+            maintenanceSettings = new MaintenanceSettings();
+        }
+    }
+
+    private void SwitchToApiMode()
+    {
+        // This would ideally update the configuration, but for now we'll just show an info message
+        // In a real implementation, this might update user preferences or configuration
+        Navigation.NavigateTo("/diagnostics");
+    }
+}

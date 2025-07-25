@@ -1,4 +1,4 @@
-@page "/api-example"
+ï»¿@page "/api-example"
 @inject ApiProposalService ApiProposalService
 @inject ApiVotingService ApiVotingService
 @inject ILogger<ApiExample> Logger
@@ -10,16 +10,16 @@
         <div class="col-12">
             <h1 class="mb-4">
                 <i class="fas fa-plug me-2"></i>
-                Exemple d'intégration API
+                Exemple d'intÃ©gration API
             </h1>
             
             <div class="alert alert-info">
                 <h5><i class="fas fa-info-circle me-2"></i>Configuration automatique</h5>
                 <p class="mb-1">
-                    <strong>Développement:</strong> API locale sur <code>https://localhost:7398</code>
+                    <strong>DÃ©veloppement:</strong> API locale sur <code>https://localhost:7398</code>
                 </p>
                 <p class="mb-0">
-                    <strong>Production:</strong> API déployée sur <code>https://nicolasquipaieapi-a6behmeyaahpc7c0.francecentral-01.azurewebsites.net</code>
+                    <strong>Production:</strong> API dÃ©ployÃ©e sur <code>https://nicolasquipaieapi-a6behmeyaahpc7c0.francecentral-01.azurewebsites.net</code>
                 </p>
             </div>
         </div>
@@ -65,7 +65,7 @@
                     {
                         <div class="text-muted">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Aucune proposition chargée ou erreur de connexion à l'API
+                            Aucune proposition chargÃ©e ou erreur de connexion Ã  l'API
                         </div>
                     }
                 </div>
@@ -84,7 +84,7 @@
                     @if (apiProposals.Any())
                     {
                         <div class="mb-3">
-                            <label class="form-label">Sélectionner une proposition:</label>
+                            <label class="form-label">SÃ©lectionner une proposition:</label>
                             <select class="form-select" @bind="selectedProposalId">
                                 <option value="0">-- Choisir une proposition --</option>
                                 @foreach (var proposal in apiProposals)
@@ -154,8 +154,8 @@
                             <ul class="list-unstyled">
                                 <li><i class="fas fa-check text-success me-2"></i>ApiProposalService (HTTP)</li>
                                 <li><i class="fas fa-check text-success me-2"></i>ApiVotingService (HTTP)</li>
-                                <li><i class="fas fa-check text-warning me-2"></i>ProposalService (Base de données locale)</li>
-                                <li><i class="fas fa-check text-warning me-2"></i>VotingService (Base de données locale)</li>
+                                <li><i class="fas fa-check text-warning me-2"></i>ProposalService (Base de donnÃ©es locale)</li>
+                                <li><i class="fas fa-check text-warning me-2"></i>VotingService (Base de donnÃ©es locale)</li>
                             </ul>
                         </div>
                         <div class="col-md-6">
@@ -198,11 +198,11 @@
 
             if (apiProposals.Any())
             {
-                Logger.LogInformation("Chargé {Count} propositions depuis l'API", apiProposals.Count);
+                Logger.LogInformation("ChargÃ© {Count} propositions depuis l'API", apiProposals.Count);
             }
             else
             {
-                Logger.LogWarning("Aucune proposition retournée par l'API");
+                Logger.LogWarning("Aucune proposition retournÃ©e par l'API");
             }
         }
         catch (Exception ex)
@@ -237,16 +237,16 @@
             
             if (success)
             {
-                voteMessage = $"Vote '{voteType}' envoyé avec succès via l'API !";
+                voteMessage = $"Vote '{voteType}' envoyÃ© avec succÃ¨s via l'API !";
                 voteSuccess = true;
-                Logger.LogInformation("Vote envoyé avec succès pour la proposition {ProposalId}", selectedProposalId);
+                Logger.LogInformation("Vote envoyÃ© avec succÃ¨s pour la proposition {ProposalId}", selectedProposalId);
                 
                 // Recharger les propositions pour voir les nouveaux totaux
                 await LoadProposalsFromApi();
             }
             else
             {
-                voteMessage = "Échec de l'envoi du vote via l'API.";
+                voteMessage = "Ã‰chec de l'envoi du vote via l'API.";
                 voteSuccess = false;
             }
         }

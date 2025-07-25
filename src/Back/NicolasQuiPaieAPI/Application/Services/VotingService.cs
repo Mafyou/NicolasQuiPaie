@@ -44,12 +44,16 @@ public class VotingService(
                 resultVote = await CreateNewVoteAsync(voteDto, userId, user);
             }
 
-            // Update proposal vote counts
-            await unitOfWork.Proposals.UpdateVoteCountsAsync(voteDto.ProposalId);
-
             // Update user reputation and badge progression
             await UpdateUserReputationAsync(user, voteDto.VoteType);
 
+            // ?? FIX: Save changes FIRST so the new vote is visible to the count query
+            await unitOfWork.SaveChangesAsync();
+
+            // Update proposal vote counts AFTER saving the vote
+            await unitOfWork.Proposals.UpdateVoteCountsAsync(voteDto.ProposalId);
+
+            // Save the vote count updates
             await unitOfWork.SaveChangesAsync();
             await unitOfWork.CommitTransactionAsync();
 
@@ -102,7 +106,6 @@ public class VotingService(
             if (vote is not null)
             {
                 await unitOfWork.Votes.DeleteAsync(vote.Id);
-                await unitOfWork.Proposals.UpdateVoteCountsAsync(proposalId);
 
                 // Optionally adjust user reputation for vote removal
                 var user = await userRepository.GetByIdAsync(userId);
@@ -111,6 +114,13 @@ public class VotingService(
                     await AdjustReputationForVoteRemovalAsync(user, vote.VoteType);
                 }
 
+                // ?? FIX: Save changes FIRST so the deleted vote is no longer counted
+                await unitOfWork.SaveChangesAsync();
+
+                // Update proposal vote counts AFTER deleting the vote
+                await unitOfWork.Proposals.UpdateVoteCountsAsync(proposalId);
+
+                // Save the vote count updates
                 await unitOfWork.SaveChangesAsync();
                 await unitOfWork.CommitTransactionAsync();
 

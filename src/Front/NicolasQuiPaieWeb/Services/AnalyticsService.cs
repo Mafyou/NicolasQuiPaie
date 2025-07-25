@@ -1,6 +1,4 @@
-using NicolasQuiPaieData.DTOs;
-using System.Net.Http.Json;
-using System.Text.Json;
+using Microsoft.Extensions.Options;
 
 namespace NicolasQuiPaieWeb.Services;
 
@@ -45,17 +43,20 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
         {
             // For now, get recent activity and convert to trending format
             var activity = await httpClient.GetFromJsonAsync<RecentActivityDto>("/api/analytics/recent-activity?take=10", _jsonOptions);
-            
+
             // Convert activity to trending proposals (simplified)
             var trending = activity?.Activities?
                 .Where(a => a.Type == "Proposal")
                 .Select(a => new TrendingProposalDto
                 {
-                    Proposal = new ProposalDto 
-                    { 
+                    Proposal = new ProposalDto
+                    {
                         Id = int.TryParse(a.RelatedItemId, out var id) ? id : 0,
                         Title = a.RelatedItemTitle ?? "",
                         CreatedByDisplayName = a.UserDisplayName,
+                        CreatedById = a.UserId,
+                        CreatedAt = a.Timestamp,
+                        Description = a.Description ?? "",
                         CategoryName = "General",
                         CategoryColor = "#007bff"
                     },
@@ -79,7 +80,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
         try
         {
             var response = await httpClient.GetFromJsonAsync<TopContributorsDto>($"/api/analytics/top-contributors?take={count}", _jsonOptions);
-            
+
             // Convert UserContributionDto to TopContributorDto
             var contributors = response?.TopProposers?.Take(count)
                 .Select(u => new TopContributorDto
@@ -93,7 +94,7 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
                     TotalScore = u.ReputationScore
                 })
                 .ToList() ?? [];
-            
+
             return contributors;
         }
         catch (Exception ex)
@@ -105,16 +106,59 @@ public class ApiAnalyticsService(HttpClient httpClient, ILogger<ApiAnalyticsServ
 }
 
 /// <summary>
-/// Client-side wrapper service for analytics - now uses real API
+/// Client-side wrapper service for analytics - with fallback to sample data in read-only mode
 /// </summary>
-public class AnalyticsService(ApiAnalyticsService apiAnalyticsService) : IAnalyticsService
+public class AnalyticsService(
+    ApiAnalyticsService apiAnalyticsService,
+    SampleDataService sampleDataService,
+    ILogger<AnalyticsService> logger,
+    IOptionsMonitor<MaintenanceSettings> maintenanceOptions) : IAnalyticsService
 {
+    private readonly ApiAnalyticsService _apiAnalyticsService = apiAnalyticsService;
+    private readonly SampleDataService _sampleDataService = sampleDataService;
+    private readonly ILogger<AnalyticsService> _logger = logger;
+    private readonly MaintenanceSettings _maintenanceSettings = maintenanceOptions.CurrentValue;
+
     public async Task<DashboardStatsDto> GetDashboardStatsAsync()
-        => await apiAnalyticsService.GetDashboardStatsAsync();
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            return await _sampleDataService.GetDashboardStatsAsync();
+        }
+
+        return await _apiAnalyticsService.GetDashboardStatsAsync();
+    }
 
     public async Task<List<TrendingProposalDto>> GetTrendingProposalsAsync(int hours = 24)
-        => await apiAnalyticsService.GetTrendingProposalsAsync(hours);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            // Convert sample proposals to trending format
+            var sampleProposals = await _sampleDataService.GetTrendingProposalsAsync(5);
+            return [.. sampleProposals.Select(p => new TrendingProposalDto
+            {
+                Proposal = p,
+                RecentVotes = p.TotalVotes / 10,
+                RecentComments = Random.Shared.Next(5, 25), // Simulate comments count
+                TrendScore = p.TotalVotes + Random.Shared.Next(5, 25)
+            })];
+        }
+
+        return await _apiAnalyticsService.GetTrendingProposalsAsync(hours);
+    }
 
     public async Task<List<TopContributorDto>> GetTopContributorsAsync(int count = 10)
-        => await apiAnalyticsService.GetTopContributorsAsync(count);
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            return
+            [
+                new() { UserId = "1", UserDisplayName = "Pierre Écolo", UserContributionLevel = ContributionLevel.NicolasSupreme, ProposalsCount = 15, VotesCount = 342, CommentsCount = 89, TotalScore = 2547 },
+                new() { UserId = "2", UserDisplayName = "Marie Dubois", UserContributionLevel = ContributionLevel.GrosNicolas, ProposalsCount = 12, VotesCount = 298, CommentsCount = 156, TotalScore = 2134 },
+                new() { UserId = "3", UserDisplayName = "Jean Travailleur", UserContributionLevel = ContributionLevel.GrosMoyenNicolas, ProposalsCount = 8, VotesCount = 187, CommentsCount = 67, TotalScore = 1456 }
+            ];
+        }
+
+        return await _apiAnalyticsService.GetTopContributorsAsync(count);
+    }
 }

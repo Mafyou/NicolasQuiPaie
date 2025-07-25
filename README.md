@@ -115,6 +115,8 @@ public async Task<IReadOnlyList<VoteDto>> GetVotesAsync(int proposalId)
 - **HTTP Client** : HttpClient configuré avec retry policies
 - **UI Components** : Composants Blazor réutilisables
 - **Error Handling** : Circuit breaker patterns + notifications utilisateur
+- **Mode Démonstration** : SampleDataService avec données d'exemple françaises
+- **Résistance** : Fallback gracieux quand l'API n'est pas disponible
 
 ### ☁️ Orchestration (.NET Aspire)
 - **Container Management** : .NET Aspire App Host
@@ -190,6 +192,22 @@ public enum ContributionLevel
 - **Tendances** : évolution des votes par période
 - **Répartition des badges** : distribution des niveaux de contribution
 - **Baromètre de mécontentement** : mesure du ras-le-bol citoyen
+- **Catégories populaires** : avec barres de progression visuelles
+- **Top contributeurs** : classement des membres les plus actifs
+
+### 🔄 **Mode Démonstration (Lecture Seule)**
+- **SampleDataService** : Données d'exemple réalistes avec 6 propositions françaises
+- **Basculement automatique** : API ↔ Données d'exemple selon configuration
+- **Bannière informative** : Indication claire du mode actuel
+- **Protection des mutations** : Création/modification bloquée en mode démo
+- **Configuration flexible** : `IsReadOnlyMode` dans appsettings.json
+
+### 📄 **Page À Propos & Support**
+- **Mission et valeurs** : Présentation de la démocratie souveraine numérique
+- **Stack technique** : Documentation des technologies utilisées
+- **Dons Bitcoin** : Support du projet via `bc1qpaekj8xfdry7ztfxzu9u7s3m9ktta604gvuu2s`
+- **QR Code** : Pour faciliter les dons depuis mobile
+- **Liens utiles** : Navigation vers les fonctionnalités principales
 
 ---
 
@@ -225,6 +243,8 @@ cd src/Front/NicolasQuiPaieWeb && dotnet watch run
 - 🌐 **Blazor WebAssembly** : `https://localhost:7084`
 - 📋 **Swagger Documentation** : `https://localhost:7051`
 - 🩺 **Health Check** : `https://localhost:7051/health`
+- 🔍 **Diagnostics** : `https://localhost:7084/diagnostics`
+- ℹ️ **À Propos** : `https://localhost:7084/about`
 
 ### 🔧 Configuration
 
@@ -235,7 +255,7 @@ cd src/Front/NicolasQuiPaieWeb && dotnet watch run
     "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=NicolasQuiPaieDb;Trusted_Connection=true;MultipleActiveResultSets=true"
   },
   "Jwt": {
-    "Key": "MySecretKeyForNicolasQuiPaie2024!",
+    "Key": "MySecretKeyForNicolasQuiPaie2025!",
     "Issuer": "NicolasQuiPaieAPI",
     "Audience": "NicolasQuiPaieClient",
     "ExpiryInMinutes": 1440
@@ -260,6 +280,11 @@ cd src/Front/NicolasQuiPaieWeb && dotnet watch run
       "Default": "Information",
       "Microsoft.AspNetCore.Components.WebAssembly": "Warning"
     }
+  },
+  "MaintenanceSettings": {
+    "IsReadOnlyMode": true,
+    "IsUnderConstruction": false,
+    "IsCompletelyDown": false
   }
 }
 ```
@@ -366,7 +391,7 @@ public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
 
 ### 📈 Métriques de Qualité
 
-#### **Objectifs 2024**
+#### **Objectifs 2025**
 - 🧪 **Test Coverage** : >85%
 - ⚡ **API Response Time** : <150ms (P95)
 - 🔒 **Security Score** : A+
@@ -438,6 +463,7 @@ public class AnalyticsService : IAnalyticsService
 - 🎯 **Circuit breaker** pattern pour API indisponible
 - 📱 **Fallback gracieux** avec données de démonstration
 - 🚨 **Notifications utilisateur** claires et actionables
+- 🟡 **Bannière read-only** quand l'API n'est pas disponible
 
 ---
 
@@ -450,21 +476,24 @@ public class AnalyticsService : IAnalyticsService
 - ✅ Blazor WebAssembly client responsive
 - ✅ .NET Aspire pour orchestration
 - ✅ C# 13 features intégrées
+- ✅ Mode démonstration avec données d'exemple
+- ✅ Page À Propos avec support Bitcoin
+- ✅ Analytics avancées avec visualisations
 
-### 🔄 Phase 2 - Scalabilité (Q1-Q2 2024)
+### 🔄 Phase 2 - Scalabilité (Q3-Q4 2025)
 - 🔄 **Containerisation** avec Docker support
 - 🔄 **CI/CD Pipeline** GitHub Actions → Azure
 - 🔄 **Performance optimizations** avec caching
 - 🔄 **Security hardening** et audit trail
 
-### 🚀 Phase 3 - Intelligence (Q3-Q4 2024)
+### 🚀 Phase 3 - Intelligence (Q5-Q6 2025)
 - 🔄 **Event-Driven Architecture** avec messaging
 - 🔄 **Real-time features** avec SignalR
 - 🔄 **Progressive Web App** (PWA) avec offline support
 - 🔄 **Advanced Analytics** avec ML.NET
 - 🔄 **Mobile Apps** cross-platform avec .NET MAUI
 
-### 🌟 Phase 4 - Innovation (2025)
+### 🌟 Phase 4 - Innovation (2026)
 - 🔄 **AI-powered recommendations** pour propositions
 - 🔄 **Voice Commands** et accessibilité avancée
 - 🔄 **Blockchain audit trail** pour votes (PoC)
@@ -539,6 +568,7 @@ git push origin feature/vote-weighting-system
 - 📚 **Documentation** : README.md et commentaires inline
 - 🐛 **Issues** : GitHub Issues pour bugs et features
 - 💬 **Discussions** : GitHub Discussions pour questions
+- 💰 **Dons Bitcoin** : `bc1qpaekj8xfdry7ztfxzu9u7s3m9ktta604gvuu2s`
 
 ### 🛠️ Troubleshooting
 
@@ -565,15 +595,23 @@ cd src/Back/NicolasQuiPaieAPI && dotnet run
 # Consulter les logs du navigateur (F12)
 ```
 
+**Mode démonstration bloqué ?**
+```bash
+# Modifier appsettings.json du client
+# Définir "IsReadOnlyMode": false
+# Redémarrer l'application
+```
+
 #### **Diagnostic Features**
 - 🩺 Page `/health` pour état système
 - 📊 Métriques temps réel avec Aspire
 - 🔄 Tests de connectivité automatiques
 - 📋 Logs structurés avec Serilog
+- 🔍 Page `/diagnostics` pour configuration système
 
 ---
 
-## 📊 Métriques de Qualité 2024
+## 📊 Métriques de Qualité 2025
 
 | Métrique | Objectif | Actuel | Statut |
 |----------|----------|---------|---------|
@@ -596,9 +634,14 @@ Ce projet est développé sous licence **MIT** - voir LICENSE.md pour les détai
 4. **Push** vers la branch (`git push origin feature/amazing-feature`)
 5. **Ouvrir** une Pull Request
 
+### 💰 Soutenir le Projet
+- **Bitcoin** : `bc1qpaekj8xfdry7ztfxzu9u7s3m9ktta604gvuu2s`
+- **Page dons** : [/about](/about) avec QR Code pour mobile
+- **Contribuer** : Code, documentation, tests, traductions
+
 ---
 
-## 🎯 Vision 2024-2025
+## 🎯 Vision 2025-2026
 
 > **"Révolutionner la démocratie numérique française avec une plateforme technique d'exception, où chaque ligne de code sert l'engagement citoyen."**
 
@@ -618,6 +661,7 @@ Ce projet est développé sous licence **MIT** - voir LICENSE.md pour les détai
 - **DevOps** : .NET Aspire + GitHub Actions ready
 - **Tests** : NUnit + Moq + Shouldly + TestContainers
 - **Quality** : SonarQube ready + Coverlet coverage
+- **Demo** : SampleDataService avec 6 propositions françaises réalistes
 
 ---
 

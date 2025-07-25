@@ -1,5 +1,3 @@
-using NicolasQuiPaieData.DTOs;
-
 namespace NicolasQuiPaieWeb.Services
 {
     /// <summary>
@@ -40,7 +38,7 @@ namespace NicolasQuiPaieWeb.Services
         {
             try
             {
-                var votes = await _apiVotingService.GetUserVotesAsync();
+                var votes = await _apiVotingService.GetUserVotesAsync(userId);
                 return votes.FirstOrDefault(v => v.ProposalId == proposalId);
             }
             catch (Exception ex)
