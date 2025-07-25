@@ -33,6 +33,9 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
+// Add Sample Data Service for read-only mode
+builder.Services.AddScoped<SampleDataService>();
+
 // Add API Services (direct HTTP clients) with error handling
 builder.Services.AddScoped<ApiProposalService>();
 builder.Services.AddScoped<ApiVotingService>();
