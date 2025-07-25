@@ -76,7 +76,7 @@
 </div>
 
 <!-- API Status Indicator (if API is down) -->
-@if (!isApiAvailable && !isLoading)
+@* @if (!isApiAvailable && !isLoading)
 {
     <div class="container py-3">
         <div class="alert alert-warning d-flex align-items-center" role="alert">
@@ -90,7 +90,7 @@
             </button>
         </div>
     </div>
-}
+} *@
 
 @if (isLoading)
 {
