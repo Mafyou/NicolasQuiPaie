@@ -1,4 +1,4 @@
-@using Microsoft.Extensions.Options
+ï»¿@using Microsoft.Extensions.Options
 @using NicolasQuiPaieWeb.Configuration
 @inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
 @inject ILogger<UnderConstructionBanner> Logger
@@ -18,11 +18,11 @@
                                 <small class="text-muted d-block">
                                     @try
                                     {
-                                        <text>Fin prévue : @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</text>
+                                        <text>Fin prÃ©vue : @DateTime.Parse(maintenanceSettings.ExpectedCompletionDate).ToString("MMMM yyyy", new System.Globalization.CultureInfo("fr-FR"))</text>
                                     }
                                     catch
                                     {
-                                        <text>Fin prévue : @maintenanceSettings.ExpectedCompletionDate</text>
+                                        <text>Fin prÃ©vue : @maintenanceSettings.ExpectedCompletionDate</text>
                                     }
                                 </small>
                             }

@@ -1,4 +1,4 @@
-@using NicolasQuiPaieData.DTOs
+ï»¿@using NicolasQuiPaieData.DTOs
 @inject CommentService CommentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JSRuntime
@@ -23,7 +23,7 @@
                         <small class="text-muted">@Comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
                         @if (Comment.UpdatedAt.HasValue)
                         {
-                            <small class="text-muted ms-2">(modifié)</small>
+                            <small class="text-muted ms-2">(modifiÃ©)</small>
                         }
                     </div>
                     
@@ -85,13 +85,13 @@
                         <Authorized>
                             <button class="btn btn-sm btn-outline-secondary" @onclick="ToggleReplyForm">
                                 <i class="fas fa-reply me-1"></i>
-                                Répondre
+                                RÃ©pondre
                             </button>
                         </Authorized>
                         <NotAuthorized>
                             <a href="/login" class="btn btn-sm btn-outline-secondary text-decoration-none">
                                 <i class="fas fa-sign-in-alt me-1"></i>
-                                Se connecter pour répondre
+                                Se connecter pour rÃ©pondre
                             </a>
                         </NotAuthorized>
                     </AuthorizeView>
@@ -103,7 +103,7 @@
                     <div class="mt-3 p-3 bg-light rounded">
                         <div class="mb-3">
                             <textarea class="form-control" @bind="replyContent" rows="3" 
-                                     placeholder="Écrivez votre réponse..."></textarea>
+                                     placeholder="Ã‰crivez votre rÃ©ponse..."></textarea>
                         </div>
                         <div class="d-flex justify-content-end">
                             <button class="btn btn-sm btn-primary me-2" @onclick="SubmitReply" 
@@ -136,7 +136,7 @@
     {
         <div class="text-muted fst-italic py-2">
             <i class="fas fa-trash me-2"></i>
-            Ce commentaire a été supprimé.
+            Ce commentaire a Ã©tÃ© supprimÃ©.
         </div>
     }
 </div>
@@ -192,7 +192,7 @@
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la mise à jour du commentaire");
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la mise Ã  jour du commentaire");
             }
         }
         catch (Exception ex)
@@ -211,7 +211,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour aimer un commentaire");
+            await JSRuntime.InvokeVoidAsync("alert", "Vous devez Ãªtre connectÃ© pour aimer un commentaire");
             return;
         }
 
@@ -280,7 +280,7 @@
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated != true)
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Vous devez être connecté pour répondre");
+            await JSRuntime.InvokeVoidAsync("alert", "Vous devez Ãªtre connectÃ© pour rÃ©pondre");
             return;
         }
 
@@ -311,7 +311,7 @@
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la création de la réponse");
+                await JSRuntime.InvokeVoidAsync("alert", "Erreur lors de la crÃ©ation de la rÃ©ponse");
             }
         }
         catch (Exception ex)
@@ -333,7 +333,7 @@
         var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (userId != Comment.UserId) return;
 
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Êtes-vous sûr de vouloir supprimer ce commentaire ?");
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "ÃŠtes-vous sÃ»r de vouloir supprimer ce commentaire ?");
         if (!confirmed) return;
 
         try
