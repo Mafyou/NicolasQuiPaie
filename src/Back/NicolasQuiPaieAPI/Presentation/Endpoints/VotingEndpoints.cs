@@ -100,7 +100,7 @@ public static class VotingEndpoints
             }
         })
         .WithName("GetVotesForProposal")
-        .WithSummary("Récupère les votes d'une proposition")
+        .WithSummary("RÃ©cupÃ¨re les votes d'une proposition")
         .Produces<IEnumerable<VoteDto>>()
         .Produces(400)
         .Produces(500);
@@ -157,7 +157,7 @@ public static class VotingEndpoints
             }
         })
         .WithName("GetUserVoteForProposal")
-        .WithSummary("Récupère le vote d'un utilisateur pour une proposition")
+        .WithSummary("RÃ©cupÃ¨re le vote d'un utilisateur pour une proposition")
         .Produces<VoteDto>()
         .Produces(400)
         .Produces(401)
@@ -202,8 +202,8 @@ public static class VotingEndpoints
 
                 await votingService.RemoveVoteAsync(userId, proposalId);
 
-                // Warning level for vote removal as it's an important action
-                logger.LogWarning("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}", 
+                // Information level for vote removal as it's a successful operation
+                logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}", 
                     userId, proposalId, clientIp);
 
                 return Results.NoContent();
@@ -278,7 +278,7 @@ public static class VotingEndpoints
             }
         })
         .WithName("GetUserVotes")
-        .WithSummary("Récupère tous les votes d'un utilisateur")
+        .WithSummary("RÃ©cupÃ¨re tous les votes d'un utilisateur")
         .Produces<IEnumerable<VoteDto>>()
         .Produces(400)
         .Produces(401)
