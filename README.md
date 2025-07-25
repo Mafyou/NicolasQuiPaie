@@ -235,7 +235,7 @@ cd src/Front/NicolasQuiPaieWeb && dotnet watch run
     "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=NicolasQuiPaieDb;Trusted_Connection=true;MultipleActiveResultSets=true"
   },
   "Jwt": {
-    "Key": "MySecretKeyForNicolasQuiPaie2024!",
+    "Key": "MySecretKeyForNicolasQuiPaie2025!",
     "Issuer": "NicolasQuiPaieAPI",
     "Audience": "NicolasQuiPaieClient",
     "ExpiryInMinutes": 1440
@@ -366,7 +366,7 @@ public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
 
 ### 📈 Métriques de Qualité
 
-#### **Objectifs 2024**
+#### **Objectifs 2025**
 - 🧪 **Test Coverage** : >85%
 - ⚡ **API Response Time** : <150ms (P95)
 - 🔒 **Security Score** : A+
@@ -451,20 +451,20 @@ public class AnalyticsService : IAnalyticsService
 - ✅ .NET Aspire pour orchestration
 - ✅ C# 13 features intégrées
 
-### 🔄 Phase 2 - Scalabilité (Q1-Q2 2024)
+### 🔄 Phase 2 - Scalabilité (Q3-Q4 2025)
 - 🔄 **Containerisation** avec Docker support
 - 🔄 **CI/CD Pipeline** GitHub Actions → Azure
 - 🔄 **Performance optimizations** avec caching
 - 🔄 **Security hardening** et audit trail
 
-### 🚀 Phase 3 - Intelligence (Q3-Q4 2024)
+### 🚀 Phase 3 - Intelligence (Q5-Q6 2025)
 - 🔄 **Event-Driven Architecture** avec messaging
 - 🔄 **Real-time features** avec SignalR
 - 🔄 **Progressive Web App** (PWA) avec offline support
 - 🔄 **Advanced Analytics** avec ML.NET
 - 🔄 **Mobile Apps** cross-platform avec .NET MAUI
 
-### 🌟 Phase 4 - Innovation (2025)
+### 🌟 Phase 4 - Innovation (2026)
 - 🔄 **AI-powered recommendations** pour propositions
 - 🔄 **Voice Commands** et accessibilité avancée
 - 🔄 **Blockchain audit trail** pour votes (PoC)
@@ -573,7 +573,7 @@ cd src/Back/NicolasQuiPaieAPI && dotnet run
 
 ---
 
-## 📊 Métriques de Qualité 2024
+## 📊 Métriques de Qualité 2025
 
 | Métrique | Objectif | Actuel | Statut |
 |----------|----------|---------|---------|
@@ -598,7 +598,7 @@ Ce projet est développé sous licence **MIT** - voir LICENSE.md pour les détai
 
 ---
 
-## 🎯 Vision 2024-2025
+## 🎯 Vision 2025-2026
 
 > **"Révolutionner la démocratie numérique française avec une plateforme technique d'exception, où chaque ligne de code sert l'engagement citoyen."**
 
