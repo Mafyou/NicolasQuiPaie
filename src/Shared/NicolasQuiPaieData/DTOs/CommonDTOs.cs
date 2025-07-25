@@ -23,6 +23,48 @@ public enum VoteType
     For = 1
 }
 
+public enum LogLevel
+{
+    Verbose = 0,
+    Debug = 1,
+    Information = 2,
+    Warning = 3,
+    Error = 4,
+    Fatal = 5
+}
+
+/// <summary>
+/// DTO pour les logs API (record for immutability during transfer)
+/// </summary>
+public record ApiLogDto
+{
+    public int Id { get; init; }
+    public string? Message { get; init; }
+    public string Level { get; init; } = "";
+    public DateTime TimeStamp { get; init; }
+    public string? Exception { get; init; }
+    public string? UserId { get; init; }
+    public string? UserName { get; init; }
+    public string? RequestPath { get; init; }
+    public string? RequestMethod { get; init; }
+    public int? StatusCode { get; init; }
+    public long? Duration { get; init; }
+    public string? ClientIP { get; init; }
+    public string? Source { get; init; }
+}
+
+/// <summary>
+/// DTO pour la réponse des logs API (record for immutability)
+/// </summary>
+public record ApiLogsResponseDto
+{
+    public int TotalReturned { get; init; }
+    public string? LevelFilter { get; init; }
+    public int RequestedCount { get; init; }
+    public string[] AvailableLevels { get; init; } = [];
+    public ApiLogDto[] Logs { get; init; } = [];
+}
+
 /// <summary>
 /// DTO pour les propositions (record for immutability during transfer)
 /// </summary>
