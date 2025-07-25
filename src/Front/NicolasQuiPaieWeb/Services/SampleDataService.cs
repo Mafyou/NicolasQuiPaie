@@ -100,12 +100,17 @@ namespace NicolasQuiPaieWeb.Services
         {
             return new List<CategoryDto>
             {
-                new() { Id = 1, Name = "Économie", Description = "Propositions économiques et fiscales", Color = "#e74c3c", IconClass = "fas fa-coins" },
-                new() { Id = 2, Name = "Environnement", Description = "Écologie et développement durable", Color = "#27ae60", IconClass = "fas fa-leaf" },
-                new() { Id = 3, Name = "Social", Description = "Questions sociales et sociétales", Color = "#3498db", IconClass = "fas fa-users" },
-                new() { Id = 4, Name = "Numérique", Description = "Transformation numérique et tech", Color = "#9b59b6", IconClass = "fas fa-laptop" },
-                new() { Id = 5, Name = "Éducation", Description = "Système éducatif et formation", Color = "#f39c12", IconClass = "fas fa-graduation-cap" },
-                new() { Id = 6, Name = "Santé", Description = "Système de santé publique", Color = "#e67e22", IconClass = "fas fa-heartbeat" }
+                new() { Id = 1, Name = "Régalien", Description = "Fonctions de souveraineté : police, justice, défense", Color = "#002E5D", IconClass = "fa-solid fa-gavel" },
+                new() { Id = 2, Name = "Économie", Description = "Fiscalité, compétitivité, marché libre", Color = "#007ACC", IconClass = "fa-solid fa-chart-line" },
+                new() { Id = 3, Name = "Gouvernance", Description = "Transparence, lutte contre la corruption", Color = "#5A189A", IconClass = "fa-solid fa-scale-balanced" },
+                new() { Id = 4, Name = "Social", Description = "Aides, redistribution, travail", Color = "#A4133C", IconClass = "fa-solid fa-hand-holding-heart" },
+                new() { Id = 5, Name = "Identité", Description = "Culture, langue, cohésion nationale", Color = "#D7263D", IconClass = "fa-solid fa-flag" },
+                new() { Id = 6, Name = "Retraites", Description = "Financement et équité inter-générationnelle", Color = "#5CC4E0", IconClass = "fa-solid fa-person-cane" },
+                new() { Id = 7, Name = "Santé", Description = "Organisation, efficacité, assurances", Color = "#198754", IconClass = "fa-solid fa-stethoscope" },
+                new() { Id = 8, Name = "Éducation", Description = "Programmes, carte scolaire, valeurs", Color = "#FF9F1C", IconClass = "fa-solid fa-school" },
+                new() { Id = 9, Name = "Institutions", Description = "Processus législatif et contre-pouvoirs", Color = "#3C096C", IconClass = "fa-solid fa-landmark" },
+                new() { Id = 10, Name = "Europe", Description = "Relations et souveraineté vis-à-vis de l'UE", Color = "#003399", IconClass = "fa-brands fa-eu" },
+                new() { Id = 11, Name = "Immigration", Description = "Contrôle des flux et intégration", Color = "#8E2A2A", IconClass = "fa-solid fa-passport" }
             };
         }
 
@@ -116,103 +121,222 @@ namespace NicolasQuiPaieWeb.Services
                 new()
                 {
                     Id = 1,
-                    Title = "Réduction de la TVA sur les produits bio",
-                    Description = "Proposition pour réduire la TVA de 20% à 5,5% sur tous les produits alimentaires biologiques certifiés pour encourager une alimentation saine et durable.",
+                    Title = "ÉTAT RECENTRÉ SUR L'ESSENTIEL",
+                    Description = "Police, justice et défense sont abandonnées aujourd'hui, laissant insécurité et chaos prospérer. Nous voulons supprimer les structures et dépenses inutiles pour renforcer le régalien et protéger les Français, sans gaspiller un centime ailleurs.",
                     CategoryId = 1,
-                    CategoryName = "Économie",
-                    CategoryColor = "#e74c3c",
-                    CategoryIcon = "fas fa-coins",
-                    VotesFor = 1247,
-                    VotesAgainst = 156,
-                    CreatedAt = DateTime.Now.AddDays(-5),
-                    ViewsCount = 3420,
-                    CreatedByDisplayName = "Marie Dubois",
+                    CategoryName = "Régalien",
+                    CategoryColor = "#002E5D",
+                    CategoryIcon = "fa-solid fa-gavel",
+                    VotesFor = 2847,
+                    VotesAgainst = 456,
+                    CreatedAt = DateTime.Now.AddDays(-12),
+                    ViewsCount = 8420,
+                    CreatedByDisplayName = "Nicolas Souverain",
                     CreatedById = "user1",
                     Status = ProposalStatus.Active
                 },
                 new()
                 {
                     Id = 2,
-                    Title = "Interdiction des jets privés pour les trajets courts",
-                    Description = "Interdire l'utilisation de jets privés pour tous les trajets de moins de 500km en Europe, avec alternatives en train haute vitesse obligatoires.",
+                    Title = "LIBERTÉ ÉCONOMIQUE PURE",
+                    Description = "Moins de taxes, moins de règles. Rendez aux actifs leur salaire et aux entreprises leur compétitivité.",
                     CategoryId = 2,
-                    CategoryName = "Environnement",
-                    CategoryColor = "#27ae60",
-                    CategoryIcon = "fas fa-leaf",
-                    VotesFor = 2134,
-                    VotesAgainst = 432,
-                    CreatedAt = DateTime.Now.AddDays(-3),
-                    ViewsCount = 5678,
-                    CreatedByDisplayName = "Pierre Écolo",
+                    CategoryName = "Économie",
+                    CategoryColor = "#007ACC",
+                    CategoryIcon = "fa-solid fa-chart-line",
+                    VotesFor = 3142,
+                    VotesAgainst = 789,
+                    CreatedAt = DateTime.Now.AddDays(-10),
+                    ViewsCount = 9876,
+                    CreatedByDisplayName = "Marie Libérale",
                     CreatedById = "user2",
                     Status = ProposalStatus.Active
                 },
                 new()
                 {
                     Id = 3,
-                    Title = "Semaine de 4 jours obligatoire",
-                    Description = "Instaurer une semaine de travail de 32 heures (4 jours) sans réduction de salaire pour améliorer la qualité de vie et la productivité.",
-                    CategoryId = 3,
-                    CategoryName = "Social",
-                    CategoryColor = "#3498db",
-                    CategoryIcon = "fas fa-users",
-                    VotesFor = 3456,
+                    Title = "ZÉRO SUBVENTION, ZÉRO PRIVILÈGE",
+                    Description = "Supprimez toutes les subventions, aides aux entreprises, niches, exonérations et réductions fiscales. Que chacun joue à armes égales !",
+                    CategoryId = 2,
+                    CategoryName = "Économie",
+                    CategoryColor = "#007ACC",
+                    CategoryIcon = "fa-solid fa-chart-line",
+                    VotesFor = 2156,
                     VotesAgainst = 1234,
-                    CreatedAt = DateTime.Now.AddDays(-7),
-                    ViewsCount = 8901,
-                    CreatedByDisplayName = "Jean Travailleur",
+                    CreatedAt = DateTime.Now.AddDays(-8),
+                    ViewsCount = 6789,
+                    CreatedByDisplayName = "Pierre Équité",
                     CreatedById = "user3",
                     Status = ProposalStatus.Active
                 },
                 new()
                 {
                     Id = 4,
-                    Title = "Internet gratuit dans tous les lieux publics",
-                    Description = "Déployer un réseau WiFi public gratuit et sécurisé dans toutes les communes de France pour réduire la fracture numérique.",
-                    CategoryId = 4,
-                    CategoryName = "Numérique",
-                    CategoryColor = "#9b59b6",
-                    CategoryIcon = "fas fa-laptop",
-                    VotesFor = 1876,
-                    VotesAgainst = 287,
-                    CreatedAt = DateTime.Now.AddDays(-2),
-                    ViewsCount = 4567,
-                    CreatedByDisplayName = "Sophie Connectée",
+                    Title = "NON AU CAPITALISME DE CONNIVENCE",
+                    Description = "Stop aux magouilles entre élites et entreprises. Fini les privilèges pour les copains du pouvoir !",
+                    CategoryId = 3,
+                    CategoryName = "Gouvernance",
+                    CategoryColor = "#5A189A",
+                    CategoryIcon = "fa-solid fa-scale-balanced",
+                    VotesFor = 3567,
+                    VotesAgainst = 234,
+                    CreatedAt = DateTime.Now.AddDays(-6),
+                    ViewsCount = 12345,
+                    CreatedByDisplayName = "Sophie Justice",
                     CreatedById = "user4",
                     Status = ProposalStatus.Active
                 },
                 new()
                 {
                     Id = 5,
-                    Title = "Cours d'éducation financière obligatoire",
-                    Description = "Rendre obligatoires les cours d'éducation financière dès le collège pour apprendre la gestion budgétaire, les investissements et les impôts.",
-                    CategoryId = 5,
-                    CategoryName = "Éducation",
-                    CategoryColor = "#f39c12",
-                    CategoryIcon = "fas fa-graduation-cap",
-                    VotesFor = 2789,
-                    VotesAgainst = 445,
-                    CreatedAt = DateTime.Now.AddDays(-6),
-                    ViewsCount = 6789,
-                    CreatedByDisplayName = "Paul Éducateur",
+                    Title = "FIN DE L'ASSISTANAT",
+                    Description = "Basta les aides sans contreparties qui tuent l'envie de bosser. Priorité à ceux qui contribuent.",
+                    CategoryId = 4,
+                    CategoryName = "Social",
+                    CategoryColor = "#A4133C",
+                    CategoryIcon = "fa-solid fa-hand-holding-heart",
+                    VotesFor = 2234,
+                    VotesAgainst = 1567,
+                    CreatedAt = DateTime.Now.AddDays(-5),
+                    ViewsCount = 7890,
+                    CreatedByDisplayName = "Jean Travailleur",
                     CreatedById = "user5",
                     Status = ProposalStatus.Active
                 },
                 new()
                 {
                     Id = 6,
-                    Title = "Remboursement des médecines douces",
-                    Description = "Inclure dans le remboursement de la Sécurité Sociale certaines médecines alternatives comme l'ostéopathie, l'acupuncture et l'homéopathie.",
-                    CategoryId = 6,
-                    CategoryName = "Santé",
-                    CategoryColor = "#e67e22",
-                    CategoryIcon = "fas fa-heartbeat",
-                    VotesFor = 1543,
-                    VotesAgainst = 876,
+                    Title = "IDENTITÉ, SOCLE DE PROSPÉRITÉ",
+                    Description = "Une France unie par sa culture, sa langue et ses traditions produit mieux. Protégeons ce qui nous rend forts et évacuons ce qui nous fait régresser.",
+                    CategoryId = 5,
+                    CategoryName = "Identité",
+                    CategoryColor = "#D7263D",
+                    CategoryIcon = "fa-solid fa-flag",
+                    VotesFor = 2789,
+                    VotesAgainst = 678,
                     CreatedAt = DateTime.Now.AddDays(-4),
-                    ViewsCount = 3456,
-                    CreatedByDisplayName = "Dr. Claire Santé",
+                    ViewsCount = 9123,
+                    CreatedByDisplayName = "Paul Tradition",
                     CreatedById = "user6",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 7,
+                    Title = "DES RETRAITES QUI PENSENT À LA JEUNESSE",
+                    Description = "Stop aux privilèges. Les actifs ne doivent plus financer des régimes spéciaux ni des retraites géantes pour une minorité. Instaurons un système équitable tourné vers l'avenir.",
+                    CategoryId = 6,
+                    CategoryName = "Retraites",
+                    CategoryColor = "#5CC4E0",
+                    CategoryIcon = "fa-solid fa-person-cane",
+                    VotesFor = 3234,
+                    VotesAgainst = 456,
+                    CreatedAt = DateTime.Now.AddDays(-3),
+                    ViewsCount = 11567,
+                    CreatedByDisplayName = "Camille Jeune",
+                    CreatedById = "user7",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 8,
+                    Title = "SANTÉ PRAGMATIQUE",
+                    Description = "Efficacité et liberté. Moins d'État dans la santé. Favorisons la concurrence et le libre choix des soins avec des assurances accessibles. Fini les gaspillages ; nos impôts doivent mieux servir.",
+                    CategoryId = 7,
+                    CategoryName = "Santé",
+                    CategoryColor = "#198754",
+                    CategoryIcon = "fa-solid fa-stethoscope",
+                    VotesFor = 1987,
+                    VotesAgainst = 1123,
+                    CreatedAt = DateTime.Now.AddDays(-2),
+                    ViewsCount = 6456,
+                    CreatedByDisplayName = "Dr. Claire Libre",
+                    CreatedById = "user8",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 9,
+                    Title = "ÉDUCATION CENTRÉE SUR L'ESSENTIEL",
+                    Description = "L'école doit transmettre notre histoire, notre langue et nos valeurs, pas des idéologies hors sol. Suppression de la carte scolaire et mise en concurrence pour davantage de liberté parentale et moins de bureaucratie.",
+                    CategoryId = 8,
+                    CategoryName = "Éducation",
+                    CategoryColor = "#FF9F1C",
+                    CategoryIcon = "fa-solid fa-school",
+                    VotesFor = 2567,
+                    VotesAgainst = 789,
+                    CreatedAt = DateTime.Now.AddDays(-1),
+                    ViewsCount = 8234,
+                    CreatedByDisplayName = "Hélène École",
+                    CreatedById = "user9",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 10,
+                    Title = "FIN DU BLOCAGE LÉGISLATIF",
+                    Description = "Certaines structures étatiques bloquent les lois dont les Français ont besoin et masquent les réalités économiques et sociales. Réformons-les pour qu'elles servent le peuple, pas une caste.",
+                    CategoryId = 9,
+                    CategoryName = "Institutions",
+                    CategoryColor = "#3C096C",
+                    CategoryIcon = "fa-solid fa-landmark",
+                    VotesFor = 2345,
+                    VotesAgainst = 567,
+                    CreatedAt = DateTime.Now.AddHours(-18),
+                    ViewsCount = 7123,
+                    CreatedByDisplayName = "Marc Réforme",
+                    CreatedById = "user10",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 11,
+                    Title = "RAPPORT DE FORCE AVEC L'UE",
+                    Description = "Basta les diktats de Bruxelles qui étouffent nos entreprises et nos travailleurs. Exigeons un véritable rapport de force pour défendre nos intérêts.",
+                    CategoryId = 10,
+                    CategoryName = "Europe",
+                    CategoryColor = "#003399",
+                    CategoryIcon = "fa-brands fa-eu",
+                    VotesFor = 2789,
+                    VotesAgainst = 456,
+                    CreatedAt = DateTime.Now.AddHours(-12),
+                    ViewsCount = 8567,
+                    CreatedByDisplayName = "Anna Souveraine",
+                    CreatedById = "user11",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 12,
+                    Title = "FIN DE L'IMMIGRATION DE MASSE",
+                    Description = "Au-delà de la fin des aides sociales et de la préservation de notre identité, demandons l'arrêt des mécanismes de régulation trop permissifs ainsi que l'expulsion des étrangers clandestins, délinquants ou inactifs de longue durée.",
+                    CategoryId = 11,
+                    CategoryName = "Immigration",
+                    CategoryColor = "#8E2A2A",
+                    CategoryIcon = "fa-solid fa-passport",
+                    VotesFor = 3456,
+                    VotesAgainst = 1234,
+                    CreatedAt = DateTime.Now.AddHours(-6),
+                    ViewsCount = 13456,
+                    CreatedByDisplayName = "Thomas Contrôle",
+                    CreatedById = "user12",
+                    Status = ProposalStatus.Active
+                },
+                new()
+                {
+                    Id = 13,
+                    Title = "REFUS DES RÉCUPÉRATIONS CONTRE-NATURE",
+                    Description = "Nous rejetons les récupérations politiques de la gauche ou des partis étatistes opposés à ce manifeste ainsi que les idéologies contraires à la liberté et à l'identité françaises.",
+                    CategoryId = 5,
+                    CategoryName = "Identité",
+                    CategoryColor = "#D7263D",
+                    CategoryIcon = "fa-solid fa-flag",
+                    VotesFor = 1987,
+                    VotesAgainst = 654,
+                    CreatedAt = DateTime.Now.AddHours(-2),
+                    ViewsCount = 5678,
+                    CreatedByDisplayName = "Émilie Résistance",
+                    CreatedById = "user13",
                     Status = ProposalStatus.Active
                 }
             };
@@ -222,16 +346,16 @@ namespace NicolasQuiPaieWeb.Services
         {
             var comments = new List<CommentDto>();
 
-            // Commentaires pour la proposition 1 (TVA bio)
+            // Commentaires pour la proposition 1 (État recentré)
             comments.AddRange([
                 new CommentDto
                 {
                     Id = 1,
-                    Content = "Excellente idée ! Cela encouragerait vraiment l'achat de produits bio. Mais il faudrait s'assurer que les producteurs répercutent bien cette baisse sur les prix.",
-                    CreatedAt = DateTime.Now.AddDays(-4),
-                    LikesCount = 23,
+                    Content = "Enfin quelqu'un qui dit la vérité ! L'État gaspille des milliards dans des trucs inutiles pendant que nos policiers manquent de moyens. Il faut vraiment se recentrer sur l'essentiel !",
+                    CreatedAt = DateTime.Now.AddDays(-11),
+                    LikesCount = 47,
                     UserId = "commenter1",
-                    UserDisplayName = "Lucas Vert",
+                    UserDisplayName = "Michel Réaliste",
                     ProposalId = 1,
                     ParentCommentId = null,
                     IsDeleted = false,
@@ -240,11 +364,11 @@ namespace NicolasQuiPaieWeb.Services
                         new CommentDto
                         {
                             Id = 2,
-                            Content = "Tout à fait d'accord ! Un mécanisme de contrôle des prix serait nécessaire pour éviter que les distributeurs gardent la marge.",
-                            CreatedAt = DateTime.Now.AddDays(-4).AddHours(2),
-                            LikesCount = 8,
+                            Content = "Exactement ! Et nos militaires aussi. On a l'armée la plus faible d'Europe à cause de ces priorités à l'envers.",
+                            CreatedAt = DateTime.Now.AddDays(-11).AddHours(2),
+                            LikesCount = 23,
                             UserId = "commenter2",
-                            UserDisplayName = "Anna Consommatrice",
+                            UserDisplayName = "Capitaine Défense",
                             ProposalId = 1,
                             ParentCommentId = 1,
                             IsDeleted = false,
@@ -256,11 +380,11 @@ namespace NicolasQuiPaieWeb.Services
                 new CommentDto
                 {
                     Id = 3,
-                    Content = "Je suis mitigé... Cette mesure va coûter cher à l'État. Ne vaudrait-il pas mieux investir directement dans l'agriculture bio ?",
-                    CreatedAt = DateTime.Now.AddDays(-3),
-                    LikesCount = 15,
+                    Content = "Mais attention à ne pas tout casser non plus. Il faut des services publics qui fonctionnent, pas juste du sécuritaire.",
+                    CreatedAt = DateTime.Now.AddDays(-10),
+                    LikesCount = 18,
                     UserId = "commenter3",
-                    UserDisplayName = "Thomas Prudent",
+                    UserDisplayName = "Julie Modérée",
                     ProposalId = 1,
                     ParentCommentId = null,
                     IsDeleted = false,
@@ -269,16 +393,16 @@ namespace NicolasQuiPaieWeb.Services
                 }
             ]);
 
-            // Commentaires pour la proposition 2 (Jets privés)
+            // Commentaires pour la proposition 2 (Liberté économique)
             comments.AddRange([
                 new CommentDto
                 {
                     Id = 4,
-                    Content = "Mesure indispensable pour le climat ! Les jets privés émettent 40 fois plus de CO2 par passager qu'un vol commercial. C'est inacceptable en 2025.",
-                    CreatedAt = DateTime.Now.AddDays(-2),
-                    LikesCount = 67,
+                    Content = "100% d'accord ! Je bosse 50h/semaine et je vois la moitié partir en impôts. Laissez-nous respirer ! Plus de liberté économique = plus d'emplois.",
+                    CreatedAt = DateTime.Now.AddDays(-9),
+                    LikesCount = 89,
                     UserId = "commenter4",
-                    UserDisplayName = "Émilie Climat",
+                    UserDisplayName = "Entrepreneur Libre",
                     ProposalId = 2,
                     ParentCommentId = null,
                     IsDeleted = false,
@@ -287,11 +411,11 @@ namespace NicolasQuiPaieWeb.Services
                         new CommentDto
                         {
                             Id = 5,
-                            Content = "Les chiffres sont parlants ! Et en plus, développer le train haute vitesse créerait des emplois.",
-                            CreatedAt = DateTime.Now.AddDays(-2).AddHours(3),
-                            LikesCount = 12,
+                            Content = "Pareil pour moi ! En tant qu'artisan, je passe plus de temps à faire de la paperasse qu'à bosser. C'est dingue !",
+                            CreatedAt = DateTime.Now.AddDays(-9).AddHours(3),
+                            LikesCount = 34,
                             UserId = "commenter5",
-                            UserDisplayName = "Marc Ferroviaire",
+                            UserDisplayName = "Artisan Français",
                             ProposalId = 2,
                             ParentCommentId = 4,
                             IsDeleted = false,
@@ -299,207 +423,137 @@ namespace NicolasQuiPaieWeb.Services
                             Replies = []
                         }
                     ]
-                },
+                }
+            ]);
+
+            // Commentaires pour la proposition 4 (Capitalisme de connivence)
+            comments.AddRange([
                 new CommentDto
                 {
                     Id = 6,
-                    Content = "Attention à ne pas pénaliser les entreprises françaises. Il faut que cette règle s'applique à toute l'Europe en même temps.",
-                    CreatedAt = DateTime.Now.AddDays(-1),
-                    LikesCount = 34,
+                    Content = "Enfin ! Marre de voir les gros se servir pendant que les PME crèvent. Il faut arrêter ce système de copains-coquins !",
+                    CreatedAt = DateTime.Now.AddDays(-5),
+                    LikesCount = 156,
                     UserId = "commenter6",
-                    UserDisplayName = "Philippe Économiste",
-                    ProposalId = 2,
-                    ParentCommentId = null,
-                    IsDeleted = false,
-                    IsModerated = false,
-                    Replies = []
-                }
-            ]);
-
-            // Commentaires pour la proposition 3 (Semaine 4 jours)
-            comments.AddRange([
-                new CommentDto
-                {
-                    Id = 7,
-                    Content = "Enfin ! Des études montrent que la productivité augmente avec moins d'heures. Le Danemark et la Suède l'ont prouvé. Vivement en France ! 🇫🇷",
-                    CreatedAt = DateTime.Now.AddDays(-6),
-                    LikesCount = 89,
-                    UserId = "commenter7",
-                    UserDisplayName = "Sarah Moderne",
-                    ProposalId = 3,
+                    UserDisplayName = "Petite Entreprise",
+                    ProposalId = 4,
                     ParentCommentId = null,
                     IsDeleted = false,
                     IsModerated = false,
                     Replies = [
                         new CommentDto
                         {
-                            Id = 8,
-                            Content = "Exact ! Et moins de stress = moins de dépenses de santé pour la collectivité. C'est gagnant-gagnant !",
-                            CreatedAt = DateTime.Now.AddDays(-6).AddHours(1),
-                            LikesCount = 24,
-                            UserId = "commenter8",
-                            UserDisplayName = "Dr. Julien Santé",
-                            ProposalId = 3,
-                            ParentCommentId = 7,
+                            Id = 7,
+                            Content = "Exactement ! Le CAC 40 a ses entrées à l'Élysée, nous on a que dalle. Il faut de l'égalité de traitement !",
+                            CreatedAt = DateTime.Now.AddDays(-5).AddHours(1),
+                            LikesCount = 67,
+                            UserId = "commenter7",
+                            UserDisplayName = "Patron PME",
+                            ProposalId = 4,
+                            ParentCommentId = 6,
                             IsDeleted = false,
                             IsModerated = false,
                             Replies = []
-                        },
+                        }
+                    ]
+                }
+            ]);
+
+            // Commentaires pour la proposition 7 (Retraites)
+            comments.AddRange([
+                new CommentDto
+                {
+                    Id = 8,
+                    Content = "MERCI ! J'ai 25 ans et je cotise pour des régimes spéciaux de privilégiés qui partent à 50 ans. Pendant ce temps, moi je vais bosser jusqu'à 67 ans minimum. C'est du vol organisé ! 😡",
+                    CreatedAt = DateTime.Now.AddDays(-2),
+                    LikesCount = 234,
+                    UserId = "commenter8",
+                    UserDisplayName = "Jeune Actif",
+                    ProposalId = 7,
+                    ParentCommentId = null,
+                    IsDeleted = false,
+                    IsModerated = false,
+                    Replies = [
                         new CommentDto
                         {
                             Id = 9,
-                            Content = "Mais comment faire pour les services publics ? Les hôpitaux ne peuvent pas fermer un jour par semaine...",
-                            CreatedAt = DateTime.Now.AddDays(-5),
-                            LikesCount = 18,
+                            Content = "Pareil ! On finance les retraites dorées des autres pendant qu'on n'aura rien. Il faut de l'équité !",
+                            CreatedAt = DateTime.Now.AddDays(-2).AddHours(2),
+                            LikesCount = 78,
                             UserId = "commenter9",
-                            UserDisplayName = "Infirmière Claire",
-                            ProposalId = 3,
-                            ParentCommentId = 7,
+                            UserDisplayName = "Génération Spoliée",
+                            ProposalId = 7,
+                            ParentCommentId = 8,
                             IsDeleted = false,
                             IsModerated = false,
                             Replies = []
                         }
                     ]
-                },
+                }
+            ]);
+
+            // Commentaires pour la proposition 9 (Éducation)
+            comments.AddRange([
                 new CommentDto
                 {
                     Id = 10,
-                    Content = "Je suis chef d'entreprise et franchement inquiet. Nos concurrents européens travaillent plus. Comment rester compétitifs ?",
-                    CreatedAt = DateTime.Now.AddDays(-5),
-                    LikesCount = 42,
+                    Content = "En tant que prof, je suis d'accord ! On nous impose des programmes idéologiques au lieu d'enseigner les bases. Nos élèves ne savent plus écrire mais connaissent la théorie du genre... 🤦‍♀️",
+                    CreatedAt = DateTime.Now.AddHours(-20),
+                    LikesCount = 145,
                     UserId = "commenter10",
-                    UserDisplayName = "Michel Entreprise",
-                    ProposalId = 3,
+                    UserDisplayName = "Prof Désabusée",
+                    ProposalId = 9,
                     ParentCommentId = null,
                     IsDeleted = false,
                     IsModerated = false,
-                    Replies = []
+                    Replies = [
+                        new CommentDto
+                        {
+                            Id = 11,
+                            Content = "Merci ! En tant que parent, je vois bien que l'école n'enseigne plus ce qui compte vraiment. Vive la liberté scolaire !",
+                            CreatedAt = DateTime.Now.AddHours(-18),
+                            LikesCount = 67,
+                            UserId = "commenter11",
+                            UserDisplayName = "Parent Concerné",
+                            ProposalId = 9,
+                            ParentCommentId = 10,
+                            IsDeleted = false,
+                            IsModerated = false,
+                            Replies = []
+                        }
+                    ]
                 }
             ]);
 
-            // Commentaires pour la proposition 4 (WiFi public)
+            // Commentaires pour la proposition 12 (Immigration)
             comments.AddRange([
-                new CommentDto
-                {
-                    Id = 11,
-                    Content = "Super initiative ! En tant qu'étudiant, c'est galère quand on a plus de 4G. Le WiFi public gratuit, c'est la base en 2025 !",
-                    CreatedAt = DateTime.Now.AddDays(-1),
-                    LikesCount = 56,
-                    UserId = "commenter11",
-                    UserDisplayName = "Maxime Étudiant",
-                    ProposalId = 4,
-                    ParentCommentId = null,
-                    IsDeleted = false,
-                    IsModerated = false,
-                    Replies = []
-                },
                 new CommentDto
                 {
                     Id = 12,
-                    Content = "Bonne idée mais attention à la sécurité ! Il faut que ce soit vraiment sécurisé, pas comme certains WiFi publics actuels.",
-                    CreatedAt = DateTime.Now.AddHours(-18),
-                    LikesCount = 31,
+                    Content = "Enfin quelqu'un qui ose dire les choses ! L'immigration de masse coûte une fortune et détruit notre cohésion sociale. Il faut du pragmatisme, pas de l'idéologie !",
+                    CreatedAt = DateTime.Now.AddHours(-4),
+                    LikesCount = 189,
                     UserId = "commenter12",
-                    UserDisplayName = "Alex Sécurité",
-                    ProposalId = 4,
+                    UserDisplayName = "Citoyen Lucide",
+                    ProposalId = 12,
                     ParentCommentId = null,
                     IsDeleted = false,
                     IsModerated = false,
                     Replies = []
-                }
-            ]);
-
-            // Commentaires pour la proposition 5 (Éducation financière)
-            comments.AddRange([
+                },
                 new CommentDto
                 {
                     Id = 13,
-                    Content = "ENFIN ! Je ne savais rien des impôts, crédits, épargne en sortant du lycée. Mes parents non plus d'ailleurs... Cette matière devrait être obligatoire !",
-                    CreatedAt = DateTime.Now.AddDays(-5),
-                    LikesCount = 78,
+                    Content = "Il faut surtout plus de contrôles et moins d'assistanat. Ceux qui veulent s'intégrer et travailler, OK. Les autres, dehors !",
+                    CreatedAt = DateTime.Now.AddHours(-3),
+                    LikesCount = 123,
                     UserId = "commenter13",
-                    UserDisplayName = "Camille Jeune",
-                    ProposalId = 5,
-                    ParentCommentId = null,
-                    IsDeleted = false,
-                    IsModerated = false,
-                    Replies = [
-                        new CommentDto
-                        {
-                            Id = 14,
-                            Content = "Pareil pour moi ! J'ai découvert le PEA à 30 ans... Si j'avais su plus tôt !",
-                            CreatedAt = DateTime.Now.AddDays(-4),
-                            LikesCount = 19,
-                            UserId = "commenter14",
-                            UserDisplayName = "Romain Épargne",
-                            ProposalId = 5,
-                            ParentCommentId = 13,
-                            IsDeleted = false,
-                            IsModerated = false,
-                            Replies = []
-                        }
-                    ]
-                },
-                new CommentDto
-                {
-                    Id = 15,
-                    Content = "Excellente proposition ! En tant que prof, je vois trop d'élèves perdus sur ces sujets. Il faut 2h/semaine minimum.",
-                    CreatedAt = DateTime.Now.AddDays(-4),
-                    LikesCount = 45,
-                    UserId = "commenter15",
-                    UserDisplayName = "Prof Hélène",
-                    ProposalId = 5,
+                    UserDisplayName = "Français Pragmatique",
+                    ProposalId = 12,
                     ParentCommentId = null,
                     IsDeleted = false,
                     IsModerated = false,
                     Replies = []
-                }
-            ]);
-
-            // Commentaires pour la proposition 6 (Médecines douces)
-            comments.AddRange([
-                new CommentDto
-                {
-                    Id = 16,
-                    Content = "Très bonne idée ! L'ostéopathie m'a sauvé le dos, mais à 60€ la séance, tout le monde ne peut pas se soigner.",
-                    CreatedAt = DateTime.Now.AddDays(-3),
-                    LikesCount = 41,
-                    UserId = "commenter16",
-                    UserDisplayName = "Martine Dos",
-                    ProposalId = 6,
-                    ParentCommentId = null,
-                    IsDeleted = false,
-                    IsModerated = false,
-                    Replies = []
-                },
-                new CommentDto
-                {
-                    Id = 17,
-                    Content = "Attention à l'homéopathie... Il faut des preuves scientifiques solides avant de rembourser. L'ostéopathie et l'acupuncture, OK, mais restons rationnels !",
-                    CreatedAt = DateTime.Now.AddDays(-2),
-                    LikesCount = 63,
-                    UserId = "commenter17",
-                    UserDisplayName = "Dr. Rationaliste",
-                    ProposalId = 6,
-                    ParentCommentId = null,
-                    IsDeleted = false,
-                    IsModerated = false,
-                    Replies = [
-                        new CommentDto
-                        {
-                            Id = 18,
-                            Content = "D'accord pour l'homéopathie, mais l'acupuncture a fait ses preuves pour la douleur. L'OMS la reconnaît !",
-                            CreatedAt = DateTime.Now.AddDays(-1),
-                            LikesCount = 22,
-                            UserId = "commenter18",
-                            UserDisplayName = "Acupuncteur Paul",
-                            ProposalId = 6,
-                            ParentCommentId = 17,
-                            IsDeleted = false,
-                            IsModerated = false,
-                            Replies = []
-                        }
-                    ]
                 }
             ]);
 
@@ -510,34 +564,34 @@ namespace NicolasQuiPaieWeb.Services
         {
             return new DashboardStatsDto
             {
-                TotalUsers = 15742,
-                ActiveUsers = 3856,
-                TotalVotes = 48392,
-                ActiveProposals = 156,
-                TotalProposals = 1247,
-                TotalComments = 12847,
-                RasLebolMeter = 68.5,
+                TotalUsers = 23847,
+                ActiveUsers = 6234,
+                TotalVotes = 67392,
+                ActiveProposals = 189,
+                TotalProposals = 1456,
+                TotalComments = 18947,
+                RasLebolMeter = 78.3, // Plus élevé pour refléter l'esprit des propositions
                 TopCategories = new List<CategoryStatsDto>
                 {
-                    new() { CategoryId = 1, CategoryName = "Économie", CategoryColor = "#e74c3c", CategoryIcon = "fas fa-coins", ProposalCount = 89, VoteCount = 1677 },
-                    new() { CategoryId = 2, CategoryName = "Environnement", CategoryColor = "#27ae60", CategoryIcon = "fas fa-leaf", ProposalCount = 76, VoteCount = 1798 },
-                    new() { CategoryId = 3, CategoryName = "Social", CategoryColor = "#3498db", CategoryIcon = "fas fa-users", ProposalCount = 134, VoteCount = 2456 },
-                    new() { CategoryId = 4, CategoryName = "Numérique", CategoryColor = "#9b59b6", CategoryIcon = "fas fa-laptop", ProposalCount = 67, VoteCount = 1234 },
-                    new() { CategoryId = 5, CategoryName = "Éducation", CategoryColor = "#f39c12", CategoryIcon = "fas fa-graduation-cap", ProposalCount = 112, VoteCount = 1897 },
-                    new() { CategoryId = 6, CategoryName = "Santé", CategoryColor = "#e67e22", CategoryIcon = "fas fa-heartbeat", ProposalCount = 95, VoteCount = 1567 }
+                    new() { CategoryId = 2, CategoryName = "Économie", CategoryColor = "#007ACC", CategoryIcon = "fa-solid fa-chart-line", ProposalCount = 156, VoteCount = 2847 },
+                    new() { CategoryId = 1, CategoryName = "Régalien", CategoryColor = "#002E5D", CategoryIcon = "fa-solid fa-gavel", ProposalCount = 134, VoteCount = 2456 },
+                    new() { CategoryId = 5, CategoryName = "Identité", CategoryColor = "#D7263D", CategoryIcon = "fa-solid fa-flag", ProposalCount = 123, VoteCount = 2234 },
+                    new() { CategoryId = 11, CategoryName = "Immigration", CategoryColor = "#8E2A2A", CategoryIcon = "fa-solid fa-passport", ProposalCount = 98, VoteCount = 1987 },
+                    new() { CategoryId = 3, CategoryName = "Gouvernance", CategoryColor = "#5A189A", CategoryIcon = "fa-solid fa-scale-balanced", ProposalCount = 87, VoteCount = 1789 },
+                    new() { CategoryId = 6, CategoryName = "Retraites", CategoryColor = "#5CC4E0", CategoryIcon = "fa-solid fa-person-cane", ProposalCount = 76, VoteCount = 1567 }
                 },
                 DailyVoteTrends = Enumerable.Range(0, 7).Select(i => new DailyVoteStatsDto
                 {
                     Date = DateTime.Today.AddDays(-i),
-                    VotesFor = Random.Shared.Next(150, 250),
-                    VotesAgainst = Random.Shared.Next(50, 120)
+                    VotesFor = Random.Shared.Next(200, 350), // Plus de votes positifs
+                    VotesAgainst = Random.Shared.Next(30, 80)  // Moins de votes négatifs
                 }).ToList(),
                 NicolasLevelDistribution = new List<NicolasLevelStatsDto>
                 {
-                    new() { Level = ContributionLevel.PetitNicolas, Count = 8945, Percentage = 56.8 },
-                    new() { Level = ContributionLevel.GrosMoyenNicolas, Count = 4126, Percentage = 26.2 },
-                    new() { Level = ContributionLevel.GrosNicolas, Count = 2034, Percentage = 12.9 },
-                    new() { Level = ContributionLevel.NicolasSupreme, Count = 637, Percentage = 4.1 }
+                    new() { Level = ContributionLevel.PetitNicolas, Count = 12456, Percentage = 52.3 },
+                    new() { Level = ContributionLevel.GrosMoyenNicolas, Count = 6789, Percentage = 28.5 },
+                    new() { Level = ContributionLevel.GrosNicolas, Count = 3234, Percentage = 13.6 },
+                    new() { Level = ContributionLevel.NicolasSupreme, Count = 1368, Percentage = 5.6 }
                 }
             };
         }
