@@ -241,7 +241,7 @@ namespace NicolasQuiPaieWeb.Services
                 {
                     Id = 8,
                     Title = "SANTÉ PRAGMATIQUE",
-                    Description = "Efficacité et liberté. Moins d'État dans la santé. Favorisons la concurrence et le libre choix des soins avec des assurances accessibles. Fini les gaspillages ; nos impôts doivent mieux servir.",
+                    Description = "Efficacité et liberté. Réduisons l'État dans la santé, favorisons la concurrence et le libre choix avec des assurances accessibles.",
                     CategoryId = 7,
                     CategoryName = "Santé",
                     CategoryColor = "#198754",
