@@ -24,21 +24,6 @@
 </head>
 
 <body>
-    <!-- Persistent demo banner that never gets hidden by script -->
-    <div id="persistent-demo-banner" class="alert alert-warning border-0 rounded-0 mb-0 text-center" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%); display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 1060;">
-        <div class="container py-2">
-            <div class="d-flex align-items-center justify-content-center flex-wrap">
-                <div class="me-3">
-                    <i class="fas fa-eye text-dark me-2"></i>
-                    <strong>Mode Démonstration</strong>
-                </div>
-                <div class="text-dark small me-3">
-                    Données d'exemple • Fonctionnalités limitées 🚧 Site en cours de construction
-                </div>
-            </div>
-        </div>
-    </div>-->
-
     <div id="app">
         <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
             <div class="text-center">
@@ -166,18 +151,6 @@
             }
         }
 
-        // Show persistent demo banner and keep it visible
-        function showPersistentDemoBanner() {
-            const persistentBanner = document.getElementById('persistent-demo-banner');
-            if (persistentBanner) {
-                persistentBanner.style.display = 'block';
-                devConsole.log('📝 Persistent demo banner displayed and will stay visible');
-                
-                // Adjust body padding to account for fixed banner
-                document.body.style.paddingTop = '60px';
-            }
-        }
-
         // Simplified loading sequence
         function startLoadingSequence() {
             updateLoadingProgress(0);
@@ -191,23 +164,8 @@
                     setTimeout(() => {
                         updateLoadingProgress(3);
                         
-                        // Show demo banner while Blazor is loading
-                        showPersistentDemoBanner();
-                        
                         setTimeout(() => {
                             updateLoadingProgress(4);
-                            
-                            // Hide loading screen after Blazor should be ready
-                            setTimeout(() => {
-                                const loadingDiv = document.querySelector('#app .d-flex.justify-content-center');
-                                if (loadingDiv) {
-                                    loadingDiv.style.opacity = '0';
-                                    setTimeout(() => {
-                                        devConsole.log('🎉 Loading screen removed');
-                                        loadingDiv.remove();
-                                    }, 300);
-                                }
-                            }, 500);
                         }, 1000);
                     }, 800);
                 }, 600);
@@ -280,15 +238,6 @@
 
             // Start the simplified loading sequence
             startLoadingSequence();
-
-            // Hide Blazor banner if it appears to avoid duplication
-            setTimeout(() => {
-                const blazorBanner = document.getElementById('blazor-readonly-banner');
-                if (blazorBanner) {
-                    blazorBanner.style.display = 'none';
-                    devConsole.log('📝 Blazor ReadOnlyModeBanner hidden to avoid duplication');
-                }
-            }, 3000);
         });
 
         function updateSignalRStatus(status, message) {
@@ -415,16 +364,6 @@
             // Prevent the default browser behavior (console error)
             event.preventDefault();
         });
-
-        // Simplified timeout handling - just for critical errors
-        setTimeout(() => {
-            const loadingDiv = document.querySelector('#app .d-flex.justify-content-center');
-            if (loadingDiv && loadingDiv.style.display !== 'none') {
-                devConsole.warn('⚠️ Loading screen still visible after 10 seconds, forcing removal');
-                loadingDiv.style.opacity = '0';
-                setTimeout(() => loadingDiv.remove(), 300);
-            }
-        }, 10000); // 10 seconds timeout
     </script>
 </body>
 
