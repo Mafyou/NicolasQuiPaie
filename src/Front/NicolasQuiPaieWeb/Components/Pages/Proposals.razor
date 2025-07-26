@@ -1,6 +1,7 @@
 ﻿@page "/proposals"
 @inject ProposalService ProposalService
 @inject NavigationManager Navigation
+@inject ILogger<Proposals> Logger
 
 <PageTitle>Propositions - Nicolas Qui Paie</PageTitle>
 
@@ -29,11 +30,11 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">Catégorie</label>
-                            <select class="form-select" @onchange="OnCategoryChanged">
+                            <select class="form-select" @bind="selectedCategory" @bind:after="OnFilterChanged">
                                 <option value="">Toutes les catégories</option>
                                 @foreach (var category in categories)
                                 {
-                                    <option value="@category.Id">@category.Name</option>
+                                    <option value="@category.Name">@category.Name</option>
                                 }
                             </select>
                         </div>
@@ -43,7 +44,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Tri</label>
-                            <select class="form-select" @onchange="OnSortChanged">
+                            <select class="form-select" @bind="sortBy" @bind:after="OnFilterChanged">
                                 <option value="recent">Plus récentes</option>
                                 <option value="popular">Plus populaires</option>
                                 <option value="controversial">Plus débattues</option>
@@ -105,7 +106,7 @@
 @code {
     private IEnumerable<ProposalDto> proposals = new List<ProposalDto>();
     private IEnumerable<CategoryDto> categories = new List<CategoryDto>();
-    private string? selectedCategory;
+    private string? selectedCategory = "";
     private string searchTerm = "";
     private string sortBy = "recent";
     private bool isLoading = true;
@@ -126,8 +127,9 @@
         {
             categories = await ProposalService.GetCategoriesAsync();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Error loading categories");
             categories = new List<CategoryDto>();
         }
     }
@@ -146,12 +148,40 @@
                 isLoadingMore = true;
             }
 
-            var newProposals = await ProposalService.GetActiveProposalsAsync(
-                skip: currentPage * PageSize,
-                take: PageSize,
-                category: selectedCategory,
-                search: string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm
-            );
+            // Convert empty string to null for category filter
+            var categoryFilter = string.IsNullOrWhiteSpace(selectedCategory) ? null : selectedCategory;
+            var searchFilter = string.IsNullOrWhiteSpace(searchTerm) ? null : searchTerm;
+
+            var newProposals = new List<ProposalDto>();
+
+            if (sortBy == "recent")
+            {
+                newProposals = [.. await ProposalService.GetRecentProposalsAsync(
+                    skip: currentPage * PageSize,
+                    take: PageSize,
+                    category: categoryFilter,
+                    search: searchFilter
+                )];
+            }
+            else if (sortBy == "popular")
+            {
+                newProposals = [.. await ProposalService.GetPopularProposalsAsync(
+                    skip: currentPage * PageSize,
+                    take: PageSize,
+                    category: categoryFilter,
+                    search: searchFilter
+                )];
+            }
+            else if (sortBy == "controversial")
+            {
+                newProposals = [.. await ProposalService.GetControversialProposalsAsync(
+                    skip: currentPage * PageSize,
+                    take: PageSize,
+                    category: categoryFilter,
+                    search: searchFilter
+                )];
+            }
+
 
             if (append)
             {
@@ -165,9 +195,9 @@
             hasMoreProposals = newProposals.Count() == PageSize;
             currentPage++;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Log error
+            Logger.LogError(ex, "Error loading proposals");
             if (!append)
             {
                 proposals = new List<ProposalDto>();
@@ -181,9 +211,8 @@
         }
     }
 
-    private async Task OnCategoryChanged(ChangeEventArgs e)
+    private async Task OnFilterChanged()
     {
-        selectedCategory = e.Value?.ToString();
         await LoadProposals();
     }
 
@@ -195,14 +224,8 @@
         }
     }
 
-    private async Task OnSortChanged(ChangeEventArgs e)
-    {
-        sortBy = e.Value?.ToString() ?? "recent";
-        await LoadProposals();
-    }
-
     private async Task LoadMoreProposals()
     {
         await LoadProposals(append: true);
     }
-}}
+}

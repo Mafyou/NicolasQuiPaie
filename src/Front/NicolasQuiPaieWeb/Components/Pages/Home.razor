@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Microsoft.Extensions.Options
 @inject ProposalService ProposalService
 @inject AnalyticsService AnalyticsService
 @inject ApiHealthService ApiHealthService
@@ -275,10 +276,10 @@ else
         {
             // Check API availability first
             isApiAvailable = await ApiHealthService.IsApiAvailableAsync();
-            
+
             if (!isApiAvailable)
             {
-                Logger.LogWarning("API not available, using fallback data");
+                Logger.LogWarning("API not available or readonly, using fallback data");
                 await LoadFallbackData();
                 return;
             }

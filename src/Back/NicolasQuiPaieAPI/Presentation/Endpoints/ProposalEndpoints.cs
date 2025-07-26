@@ -56,6 +56,147 @@ public static class ProposalEndpoints
         .Produces(400)
         .Produces(500);
 
+        // GET /api/proposals/recent
+        group.MapGet("/recent", async (
+            [FromServices] IProposalService proposalService,
+            [FromServices] ILogger<Program> logger,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 20,
+            [FromQuery] string? category = null,
+            [FromQuery] string? search = null) =>
+        {
+            try
+            {
+                if (take <= 0 || take > 100)
+                {
+                    logger.LogWarning("Invalid take parameter for recent proposals: {Take}. Must be between 1 and 100", take);
+                    return Results.BadRequest("Take parameter must be between 1 and 100");
+                }
+
+                if (skip < 0)
+                {
+                    logger.LogWarning("Invalid skip parameter for recent proposals: {Skip}. Must be >= 0", skip);
+                    return Results.BadRequest("Skip parameter must be >= 0");
+                }
+
+                var proposals = await proposalService.GetRecentProposalsAsync(skip, take, category, search);
+                var proposalsList = proposals.ToList();
+
+                if (proposalsList.Count == 0)
+                {
+                    logger.LogWarning("No recent proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                        skip, take, category, search);
+                }
+
+                return Results.Ok(proposalsList);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving recent proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    skip, take, category, search);
+                return Results.Problem("Error retrieving recent proposals");
+            }
+        })
+        .WithName("GetRecentProposals")
+        .WithSummary("Récupère les propositions les plus récentes")
+        .Produces<IEnumerable<ProposalDto>>()
+        .Produces(400)
+        .Produces(500);
+
+        // GET /api/proposals/popular
+        group.MapGet("/popular", async (
+            [FromServices] IProposalService proposalService,
+            [FromServices] ILogger<Program> logger,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 20,
+            [FromQuery] string? category = null,
+            [FromQuery] string? search = null) =>
+        {
+            try
+            {
+                if (take <= 0 || take > 100)
+                {
+                    logger.LogWarning("Invalid take parameter for popular proposals: {Take}. Must be between 1 and 100", take);
+                    return Results.BadRequest("Take parameter must be between 1 and 100");
+                }
+
+                if (skip < 0)
+                {
+                    logger.LogWarning("Invalid skip parameter for popular proposals: {Skip}. Must be >= 0", skip);
+                    return Results.BadRequest("Skip parameter must be >= 0");
+                }
+
+                var proposals = await proposalService.GetPopularProposalsAsync(skip, take, category, search);
+                var proposalsList = proposals.ToList();
+
+                if (proposalsList.Count == 0)
+                {
+                    logger.LogWarning("No popular proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                        skip, take, category, search);
+                }
+
+                return Results.Ok(proposalsList);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving popular proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    skip, take, category, search);
+                return Results.Problem("Error retrieving popular proposals");
+            }
+        })
+        .WithName("GetPopularProposals")
+        .WithSummary("Récupère les propositions les plus populaires (nombre de votes positifs)")
+        .Produces<IEnumerable<ProposalDto>>()
+        .Produces(400)
+        .Produces(500);
+
+        // GET /api/proposals/controversial
+        group.MapGet("/controversial", async (
+            [FromServices] IProposalService proposalService,
+            [FromServices] ILogger<Program> logger,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 20,
+            [FromQuery] string? category = null,
+            [FromQuery] string? search = null) =>
+        {
+            try
+            {
+                if (take <= 0 || take > 100)
+                {
+                    logger.LogWarning("Invalid take parameter for controversial proposals: {Take}. Must be between 1 and 100", take);
+                    return Results.BadRequest("Take parameter must be between 1 and 100");
+                }
+
+                if (skip < 0)
+                {
+                    logger.LogWarning("Invalid skip parameter for controversial proposals: {Skip}. Must be >= 0", skip);
+                    return Results.BadRequest("Skip parameter must be >= 0");
+                }
+
+                var proposals = await proposalService.GetControversialProposalsAsync(skip, take, category, search);
+                var proposalsList = proposals.ToList();
+
+                if (proposalsList.Count == 0)
+                {
+                    logger.LogWarning("No controversial proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                        skip, take, category, search);
+                }
+
+                return Results.Ok(proposalsList);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error retrieving controversial proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    skip, take, category, search);
+                return Results.Problem("Error retrieving controversial proposals");
+            }
+        })
+        .WithName("GetControversialProposals")
+        .WithSummary("Récupère les propositions les plus controversées (équilibre votes pour/contre)")
+        .Produces<IEnumerable<ProposalDto>>()
+        .Produces(400)
+        .Produces(500);
+
         // GET /api/proposals/trending
         group.MapGet("/trending", async (
             [FromServices] IProposalService proposalService,

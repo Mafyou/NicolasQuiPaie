@@ -53,12 +53,12 @@ namespace NicolasQuiPaieWeb.Services
             {
                 var url = $"/api/votes/proposal/{proposalId}";
                 var response = await _httpClient.GetFromJsonAsync<List<VoteDto>>(url, _jsonOptions);
-                return response ?? new List<VoteDto>();
+                return response ?? [];
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erreur lors de la récupération des votes pour la proposition {ProposalId}", proposalId);
-                return new List<VoteDto>();
+                return [];
             }
         }
 
@@ -75,7 +75,7 @@ namespace NicolasQuiPaieWeb.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erreur lors de la récupération des votes de l'utilisateur");
-                return new List<VoteDto>();
+                return [];
             }
         }
 

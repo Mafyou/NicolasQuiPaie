@@ -1,21 +1,18 @@
+using Microsoft.Extensions.Options;
+
 namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
 /// Service to check API health and connectivity
 /// </summary>
-public class ApiHealthService
+public class ApiHealthService(HttpClient httpClient, IOptionsSnapshot<MaintenanceSettings> maintenanceOptions, ILogger<ApiHealthService> logger)
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<ApiHealthService> _logger;
+    private readonly HttpClient _httpClient = httpClient;
+    private readonly IOptionsSnapshot<MaintenanceSettings> _maintenanceOptions = maintenanceOptions;
+    private readonly ILogger<ApiHealthService> _logger = logger;
     private bool? _lastHealthStatus;
     private DateTime _lastHealthCheck = DateTime.MinValue;
     private readonly TimeSpan _healthCheckInterval = TimeSpan.FromMinutes(1);
-
-    public ApiHealthService(HttpClient httpClient, ILogger<ApiHealthService> logger)
-    {
-        _httpClient = httpClient;
-        _logger = logger;
-    }
 
     /// <summary>
     /// Checks if the API is available and responsive
@@ -23,7 +20,7 @@ public class ApiHealthService
     public async Task<bool> IsApiAvailableAsync()
     {
         // Use cached result if recent
-        if (_lastHealthStatus.HasValue && 
+        if (_lastHealthStatus.HasValue &&
             DateTime.UtcNow - _lastHealthCheck < _healthCheckInterval)
         {
             return _lastHealthStatus.Value;
@@ -31,23 +28,25 @@ public class ApiHealthService
 
         try
         {
-            _logger.LogInformation("Checking API health at {BaseAddress}", _httpClient.BaseAddress);
-            
+            // If the API is in read-only mode, return false immediately
+            if (_maintenanceOptions.Value.IsReadOnlyMode)
+            {
+                _lastHealthStatus = false;
+                _lastHealthCheck = DateTime.UtcNow;
+                return false;
+            }
+
             // Try a simple health check endpoint first
             using var response = await _httpClient.GetAsync("/health", HttpCompletionOption.ResponseHeadersRead);
-            
+
             _lastHealthStatus = response.IsSuccessStatusCode;
             _lastHealthCheck = DateTime.UtcNow;
-            
-            if (_lastHealthStatus.Value)
-            {
-                _logger.LogInformation("API health check successful");
-            }
-            else
+
+            if (!_lastHealthStatus.Value)
             {
                 _logger.LogWarning("API health check failed with status: {StatusCode}", response.StatusCode);
             }
-            
+
             return _lastHealthStatus.Value;
         }
         catch (HttpRequestException ex)
@@ -79,7 +78,7 @@ public class ApiHealthService
     public async Task<string> GetApiStatusMessageAsync()
     {
         var isAvailable = await IsApiAvailableAsync();
-        
+
         return isAvailable switch
         {
             true => "? API connectée et fonctionnelle",

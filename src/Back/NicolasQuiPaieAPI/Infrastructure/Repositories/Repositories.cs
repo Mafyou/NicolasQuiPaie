@@ -82,6 +82,85 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Proposal>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        var query = _context.Proposals
+            .Include(p => p.CreatedBy)
+            .Include(p => p.Category)
+            .Where(p => p.Status == ProposalStatus.Active);
+
+        if (!string.IsNullOrEmpty(category))
+        {
+            query = query.Where(p => p.Category.Name.Contains(category));
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
+        }
+
+        return await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Proposal>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        var query = _context.Proposals
+            .Include(p => p.CreatedBy)
+            .Include(p => p.Category)
+            .Where(p => p.Status == ProposalStatus.Active);
+
+        if (!string.IsNullOrEmpty(category))
+        {
+            query = query.Where(p => p.Category.Name.Contains(category));
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
+        }
+
+        return await query
+            .OrderByDescending(p => p.VotesFor)
+            .ThenByDescending(p => p.VotesFor + p.VotesAgainst)
+            .ThenByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Proposal>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        var query = _context.Proposals
+            .Include(p => p.CreatedBy)
+            .Include(p => p.Category)
+            .Where(p => p.Status == ProposalStatus.Active)
+            .Where(p => p.VotesFor > 0 && p.VotesAgainst > 0); // Only proposals with both types of votes
+
+        if (!string.IsNullOrEmpty(category))
+        {
+            query = query.Where(p => p.Category.Name.Contains(category));
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(p => p.Title.Contains(search) || p.Description.Contains(search));
+        }
+
+        // Order by controversy score: closer to 50% ratio = more controversial
+        // Also prioritize proposals with more total votes
+        return await query
+            .OrderBy(p => Math.Abs(0.5 - (double)p.VotesFor / (p.VotesFor + p.VotesAgainst)))
+            .ThenByDescending(p => p.VotesFor + p.VotesAgainst)
+            .ThenByDescending(p => p.CreatedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Proposal>> GetUserProposalsAsync(string userId)
     {
         return await _context.Proposals

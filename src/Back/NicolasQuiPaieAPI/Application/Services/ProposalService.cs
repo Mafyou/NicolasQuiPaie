@@ -41,6 +41,48 @@ public class ProposalService : IProposalService
         }
     }
 
+    public async Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var proposals = await _unitOfWork.Proposals.GetRecentProposalsAsync(skip, take, category, search);
+            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions récentes");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var proposals = await _unitOfWork.Proposals.GetPopularProposalsAsync(skip, take, category, search);
+            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions populaires");
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var proposals = await _unitOfWork.Proposals.GetControversialProposalsAsync(skip, take, category, search);
+            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions controversées");
+            throw;
+        }
+    }
+
     public async Task<ProposalDto?> GetProposalByIdAsync(int id)
     {
         try

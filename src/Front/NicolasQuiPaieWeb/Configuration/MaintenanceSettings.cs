@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace NicolasQuiPaieWeb.Configuration;
 
 public class MaintenanceSettings

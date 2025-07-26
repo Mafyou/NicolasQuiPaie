@@ -1,166 +1,259 @@
-using NicolasQuiPaieData.DTOs;
-using System.Net.Http.Json;
-using System.Text.Json;
+namespace NicolasQuiPaieWeb.Services;
 
-namespace NicolasQuiPaieWeb.Services
+public class ApiProposalService
 {
-    public class ApiProposalService
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<ApiProposalService> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    public ApiProposalService(HttpClient httpClient, ILogger<ApiProposalService> logger)
     {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<ApiProposalService> _logger;
-        private readonly JsonSerializerOptions _jsonOptions;
-
-        public ApiProposalService(HttpClient httpClient, ILogger<ApiProposalService> logger)
+        _httpClient = httpClient;
+        _logger = logger;
+        _jsonOptions = new JsonSerializerOptions
         {
-            _httpClient = httpClient;
-            _logger = logger;
-            _jsonOptions = new JsonSerializerOptions
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
+    }
+
+    /// <summary>
+    /// Récupère les propositions actives depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var queryParams = new List<string>
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
+                $"skip={skip}",
+                $"take={take}"
             };
+
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            if (!string.IsNullOrEmpty(search))
+                queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = $"/api/proposals?{queryString}";
+
+            var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
+            return response ?? new List<ProposalDto>();
         }
-
-        /// <summary>
-        /// Récupère les propositions actives depuis l'API
-        /// </summary>
-        public async Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+        catch (Exception ex)
         {
-            try
-            {
-                var queryParams = new List<string>();
-                queryParams.Add($"skip={skip}");
-                queryParams.Add($"take={take}");
-
-                if (!string.IsNullOrEmpty(category))
-                    queryParams.Add($"category={Uri.EscapeDataString(category)}");
-
-                if (!string.IsNullOrEmpty(search))
-                    queryParams.Add($"search={Uri.EscapeDataString(search)}");
-
-                var queryString = string.Join("&", queryParams);
-                var url = $"/api/proposals?{queryString}";
-
-                var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
-                return response ?? new List<ProposalDto>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des propositions actives");
-                return new List<ProposalDto>();
-            }
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions actives");
+            return [];
         }
+    }
 
-        /// <summary>
-        /// Récupère les propositions tendances depuis l'API
-        /// </summary>
-        public async Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5)
+    /// <summary>
+    /// Récupère les propositions récentes depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
         {
-            try
+            var queryParams = new List<string>
             {
-                var url = $"/api/proposals/trending?take={take}";
-                var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
-                return response ?? new List<ProposalDto>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des propositions tendances");
-                return new List<ProposalDto>();
-            }
+                $"skip={skip}",
+                $"take={take}"
+            };
+
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            if (!string.IsNullOrEmpty(search))
+                queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = $"/api/proposals/recent?{queryString}";
+
+            var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
+            return response ?? [];
         }
-
-        /// <summary>
-        /// Récupère une proposition spécifique par ID depuis l'API
-        /// </summary>
-        public async Task<ProposalDto?> GetProposalDtoByIdAsync(int id)
+        catch (Exception ex)
         {
-            try
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions récentes");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Récupère les propositions populaires depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var queryParams = new List<string>
             {
-                var url = $"/api/proposals/{id}";
-                return await _httpClient.GetFromJsonAsync<ProposalDto>(url, _jsonOptions);
+                $"skip={skip}",
+                $"take={take}"
+            };
+
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            if (!string.IsNullOrEmpty(search))
+                queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = $"/api/proposals/popular?{queryString}";
+
+            var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
+            return response ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions populaires");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Récupère les propositions controversées depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    {
+        try
+        {
+            var queryParams = new List<string>
+            {
+                $"skip={skip}",
+                $"take={take}"
+            };
+
+            if (!string.IsNullOrEmpty(category))
+                queryParams.Add($"category={Uri.EscapeDataString(category)}");
+
+            if (!string.IsNullOrEmpty(search))
+                queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+            var queryString = string.Join("&", queryParams);
+            var url = $"/api/proposals/controversial?{queryString}";
+
+            var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
+            return response ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions controversées");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Récupère les propositions tendances depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5)
+    {
+        try
+        {
+            var url = $"/api/proposals/trending?take={take}";
+            var response = await _httpClient.GetFromJsonAsync<List<ProposalDto>>(url, _jsonOptions);
+            return response ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des propositions tendances");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Récupère une proposition spécifique par ID depuis l'API
+    /// </summary>
+    public async Task<ProposalDto?> GetProposalDtoByIdAsync(int id)
+    {
+        try
+        {
+            var url = $"/api/proposals/{id}";
+            return await _httpClient.GetFromJsonAsync<ProposalDto>(url, _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération de la proposition {ProposalId}", id);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Crée une nouvelle proposition via l'API
+    /// </summary>
+    public async Task<ProposalDto?> CreateProposalAsync(CreateProposalDto createProposalDto)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/proposals", createProposalDto, _jsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<ProposalDto>(_jsonOptions);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Erreur lors de la récupération de la proposition {ProposalId}", id);
+                _logger.LogWarning("Échec de la création de proposition. Status: {StatusCode}", response.StatusCode);
                 return null;
             }
         }
-
-        /// <summary>
-        /// Crée une nouvelle proposition via l'API
-        /// </summary>
-        public async Task<ProposalDto?> CreateProposalAsync(CreateProposalDto createProposalDto)
+        catch (Exception ex)
         {
-            try
-            {
-                var response = await _httpClient.PostAsJsonAsync("/api/proposals", createProposalDto, _jsonOptions);
+            _logger.LogError(ex, "Erreur lors de la création de la proposition");
+            return null;
+        }
+    }
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return await response.Content.ReadFromJsonAsync<ProposalDto>(_jsonOptions);
-                }
-                else
-                {
-                    _logger.LogWarning("Échec de la création de proposition. Status: {StatusCode}", response.StatusCode);
-                    return null;
-                }
-            }
-            catch (Exception ex)
+    /// <summary>
+    /// Incrémente le nombre de vues d'une proposition via l'API
+    /// </summary>
+    public async Task IncrementViewsAsync(int proposalId)
+    {
+        try
+        {
+            var url = $"/api/proposals/{proposalId}/views";
+            var response = await _httpClient.PostAsync(url, null);
+
+            if (response.IsSuccessStatusCode)
             {
-                _logger.LogError(ex, "Erreur lors de la création de la proposition");
-                return null;
+                _logger.LogDebug("Views count incremented successfully for proposal {ProposalId}", proposalId);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogDebug("Proposal {ProposalId} not found for view increment", proposalId);
+            }
+            else
+            {
+                _logger.LogWarning("Failed to increment views for proposal {ProposalId}. Status: {StatusCode}",
+                                 proposalId, response.StatusCode);
             }
         }
-
-        /// <summary>
-        /// Incrémente le nombre de vues d'une proposition via l'API
-        /// </summary>
-        public async Task IncrementViewsAsync(int proposalId)
+        catch (HttpRequestException ex)
         {
-            try
-            {
-                var url = $"/api/proposals/{proposalId}/views";
-                var response = await _httpClient.PostAsync(url, null);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    _logger.LogDebug("Views count incremented successfully for proposal {ProposalId}", proposalId);
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    _logger.LogDebug("Proposal {ProposalId} not found for view increment", proposalId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to increment views for proposal {ProposalId}. Status: {StatusCode}", 
-                                     proposalId, response.StatusCode);
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogWarning(ex, "Network error while incrementing views for proposal {ProposalId}", proposalId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error while incrementing views for proposal {ProposalId}", proposalId);
-            }
+            _logger.LogWarning(ex, "Network error while incrementing views for proposal {ProposalId}", proposalId);
         }
-
-        /// <summary>
-        /// Récupère toutes les catégories actives depuis l'API
-        /// </summary>
-        public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                var response = await _httpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories", _jsonOptions);
-                return response ?? new List<CategoryDto>();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erreur lors de la récupération des catégories");
-                return new List<CategoryDto>();
-            }
+            _logger.LogError(ex, "Unexpected error while incrementing views for proposal {ProposalId}", proposalId);
+        }
+    }
+
+    /// <summary>
+    /// Récupère toutes les catégories actives depuis l'API
+    /// </summary>
+    public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories", _jsonOptions);
+            return response ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors de la récupération des catégories");
+            return [];
         }
     }
 }

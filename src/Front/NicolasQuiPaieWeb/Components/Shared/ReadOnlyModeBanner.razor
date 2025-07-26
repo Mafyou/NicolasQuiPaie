@@ -2,10 +2,11 @@
 @using NicolasQuiPaieWeb.Configuration
 @inject IOptionsSnapshot<MaintenanceSettings> MaintenanceOptions
 @inject NavigationManager Navigation
+@inject ILogger<ReadOnlyModeBanner> Logger
 
 @if (maintenanceSettings.IsReadOnlyMode)
 {
-    <div class="alert alert-warning border-0 rounded-0 mb-0 text-center" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%);">
+    <div id="blazor-readonly-banner" class="alert alert-warning border-0 rounded-0 mb-0 text-center" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%); display: none;">
         <div class="container py-2">
             <div class="d-flex align-items-center justify-content-center flex-wrap">
                 <div class="me-3">
@@ -13,7 +14,7 @@
                     <strong>Mode Démonstration</strong>
                 </div>
                 <div class="text-dark small me-3">
-                    Données d'exemple • Fonctionnalités limitées
+                    Données d'exemple • Fonctionnalités limitées @maintenanceSettings.ConstructionMessage
                 </div>
                 @* <button class="btn btn-dark btn-sm" @onclick="SwitchToApiMode">
                     <i class="fas fa-sync-alt me-1"></i>
@@ -32,9 +33,18 @@
         try
         {
             maintenanceSettings = MaintenanceOptions.Value;
+            Logger.LogInformation("ReadOnlyModeBanner initialized. IsReadOnlyMode: {IsReadOnlyMode}, ConstructionMessage: {ConstructionMessage}", 
+                maintenanceSettings.IsReadOnlyMode, maintenanceSettings.ConstructionMessage);
+            
+            if (maintenanceSettings.IsReadOnlyMode)
+            {
+                Logger.LogInformation("ReadOnlyModeBanner will be hidden in favor of persistent HTML banner");
+            }
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Error initializing ReadOnlyModeBanner");
+            // Use default values if configuration fails
             maintenanceSettings = new MaintenanceSettings();
         }
     }
