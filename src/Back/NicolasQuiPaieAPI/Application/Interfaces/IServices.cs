@@ -4,6 +4,12 @@ public interface IProposalService
 {
     Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null);
     Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5);
+    
+    // New methods for different sorting strategies
+    Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    
     Task<ProposalDto?> GetProposalByIdAsync(int id);
     Task<ProposalDto> CreateProposalAsync(CreateProposalDto createDto, string userId);
     Task<ProposalDto> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId);

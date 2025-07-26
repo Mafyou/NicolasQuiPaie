@@ -28,6 +28,9 @@ public interface IProposalRepository : IRepository<Proposal>
 {
     Task<IEnumerable<Proposal>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null);
     Task<IEnumerable<Proposal>> GetTrendingProposalsAsync(int take = 5);
+    Task<IEnumerable<Proposal>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IEnumerable<Proposal>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IEnumerable<Proposal>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
     Task<IEnumerable<Proposal>> GetUserProposalsAsync(string userId);
     Task UpdateVoteCountsAsync(int proposalId);
 }

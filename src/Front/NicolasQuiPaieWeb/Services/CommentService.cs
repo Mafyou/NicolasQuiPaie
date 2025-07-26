@@ -1,9 +1,3 @@
-using NicolasQuiPaieData.DTOs;
-using NicolasQuiPaieWeb.Configuration;
-using Microsoft.Extensions.Options;
-using System.Net.Http.Json;
-using System.Text.Json;
-
 namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
@@ -42,12 +36,12 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
         try
         {
             var response = await httpClient.PostAsJsonAsync("/api/comments", createDto, _jsonOptions);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<CommentDto>(_jsonOptions);
             }
-            
+
             logger.LogWarning("Échec de la création du commentaire. Status: {StatusCode}", response.StatusCode);
             return null;
         }
@@ -66,12 +60,12 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
         try
         {
             var response = await httpClient.PutAsJsonAsync($"/api/comments/{commentId}", updateDto, _jsonOptions);
-            
+
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadFromJsonAsync<CommentDto>(_jsonOptions);
             }
-            
+
             logger.LogWarning("Échec de la mise à jour du commentaire {CommentId}. Status: {StatusCode}", commentId, response.StatusCode);
             return null;
         }
@@ -103,24 +97,16 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
 /// <summary>
 /// Client-side wrapper service for comment operations with read-only mode support
 /// </summary>
-public class CommentService
+public class CommentService(
+    ApiCommentService apiCommentService,
+    SampleDataService sampleDataService,
+    ILogger<CommentService> logger,
+    IOptionsMonitor<MaintenanceSettings> maintenanceOptions)
 {
-    private readonly ApiCommentService _apiCommentService;
-    private readonly SampleDataService _sampleDataService;
-    private readonly ILogger<CommentService> _logger;
-    private readonly MaintenanceSettings _maintenanceSettings;
-
-    public CommentService(
-        ApiCommentService apiCommentService,
-        SampleDataService sampleDataService,
-        ILogger<CommentService> logger,
-        IOptionsMonitor<MaintenanceSettings> maintenanceOptions)
-    {
-        _apiCommentService = apiCommentService;
-        _sampleDataService = sampleDataService;
-        _logger = logger;
-        _maintenanceSettings = maintenanceOptions.CurrentValue;
-    }
+    private readonly ApiCommentService _apiCommentService = apiCommentService;
+    private readonly SampleDataService _sampleDataService = sampleDataService;
+    private readonly ILogger<CommentService> _logger = logger;
+    private readonly MaintenanceSettings _maintenanceSettings = maintenanceOptions.CurrentValue;
 
     public async Task<IEnumerable<CommentDto>> GetCommentsForProposalAsync(int proposalId)
     {

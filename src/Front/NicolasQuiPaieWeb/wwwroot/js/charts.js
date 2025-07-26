@@ -8,8 +8,11 @@ try {
     console.warn('Chart.js not loaded, charts will not be available');
 }
 
+// Create global namespace for Nicolas functions
+window.nicolasCharts = window.nicolasCharts || {};
+
 // Initialize vote trends chart
-export function initializeVoteTrendsChart(labels, votesFor, votesAgainst) {
+window.nicolasCharts.initializeVoteTrendsChart = function (labels, votesFor, votesAgainst) {
     if (!Chart) {
         console.warn('Chart.js not available');
         return;
@@ -74,14 +77,14 @@ export function initializeVoteTrendsChart(labels, votesFor, votesAgainst) {
             }
         }
     });
-}
+};
 
 // Initialize SignalR connection for real-time updates
-window.setupVotingSignalR = function(proposalId) {
+window.setupVotingSignalR = function (proposalId) {
     if (typeof signalR === 'undefined') {
         console.warn('SignalR not available');
         return {
-            dispose: () => {},
+            dispose: () => { },
             invoke: () => Promise.resolve()
         };
     }
@@ -143,11 +146,11 @@ function updateVoteDisplay(update) {
     progressBars.forEach(progressBar => {
         const forBar = progressBar.querySelector('.progress-bar.bg-success');
         const againstBar = progressBar.querySelector('.progress-bar.bg-danger');
-        
+
         if (forBar && againstBar) {
             const forPercentage = update.TotalVotes > 0 ? (update.VotesFor / update.TotalVotes * 100) : 0;
             const againstPercentage = 100 - forPercentage;
-            
+
             forBar.style.width = `${forPercentage}%`;
             againstBar.style.width = `${againstPercentage}%`;
         }
@@ -182,28 +185,28 @@ window.nicolasUtils = {
     // Animate counter
     animateCounter: (element, start, end, duration = 1000) => {
         if (!element) return;
-        
+
         const range = end - start;
         const minTimer = 50;
         const stepTime = Math.abs(Math.floor(duration / range));
         const timer = Math.max(stepTime, minTimer);
-        
+
         const startTime = new Date().getTime();
         const endTime = startTime + duration;
-        
+
         function run() {
             const now = new Date().getTime();
             const remaining = Math.max((endTime - now) / duration, 0);
             const value = Math.round(end - (remaining * range));
             element.textContent = value;
-            
+
             if (value === end) {
                 return;
             }
-            
+
             setTimeout(run, timer);
         }
-        
+
         run();
     },
 
@@ -215,7 +218,7 @@ window.nicolasUtils = {
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
-        
+
         toast.innerHTML = `
             <div class="d-flex">
                 <div class="toast-body">
@@ -224,7 +227,7 @@ window.nicolasUtils = {
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         `;
-        
+
         // Add to toast container or create one
         let container = document.querySelector('.toast-container');
         if (!container) {
@@ -232,14 +235,14 @@ window.nicolasUtils = {
             container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
             document.body.appendChild(container);
         }
-        
+
         container.appendChild(toast);
-        
+
         // Initialize and show toast
         if (typeof bootstrap !== 'undefined') {
             const bsToast = new bootstrap.Toast(toast);
             bsToast.show();
-            
+
             // Remove toast after it's hidden
             toast.addEventListener('hidden.bs.toast', () => {
                 toast.remove();
