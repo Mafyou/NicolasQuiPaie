@@ -38,7 +38,7 @@ public class MaintenanceSettings
 
     public bool ShowMaintenanceNotice { get; set; } = false;
 
-    public string? MaintenanceMessage { get; set; }
+    public string? MaintenanceMessage { get; set; } = "class";
 
     /// <summary>
     /// Message de contact pour la maintenance
