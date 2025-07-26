@@ -7,7 +7,7 @@
     - Blazor WebAssembly performance optimizations
     - Assembly trimming for smaller bundle size
     - AOT compilation for Release builds
-    - JSON serialization optimizations
+    - JSON serialization optimizations (compatible with JS interop)
     - Build performance improvements
     - SignalR 8.0.7 compatibility
     - Chart.js 4.4.1 integration
@@ -26,7 +26,11 @@
     <RunAOTCompilation>false</RunAOTCompilation>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
-    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    
+    <!-- JSON serialization: Enable reflection for JS interop compatibility -->
+    <!-- Setting to false causes JsonSerializerIsReflectionDisabled errors in production -->
+    <!-- Blazor's JS interop requires reflection-based JSON serialization -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     
     <!-- Build performance -->
     <UseRidGraph>false</UseRidGraph>
@@ -48,6 +52,9 @@
     <OptimizationPreference>Speed</OptimizationPreference>
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>full</TrimMode>
+    
+    <!-- Keep JSON serialization reflection enabled even in Release for JS interop -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
@@ -90,5 +97,14 @@
     <CompilerVisibleProperty Include="DeferredSourceGeneratorExecution" />
     <CompilerVisibleProperty Include="MSBuildProjectDirectory" />
   </ItemGroup>
+
+  <!-- 
+    Performance Note: While JsonSerializerIsReflectionEnabledByDefault=true adds some overhead,
+    it's required for Blazor's JavaScript interop to function properly. Disabling it causes
+    critical production errors with FocusOnNavigate, HeadOutlet, and other JS interop features.
+    
+    Alternative optimization: Use source generators for custom JSON serialization where needed
+    instead of globally disabling reflection-based serialization.
+  -->
 
 </Project>

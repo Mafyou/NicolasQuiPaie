@@ -1,4 +1,5 @@
 <linker>
+  <!-- Preserve main assemblies -->
   <assembly fullname="NicolasQuiPaieWeb" />
   <assembly fullname="NicolasQuiPaieData" />
   <assembly fullname="System.Text.Json" />
@@ -10,23 +11,48 @@
   <assembly fullname="Microsoft.JSInterop" />
   <assembly fullname="Microsoft.JSInterop.WebAssembly" />
   
-  <!-- Preserve JSON serialization for DTOs -->
+  <!-- Preserve all DTOs for JSON serialization -->
   <type fullname="NicolasQuiPaieData.DTOs.*" />
   
   <!-- Preserve authentication components -->
   <type fullname="Microsoft.AspNetCore.Components.Authorization.*" />
   
-  <!-- Preserve Blazor components -->
+  <!-- Preserve Blazor components that use JS interop -->
   <type fullname="Microsoft.AspNetCore.Components.*" />
+  <type fullname="Microsoft.AspNetCore.Components.Web.*" />
+  <type fullname="Microsoft.AspNetCore.Components.Routing.*" />
   
-  <!-- Preserve JavaScript interop for charts and SignalR -->
+  <!-- Critical: Preserve JavaScript interop infrastructure -->
   <type fullname="Microsoft.JSInterop.*" />
+  <type fullname="Microsoft.JSInterop.Infrastructure.*" />
   
-  <!-- Preserve Chart.js and SignalR interop -->
-  <type fullname="NicolasQuiPaieWeb.Services.*" />
-  <type fullname="NicolasQuiPaieWeb.Components.*" />
-  
-  <!-- Preserve System.Text.Json for optimal serialization -->
+  <!-- Critical: Preserve JSON serialization for JS interop -->
   <type fullname="System.Text.Json.*" />
   <type fullname="System.Text.Json.Serialization.*" />
+  <type fullname="System.Text.Json.Serialization.Metadata.*" />
+  
+  <!-- Preserve custom services that may use JS interop -->
+  <type fullname="NicolasQuiPaieWeb.Services.*" />
+  <type fullname="NicolasQuiPaieWeb.Components.*" />
+  <type fullname="NicolasQuiPaieWeb.Configuration.*" />
+  
+  <!-- Preserve reflection-based serialization support -->
+  <type fullname="System.Reflection.*" />
+  <type fullname="System.ComponentModel.*" />
+  
+  <!-- Preserve specific types that often cause JS interop issues -->
+  <type fullname="Microsoft.AspNetCore.Components.Web.HeadOutlet" />
+  <type fullname="Microsoft.AspNetCore.Components.Routing.FocusOnNavigate" />
+  <type fullname="Microsoft.AspNetCore.Components.NavigationManager" />
+  
+  <!-- Preserve SignalR and Chart.js interop -->
+  <type fullname="Microsoft.AspNetCore.SignalR.*" />
+  
+  <!-- Preserve common data types used in JS interop -->
+  <type fullname="System.String" />
+  <type fullname="System.Int32" />
+  <type fullname="System.Boolean" />
+  <type fullname="System.DateTime" />
+  <type fullname="System.Collections.Generic.*" />
+  <type fullname="System.Collections.*" />
 </linker>

@@ -1,4 +1,4 @@
-// Global using statements for NicolasQuiPaieWeb project
+// Global using statements for NicolasQuiPaieWeb
 global using Blazored.LocalStorage;
 global using Microsoft.AspNetCore.Components.Authorization;
 global using Microsoft.AspNetCore.Components.Web;
@@ -13,3 +13,6 @@ global using NicolasQuiPaieWeb.Configuration;
 global using NicolasQuiPaieWeb.Services;
 global using System.Net.Http.Json;
 global using System.Text.Json;
+global using System.ComponentModel.DataAnnotations;
+global using System.Text.Json.Serialization;
+global using Microsoft.JSInterop;
