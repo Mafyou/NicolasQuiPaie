@@ -91,11 +91,4 @@
     <CompilerVisibleProperty Include="MSBuildProjectDirectory" />
   </ItemGroup>
 
-  <!-- Optimize JavaScript modules loading -->
-  <ItemGroup>
-    <BlazorWebAssemblyLazyLoad Include="System.Drawing.dll" />
-    <BlazorWebAssemblyLazyLoad Include="System.Xml.XPath.dll" />
-    <BlazorWebAssemblyLazyLoad Include="System.Xml.Linq.dll" />
-  </ItemGroup>
-
 </Project>
