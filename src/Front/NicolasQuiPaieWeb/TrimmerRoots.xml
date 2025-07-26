@@ -1,0 +1,32 @@
+<linker>
+  <assembly fullname="NicolasQuiPaieWeb" />
+  <assembly fullname="NicolasQuiPaieData" />
+  <assembly fullname="System.Text.Json" />
+  <assembly fullname="Microsoft.AspNetCore.Components.WebAssembly" />
+  <assembly fullname="Microsoft.AspNetCore.Components.Authorization" />
+  <assembly fullname="Blazored.LocalStorage" />
+  <assembly fullname="System.IdentityModel.Tokens.Jwt" />
+  <assembly fullname="Microsoft.Extensions.Http" />
+  <assembly fullname="Microsoft.JSInterop" />
+  <assembly fullname="Microsoft.JSInterop.WebAssembly" />
+  
+  <!-- Preserve JSON serialization for DTOs -->
+  <type fullname="NicolasQuiPaieData.DTOs.*" />
+  
+  <!-- Preserve authentication components -->
+  <type fullname="Microsoft.AspNetCore.Components.Authorization.*" />
+  
+  <!-- Preserve Blazor components -->
+  <type fullname="Microsoft.AspNetCore.Components.*" />
+  
+  <!-- Preserve JavaScript interop for charts and SignalR -->
+  <type fullname="Microsoft.JSInterop.*" />
+  
+  <!-- Preserve Chart.js and SignalR interop -->
+  <type fullname="NicolasQuiPaieWeb.Services.*" />
+  <type fullname="NicolasQuiPaieWeb.Components.*" />
+  
+  <!-- Preserve System.Text.Json for optimal serialization -->
+  <type fullname="System.Text.Json.*" />
+  <type fullname="System.Text.Json.Serialization.*" />
+</linker>

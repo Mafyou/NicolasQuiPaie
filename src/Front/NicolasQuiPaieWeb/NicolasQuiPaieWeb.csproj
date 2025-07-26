@@ -1,10 +1,53 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
+  <!-- 
+    Optimized Blazor WebAssembly project file for .NET 9 and C# 13.0
+    Features:
+    - C# 13.0 language features enabled
+    - Blazor WebAssembly performance optimizations
+    - Assembly trimming for smaller bundle size
+    - AOT compilation for Release builds
+    - JSON serialization optimizations
+    - Build performance improvements
+    - SignalR 8.0.7 compatibility
+    - Chart.js 4.4.1 integration
+  -->
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>f2f6ef31-3cb9-47ad-a14b-faccad858769</UserSecretsId>
+    
+    <!-- Performance and optimization settings -->
+    <BlazorWebAssemblyPreserveCollationData>false</BlazorWebAssemblyPreserveCollationData>
+    <BlazorWebAssemblyJiterpreter>true</BlazorWebAssemblyJiterpreter>
+    <RunAOTCompilation>false</RunAOTCompilation>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>partial</TrimMode>
+    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    
+    <!-- Build performance -->
+    <UseRidGraph>false</UseRidGraph>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningLevel>5</WarningLevel>
+    
+    <!-- Enable faster builds in development -->
+    <BlazorEnableTimeZoneSupport>true</BlazorEnableTimeZoneSupport>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    
+    <!-- JavaScript interop optimizations -->
+    <BlazorWebAssemblyLoadAllGlobalizationData>false</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+
+  <!-- Conditional AOT compilation for Release builds -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RunAOTCompilation>true</RunAOTCompilation>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +66,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     
+    <!-- SignalR client for real-time updates -->
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
+    
     <!-- Local storage for JWT token storage -->
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     
@@ -32,6 +78,24 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
+  </ItemGroup>
+
+  <!-- Trim unused features for better performance -->
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" Condition="Exists('TrimmerRoots.xml')" />
+  </ItemGroup>
+
+  <!-- Enable Source Generators for better performance -->
+  <ItemGroup>
+    <CompilerVisibleProperty Include="DeferredSourceGeneratorExecution" />
+    <CompilerVisibleProperty Include="MSBuildProjectDirectory" />
+  </ItemGroup>
+
+  <!-- Optimize JavaScript modules loading -->
+  <ItemGroup>
+    <BlazorWebAssemblyLazyLoad Include="System.Drawing.dll" />
+    <BlazorWebAssemblyLazyLoad Include="System.Xml.XPath.dll" />
+    <BlazorWebAssemblyLazyLoad Include="System.Xml.Linq.dll" />
   </ItemGroup>
 
 </Project>
