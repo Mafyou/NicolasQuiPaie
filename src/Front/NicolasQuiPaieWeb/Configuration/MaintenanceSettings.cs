@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-
 namespace NicolasQuiPaieWeb.Configuration;
 
 public class MaintenanceSettings
@@ -38,7 +36,7 @@ public class MaintenanceSettings
 
     public bool ShowMaintenanceNotice { get; set; } = false;
 
-    public string? MaintenanceMessage { get; set; } = "class";
+    public string? MaintenanceMessage { get; set; }
 
     /// <summary>
     /// Message de contact pour la maintenance
