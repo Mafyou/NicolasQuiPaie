@@ -157,22 +157,12 @@ public class ProposalService : IProposalService
         {
             var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId) ?? throw new ArgumentException($"Proposition {proposalId} non trouvée");
 
-            // Convert DTO enum to Infrastructure enum using C# 13.0 pattern matching
-            var infrastructureStatus = newStatus switch
-            {
-                ProposalStatus.Draft => ProposalStatus.Draft,
-                ProposalStatus.Active => ProposalStatus.Active,
-                ProposalStatus.Closed => ProposalStatus.Closed,
-                ProposalStatus.Archived => ProposalStatus.Archived,
-                _ => throw new ArgumentException($"Statut non valide: {newStatus}")
-            };
-
             var oldStatus = proposal.Status;
-            proposal.Status = infrastructureStatus;
+            proposal.Status = newStatus;
             proposal.UpdatedAt = DateTime.UtcNow;
 
             // Set ClosedAt when closing a proposal
-            if (infrastructureStatus == ProposalStatus.Closed && proposal.ClosedAt == null)
+            if (newStatus == ProposalStatus.Closed && proposal.ClosedAt == null)
             {
                 proposal.ClosedAt = DateTime.UtcNow;
             }
@@ -181,7 +171,7 @@ public class ProposalService : IProposalService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Proposition status changed: {ProposalId} from {OldStatus} to {NewStatus} by SuperUser/Admin {UserId}",
-                proposalId, oldStatus, infrastructureStatus, userId);
+                proposalId, oldStatus, newStatus, userId);
 
             return updatedProposal.ToDto();
         }

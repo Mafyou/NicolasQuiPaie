@@ -30,7 +30,7 @@ public static class AuthorizationExtensions
         {
             // Basic authenticated user policy
             options.AddPolicy(NicolasPolicies.User, policy =>
-                policy.RequireRole([NicolasRoles.User, NicolasRoles.SuperUser, NicolasRoles.Admin]));
+                policy.RequireRole([NicolasRoles.User, NicolasRoles.SuperUser, NicolasRoles.Admin, NicolasRoles.Developer]));
 
             // SuperUser policy - can manage proposals
             options.AddPolicy(NicolasPolicies.SuperUser, policy =>
