@@ -1,15 +1,4 @@
-// C# 13.0 - Enhanced Voting Service Tests with latest language features - Democratic Edition
-
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using NicolasQuiPaie.UnitTests.Helpers;
-using NicolasQuiPaieAPI.Application.Interfaces;
-using NicolasQuiPaieAPI.Application.Services;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using NicolasQuiPaieData.DTOs;
-using InfrastructureContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
-
-namespace Tests.NicolasQuiPaie.UnitTests.Services;
+namespace NicolasQuiPaie.UnitTests.Services;
 
 /// <summary>
 /// C# 13.0 - Democratic voting service tests ensuring equal voting rights for all Nicolas
@@ -19,7 +8,6 @@ public class VotingServiceTests
 {
     // C# 13.0 - Field keyword for backing fields (simulated with private fields until full support)
     private Mock<IUnitOfWork> _mockUnitOfWork = null!;
-    private Mock<IMapper> _mockMapper = null!;
     private Mock<ILogger<VotingService>> _mockLogger = null!;
     private Mock<IVoteRepository> _mockVoteRepository = null!;
     private Mock<IProposalRepository> _mockProposalRepository = null!;
@@ -30,7 +18,7 @@ public class VotingServiceTests
     public void Setup()
     {
         // C# 13.0 - Tuple deconstruction with modern setup
-        (_mockUnitOfWork, _mockMapper, _mockLogger) = TestDataHelper.CreateServiceMocks<VotingService>();
+        (_mockUnitOfWork, _mockLogger) = TestDataHelper.CreateServiceMocks<VotingService>();
 
         _mockVoteRepository = TestDataHelper.CreateMockWithDefaults<IVoteRepository>();
         _mockProposalRepository = TestDataHelper.CreateMockWithDefaults<IProposalRepository>();
@@ -49,7 +37,6 @@ public class VotingServiceTests
 
         _votingService = new VotingService(
             _mockUnitOfWork.Object,
-            _mockMapper.Object,
             _mockLogger.Object,
             _mockUserRepository.Object);
     }
@@ -334,7 +321,7 @@ public class VotingServiceTests
         // Count the actual "For" votes (2 out of 3)
         result.Count(v => v.VoteType == NicolasQuiPaieData.DTOs.VoteType.For).ShouldBe(2);
         result.Sum(v => v.Weight).ShouldBe(3); // All weights are 1: 1 + 1 + 1 = 3
-        
+
         // Verify democratic equality: all votes should have weight = 1
         result.All(v => v.Weight == 1).ShouldBeTrue();
     }
@@ -370,7 +357,6 @@ public class VotingServiceTests
     {
         // C# 13.0 - Enhanced cleanup with null conditional operators
         _mockUnitOfWork?.Reset();
-        _mockMapper?.Reset();
         _mockLogger?.Reset();
         _mockVoteRepository?.Reset();
         _mockProposalRepository?.Reset();

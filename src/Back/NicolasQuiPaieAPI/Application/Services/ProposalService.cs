@@ -3,13 +3,11 @@ namespace NicolasQuiPaieAPI.Application.Services;
 public class ProposalService : IProposalService
 {
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
     private readonly ILogger<ProposalService> _logger;
 
-    public ProposalService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<ProposalService> logger)
+    public ProposalService(IUnitOfWork unitOfWork, ILogger<ProposalService> logger)
     {
         _unitOfWork = unitOfWork;
-        _mapper = mapper;
         _logger = logger;
     }
 
@@ -18,7 +16,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposals = await _unitOfWork.Proposals.GetActiveProposalsAsync(skip, take, categoryId, search);
-            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+            return proposals.Select(p => p.ToDto());
         }
         catch (Exception ex)
         {
@@ -32,7 +30,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposals = await _unitOfWork.Proposals.GetTrendingProposalsAsync(take);
-            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+            return proposals.Select(p => p.ToDto());
         }
         catch (Exception ex)
         {
@@ -46,7 +44,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposals = await _unitOfWork.Proposals.GetRecentProposalsAsync(skip, take, category, search);
-            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+            return proposals.Select(p => p.ToDto());
         }
         catch (Exception ex)
         {
@@ -60,7 +58,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposals = await _unitOfWork.Proposals.GetPopularProposalsAsync(skip, take, category, search);
-            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+            return proposals.Select(p => p.ToDto());
         }
         catch (Exception ex)
         {
@@ -74,7 +72,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposals = await _unitOfWork.Proposals.GetControversialProposalsAsync(skip, take, category, search);
-            return _mapper.Map<IEnumerable<ProposalDto>>(proposals);
+            return proposals.Select(p => p.ToDto());
         }
         catch (Exception ex)
         {
@@ -88,7 +86,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposal = await _unitOfWork.Proposals.GetByIdAsync(id);
-            return proposal != null ? _mapper.Map<ProposalDto>(proposal) : null;
+            return proposal?.ToDto();
         }
         catch (Exception ex)
         {
@@ -101,7 +99,7 @@ public class ProposalService : IProposalService
     {
         try
         {
-            var proposal = _mapper.Map<Proposal>(createDto);
+            var proposal = createDto.ToEntity();
             proposal.CreatedById = userId;
             proposal.Status = Infrastructure.Models.ProposalStatus.Active;
             proposal.CreatedAt = DateTime.UtcNow;
@@ -110,7 +108,7 @@ public class ProposalService : IProposalService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Proposition créée avec succès: {ProposalId} par {UserId}", createdProposal.Id, userId);
-            return _mapper.Map<ProposalDto>(createdProposal);
+            return createdProposal.ToDto();
         }
         catch (Exception ex)
         {
@@ -134,14 +132,19 @@ public class ProposalService : IProposalService
                 throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à modifier cette proposition");
             }
 
-            _mapper.Map(updateDto, proposal);
+            // Update properties manually instead of using AutoMapper
+            proposal.Title = updateDto.Title;
+            proposal.Description = updateDto.Description;
+            proposal.CategoryId = updateDto.CategoryId;
+            proposal.ImageUrl = updateDto.ImageUrl;
+            proposal.Tags = updateDto.Tags;
             proposal.UpdatedAt = DateTime.UtcNow;
 
             var updatedProposal = await _unitOfWork.Proposals.UpdateAsync(proposal);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Proposition mise à jour: {ProposalId} par {UserId}", id, userId);
-            return _mapper.Map<ProposalDto>(updatedProposal);
+            return updatedProposal.ToDto();
         }
         catch (Exception ex)
         {
@@ -201,8 +204,8 @@ public class ProposalService : IProposalService
                 proposal.ViewsCount++;
                 await _unitOfWork.Proposals.UpdateAsync(proposal);
                 await _unitOfWork.SaveChangesAsync();
-                
-                _logger.LogDebug("Views count incremented for proposal {ProposalId}. New count: {ViewsCount}", 
+
+                _logger.LogDebug("Views count incremented for proposal {ProposalId}. New count: {ViewsCount}",
                     proposalId, proposal.ViewsCount);
             }
             else

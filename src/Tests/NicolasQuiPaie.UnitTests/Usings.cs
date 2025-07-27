@@ -1,0 +1,17 @@
+﻿global using FluentValidation.TestHelper;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Logging;
+global using NicolasQuiPaie.UnitTests.Helpers;
+global using NicolasQuiPaieAPI.Application.Interfaces;
+global using NicolasQuiPaieAPI.Application.Services;
+global using NicolasQuiPaieAPI.Application.Validators;
+global using NicolasQuiPaieAPI.Infrastructure.Data;
+global using NicolasQuiPaieAPI.Infrastructure.Models;
+global using NicolasQuiPaieData.DTOs;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Security.Claims;
+global using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
+global using DtoProposalStatus = NicolasQuiPaieData.DTOs.ProposalStatus;
+global using InfrastructureContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
+global using InfrastructureProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;

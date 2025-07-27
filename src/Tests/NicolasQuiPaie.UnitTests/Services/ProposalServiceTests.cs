@@ -1,398 +1,353 @@
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using NicolasQuiPaieAPI.Application.Interfaces;
-using NicolasQuiPaieAPI.Application.Services;
-using NicolasQuiPaieData.DTOs;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using InfrastructureProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
-using DtoProposalStatus = NicolasQuiPaieData.DTOs.ProposalStatus;
+namespace NicolasQuiPaie.UnitTests.Services;
 
-namespace NicolasQuiPaie.UnitTests.Services
+[TestFixture]
+public class ProposalServiceTests
 {
-    [TestFixture]
-    public class ProposalServiceTests
+    private Mock<IUnitOfWork> _mockUnitOfWork;
+    private Mock<ILogger<ProposalService>> _mockLogger;
+    private Mock<IProposalRepository> _mockProposalRepository;
+    private ProposalService _proposalService;
+
+    [SetUp]
+    public void Setup()
     {
-        private Mock<IUnitOfWork> _mockUnitOfWork;
-        private Mock<IMapper> _mockMapper;
-        private Mock<ILogger<ProposalService>> _mockLogger;
-        private Mock<IProposalRepository> _mockProposalRepository;
-        private ProposalService _proposalService;
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockLogger = new Mock<ILogger<ProposalService>>();
+        _mockProposalRepository = new Mock<IProposalRepository>();
 
-        [SetUp]
-        public void Setup()
+        _mockUnitOfWork.Setup(x => x.Proposals).Returns(_mockProposalRepository.Object);
+
+        _proposalService = new ProposalService(
+            _mockUnitOfWork.Object,
+            _mockLogger.Object);
+    }
+
+    [Test]
+    public async Task GetActiveProposalsAsync_ShouldReturnProposals_WhenProposalsExist()
+    {
+        // Arrange
+        var proposals = new List<Proposal>
         {
-            _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockMapper = new Mock<IMapper>();
-            _mockLogger = new Mock<ILogger<ProposalService>>();
-            _mockProposalRepository = new Mock<IProposalRepository>();
+            new Proposal { Id = 1, Title = "Test Proposal 1", Status = InfrastructureProposalStatus.Active },
+            new Proposal { Id = 2, Title = "Test Proposal 2", Status = InfrastructureProposalStatus.Active }
+        };
 
-            _mockUnitOfWork.Setup(x => x.Proposals).Returns(_mockProposalRepository.Object);
-
-            _proposalService = new ProposalService(
-                _mockUnitOfWork.Object,
-                _mockMapper.Object,
-                _mockLogger.Object);
-        }
-
-        [Test]
-        public async Task GetActiveProposalsAsync_ShouldReturnProposals_WhenProposalsExist()
+        var proposalDtos = new List<ProposalDto>
         {
-            // Arrange
-            var proposals = new List<Proposal>
-            {
-                new Proposal { Id = 1, Title = "Test Proposal 1", Status = InfrastructureProposalStatus.Active },
-                new Proposal { Id = 2, Title = "Test Proposal 2", Status = InfrastructureProposalStatus.Active }
-            };
+            new ProposalDto { Id = 1, Title = "Test Proposal 1", Status = DtoProposalStatus.Active },
+            new ProposalDto { Id = 2, Title = "Test Proposal 2", Status = DtoProposalStatus.Active }
+        };
 
-            var proposalDtos = new List<ProposalDto>
-            {
-                new ProposalDto { Id = 1, Title = "Test Proposal 1", Status = DtoProposalStatus.Active },
-                new ProposalDto { Id = 2, Title = "Test Proposal 2", Status = DtoProposalStatus.Active }
-            };
+        _mockProposalRepository
+            .Setup(x => x.GetActiveProposalsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<string?>()))
+            .ReturnsAsync(proposals);
 
-            _mockProposalRepository
-                .Setup(x => x.GetActiveProposalsAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<string?>()))
-                .ReturnsAsync(proposals);
+        // Act
+        var result = await _proposalService.GetActiveProposalsAsync();
 
-            _mockMapper
-                .Setup(x => x.Map<IEnumerable<ProposalDto>>(It.IsAny<IEnumerable<Proposal>>()))
-                .Returns(proposalDtos);
+        // Assert
+        result.ShouldNotBeNull();
+        result.Count().ShouldBe(2);
+        result.First().Title.ShouldBe("Test Proposal 1");
 
-            // Act
-            var result = await _proposalService.GetActiveProposalsAsync();
+        _mockProposalRepository.Verify(x => x.GetActiveProposalsAsync(0, 20, null, null), Times.Once);
+    }
 
-            // Assert
-            result.ShouldNotBeNull();
-            result.Count().ShouldBe(2);
-            result.First().Title.ShouldBe("Test Proposal 1");
-            
-            _mockProposalRepository.Verify(x => x.GetActiveProposalsAsync(0, 20, null, null), Times.Once);
-            _mockMapper.Verify(x => x.Map<IEnumerable<ProposalDto>>(proposals), Times.Once);
-        }
+    [Test]
+    public async Task GetProposalByIdAsync_ShouldReturnProposal_WhenProposalExists()
+    {
+        // Arrange
+        var proposalId = 1;
+        var proposal = new Proposal { Id = proposalId, Title = "Test Proposal", Status = InfrastructureProposalStatus.Active };
+        var proposalDto = new ProposalDto { Id = proposalId, Title = "Test Proposal", Status = DtoProposalStatus.Active };
 
-        [Test]
-        public async Task GetProposalByIdAsync_ShouldReturnProposal_WhenProposalExists()
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(proposal);
+
+        // Act
+        var result = await _proposalService.GetProposalByIdAsync(proposalId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Id.ShouldBe(proposalId);
+        result.Title.ShouldBe("Test Proposal");
+
+        _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
+    }
+
+    [Test]
+    public async Task GetProposalByIdAsync_ShouldReturnNull_WhenProposalDoesNotExist()
+    {
+        // Arrange
+        var proposalId = 999;
+
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync((Proposal?)null);
+
+        // Act
+        var result = await _proposalService.GetProposalByIdAsync(proposalId);
+
+        // Assert
+        result.ShouldBeNull();
+
+        _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
+    }
+
+    [Test]
+    public async Task CreateProposalAsync_ShouldCreateProposal_WhenValidDataProvided()
+    {
+        // Arrange
+        var userId = "user123";
+        var createDto = new CreateProposalDto
         {
-            // Arrange
-            var proposalId = 1;
-            var proposal = new Proposal { Id = proposalId, Title = "Test Proposal", Status = InfrastructureProposalStatus.Active };
-            var proposalDto = new ProposalDto { Id = proposalId, Title = "Test Proposal", Status = DtoProposalStatus.Active };
+            Title = "New Proposal",
+            Description = "This is a test proposal description that is long enough to pass validation.",
+            CategoryId = 1
+        };
 
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(proposal);
-
-            _mockMapper
-                .Setup(x => x.Map<ProposalDto>(proposal))
-                .Returns(proposalDto);
-
-            // Act
-            var result = await _proposalService.GetProposalByIdAsync(proposalId);
-
-            // Assert
-            result.ShouldNotBeNull();
-            result.Id.ShouldBe(proposalId);
-            result.Title.ShouldBe("Test Proposal");
-
-            _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
-            _mockMapper.Verify(x => x.Map<ProposalDto>(proposal), Times.Once);
-        }
-
-        [Test]
-        public async Task GetProposalByIdAsync_ShouldReturnNull_WhenProposalDoesNotExist()
+        var proposal = new Proposal
         {
-            // Arrange
-            var proposalId = 999;
+            Title = createDto.Title,
+            Description = createDto.Description,
+            CategoryId = createDto.CategoryId,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active
+        };
 
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync((Proposal?)null);
-
-            // Act
-            var result = await _proposalService.GetProposalByIdAsync(proposalId);
-
-            // Assert
-            result.ShouldBeNull();
-
-            _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
-            _mockMapper.Verify(x => x.Map<ProposalDto>(It.IsAny<Proposal>()), Times.Never);
-        }
-
-        [Test]
-        public async Task CreateProposalAsync_ShouldCreateProposal_WhenValidDataProvided()
+        var createdProposal = new Proposal
         {
-            // Arrange
-            var userId = "user123";
-            var createDto = new CreateProposalDto
-            {
-                Title = "New Proposal",
-                Description = "This is a test proposal description that is long enough to pass validation.",
-                CategoryId = 1
-            };
+            Id = 1,
+            Title = createDto.Title,
+            Description = createDto.Description,
+            CategoryId = createDto.CategoryId,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active,
+            CreatedAt = DateTime.UtcNow
+        };
 
-            var proposal = new Proposal
-            {
-                Title = createDto.Title,
-                Description = createDto.Description,
-                CategoryId = createDto.CategoryId,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active
-            };
-
-            var createdProposal = new Proposal
-            {
-                Id = 1,
-                Title = createDto.Title,
-                Description = createDto.Description,
-                CategoryId = createDto.CategoryId,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var proposalDto = new ProposalDto
-            {
-                Id = 1,
-                Title = createDto.Title,
-                Description = createDto.Description,
-                CategoryId = createDto.CategoryId,
-                CreatedById = userId,
-                Status = DtoProposalStatus.Active
-            };
-
-            _mockMapper
-                .Setup(x => x.Map<Proposal>(createDto))
-                .Returns(proposal);
-
-            _mockProposalRepository
-                .Setup(x => x.AddAsync(It.IsAny<Proposal>()))
-                .ReturnsAsync(createdProposal);
-
-            _mockUnitOfWork
-                .Setup(x => x.SaveChangesAsync())
-                .ReturnsAsync(1);
-
-            _mockMapper
-                .Setup(x => x.Map<ProposalDto>(createdProposal))
-                .Returns(proposalDto);
-
-            // Act
-            var result = await _proposalService.CreateProposalAsync(createDto, userId);
-
-            // Assert
-            result.ShouldNotBeNull();
-            result.Title.ShouldBe(createDto.Title);
-            result.CreatedById.ShouldBe(userId);
-            result.Status.ShouldBe(DtoProposalStatus.Active);
-
-            _mockProposalRepository.Verify(x => x.AddAsync(It.Is<Proposal>(p => 
-                p.Title == createDto.Title && 
-                p.CreatedById == userId && 
-                p.Status == InfrastructureProposalStatus.Active)), Times.Once);
-            _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
-        }
-
-        [Test]
-        public async Task UpdateProposalAsync_ShouldUpdateProposal_WhenUserIsOwner()
+        var proposalDto = new ProposalDto
         {
-            // Arrange
-            var proposalId = 1;
-            var userId = "user123";
-            var updateDto = new UpdateProposalDto
-            {
-                Title = "Updated Proposal",
-                Description = "This is an updated test proposal description that is long enough.",
-                CategoryId = 2
-            };
+            Id = 1,
+            Title = createDto.Title,
+            Description = createDto.Description,
+            CategoryId = createDto.CategoryId,
+            CreatedById = userId,
+            Status = DtoProposalStatus.Active
+        };
 
-            var existingProposal = new Proposal
-            {
-                Id = proposalId,
-                Title = "Original Proposal",
-                Description = "Original description that is long enough to pass validation.",
-                CategoryId = 1,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active,
-                CreatedAt = DateTime.UtcNow.AddDays(-1)
-            };
+        _mockProposalRepository
+            .Setup(x => x.AddAsync(It.IsAny<Proposal>()))
+            .ReturnsAsync(createdProposal);
 
-            var updatedProposal = new Proposal
-            {
-                Id = proposalId,
-                Title = updateDto.Title,
-                Description = updateDto.Description,
-                CategoryId = updateDto.CategoryId,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active,
-                CreatedAt = DateTime.UtcNow.AddDays(-1),
-                UpdatedAt = DateTime.UtcNow
-            };
+        _mockUnitOfWork
+            .Setup(x => x.SaveChangesAsync())
+            .ReturnsAsync(1);
 
-            var proposalDto = new ProposalDto
-            {
-                Id = proposalId,
-                Title = updateDto.Title,
-                Description = updateDto.Description,
-                CategoryId = updateDto.CategoryId
-            };
+        // Act
+        var result = await _proposalService.CreateProposalAsync(createDto, userId);
 
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(existingProposal);
+        // Assert
+        result.ShouldNotBeNull();
+        result.Title.ShouldBe(createDto.Title);
+        result.CreatedById.ShouldBe(userId);
+        result.Status.ShouldBe(DtoProposalStatus.Active);
 
-            _mockMapper
-                .Setup(x => x.Map(updateDto, existingProposal))
-                .Callback<UpdateProposalDto, Proposal>((dto, proposal) =>
-                {
-                    proposal.Title = dto.Title;
-                    proposal.Description = dto.Description;
-                    proposal.CategoryId = dto.CategoryId;
-                });
+        _mockProposalRepository.Verify(x => x.AddAsync(It.Is<Proposal>(p =>
+            p.Title == createDto.Title &&
+            p.CreatedById == userId &&
+            p.Status == InfrastructureProposalStatus.Active)), Times.Once);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
 
-            _mockProposalRepository
-                .Setup(x => x.UpdateAsync(It.IsAny<Proposal>()))
-                .ReturnsAsync(updatedProposal);
-
-            _mockUnitOfWork
-                .Setup(x => x.SaveChangesAsync())
-                .ReturnsAsync(1);
-
-            _mockMapper
-                .Setup(x => x.Map<ProposalDto>(updatedProposal))
-                .Returns(proposalDto);
-
-            // Act
-            var result = await _proposalService.UpdateProposalAsync(proposalId, updateDto, userId);
-
-            // Assert
-            result.ShouldNotBeNull();
-            result.Title.ShouldBe(updateDto.Title);
-
-            _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
-            _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Once);
-            _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
-        }
-
-        [Test]
-        public async Task UpdateProposalAsync_ShouldThrowUnauthorizedException_WhenUserIsNotOwner()
+    [Test]
+    public async Task UpdateProposalAsync_ShouldUpdateProposal_WhenUserIsOwner()
+    {
+        // Arrange
+        var proposalId = 1;
+        var userId = "user123";
+        var updateDto = new UpdateProposalDto
         {
-            // Arrange
-            var proposalId = 1;
-            var userId = "user123";
-            var differentUserId = "user456";
-            var updateDto = new UpdateProposalDto
-            {
-                Title = "Updated Proposal",
-                Description = "This is an updated test proposal description that is long enough.",
-                CategoryId = 2
-            };
+            Title = "Updated Proposal",
+            Description = "This is an updated test proposal description that is long enough.",
+            CategoryId = 2
+        };
 
-            var existingProposal = new Proposal
-            {
-                Id = proposalId,
-                CreatedById = differentUserId, // Different user
-                Status = InfrastructureProposalStatus.Active
-            };
-
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(existingProposal);
-
-            // Act & Assert
-            var exception = await Should.ThrowAsync<UnauthorizedAccessException>(
-                () => _proposalService.UpdateProposalAsync(proposalId, updateDto, userId));
-
-            exception.Message.ShouldBe("Vous n'êtes pas autorisé à modifier cette proposition");
-
-            _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
-            _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Never);
-            _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
-        }
-
-        [Test]
-        public async Task DeleteProposalAsync_ShouldDeleteProposal_WhenUserIsOwner()
+        var existingProposal = new Proposal
         {
-            // Arrange
-            var proposalId = 1;
-            var userId = "user123";
+            Id = proposalId,
+            Title = "Original Proposal",
+            Description = "Original description that is long enough to pass validation.",
+            CategoryId = 1,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active,
+            CreatedAt = DateTime.UtcNow.AddDays(-1)
+        };
 
-            var existingProposal = new Proposal
-            {
-                Id = proposalId,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active
-            };
-
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(existingProposal);
-
-            _mockProposalRepository
-                .Setup(x => x.DeleteAsync(proposalId))
-                .Returns(Task.CompletedTask);
-
-            _mockUnitOfWork
-                .Setup(x => x.SaveChangesAsync())
-                .ReturnsAsync(1);
-
-            // Act
-            await _proposalService.DeleteProposalAsync(proposalId, userId);
-
-            // Assert
-            _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
-            _mockProposalRepository.Verify(x => x.DeleteAsync(proposalId), Times.Once);
-            _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
-        }
-
-        [Test]
-        public async Task CanUserEditProposalAsync_ShouldReturnTrue_WhenUserIsOwner()
+        var updatedProposal = new Proposal
         {
-            // Arrange
-            var proposalId = 1;
-            var userId = "user123";
+            Id = proposalId,
+            Title = updateDto.Title,
+            Description = updateDto.Description,
+            CategoryId = updateDto.CategoryId,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active,
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+            UpdatedAt = DateTime.UtcNow
+        };
 
-            var proposal = new Proposal
-            {
-                Id = proposalId,
-                CreatedById = userId,
-                Status = InfrastructureProposalStatus.Active
-            };
-
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(proposal);
-
-            // Act
-            var result = await _proposalService.CanUserEditProposalAsync(proposalId, userId);
-
-            // Assert
-            result.ShouldBeTrue();
-        }
-
-        [Test]
-        public async Task CanUserEditProposalAsync_ShouldReturnFalse_WhenUserIsNotOwner()
+        var proposalDto = new ProposalDto
         {
-            // Arrange
-            var proposalId = 1;
-            var userId = "user123";
-            var differentUserId = "user456";
+            Id = proposalId,
+            Title = updateDto.Title,
+            Description = updateDto.Description,
+            CategoryId = updateDto.CategoryId
+        };
 
-            var proposal = new Proposal
-            {
-                Id = proposalId,
-                CreatedById = differentUserId,
-                Status = InfrastructureProposalStatus.Active
-            };
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(existingProposal);
 
-            _mockProposalRepository
-                .Setup(x => x.GetByIdAsync(proposalId))
-                .ReturnsAsync(proposal);
+        _mockProposalRepository
+            .Setup(x => x.UpdateAsync(It.IsAny<Proposal>()))
+            .ReturnsAsync(updatedProposal);
 
-            // Act
-            var result = await _proposalService.CanUserEditProposalAsync(proposalId, userId);
+        _mockUnitOfWork
+            .Setup(x => x.SaveChangesAsync())
+            .ReturnsAsync(1);
 
-            // Assert
-            result.ShouldBeFalse();
-        }
+        // Act
+        var result = await _proposalService.UpdateProposalAsync(proposalId, updateDto, userId);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Title.ShouldBe(updateDto.Title);
+
+        _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
+        _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Once);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task UpdateProposalAsync_ShouldThrowUnauthorizedException_WhenUserIsNotOwner()
+    {
+        // Arrange
+        var proposalId = 1;
+        var userId = "user123";
+        var differentUserId = "user456";
+        var updateDto = new UpdateProposalDto
+        {
+            Title = "Updated Proposal",
+            Description = "This is an updated test proposal description that is long enough.",
+            CategoryId = 2
+        };
+
+        var existingProposal = new Proposal
+        {
+            Id = proposalId,
+            CreatedById = differentUserId, // Different user
+            Status = InfrastructureProposalStatus.Active
+        };
+
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(existingProposal);
+
+        // Act & Assert
+        var exception = await Should.ThrowAsync<UnauthorizedAccessException>(
+            () => _proposalService.UpdateProposalAsync(proposalId, updateDto, userId));
+
+        exception.Message.ShouldBe("Vous n'êtes pas autorisé à modifier cette proposition");
+
+        _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
+        _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Never);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
+    }
+
+    [Test]
+    public async Task DeleteProposalAsync_ShouldDeleteProposal_WhenUserIsOwner()
+    {
+        // Arrange
+        var proposalId = 1;
+        var userId = "user123";
+
+        var existingProposal = new Proposal
+        {
+            Id = proposalId,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active
+        };
+
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(existingProposal);
+
+        _mockProposalRepository
+            .Setup(x => x.DeleteAsync(proposalId))
+            .Returns(Task.CompletedTask);
+
+        _mockUnitOfWork
+            .Setup(x => x.SaveChangesAsync())
+            .ReturnsAsync(1);
+
+        // Act
+        await _proposalService.DeleteProposalAsync(proposalId, userId);
+
+        // Assert
+        _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
+        _mockProposalRepository.Verify(x => x.DeleteAsync(proposalId), Times.Once);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task CanUserEditProposalAsync_ShouldReturnTrue_WhenUserIsOwner()
+    {
+        // Arrange
+        var proposalId = 1;
+        var userId = "user123";
+
+        var proposal = new Proposal
+        {
+            Id = proposalId,
+            CreatedById = userId,
+            Status = InfrastructureProposalStatus.Active
+        };
+
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(proposal);
+
+        // Act
+        var result = await _proposalService.CanUserEditProposalAsync(proposalId, userId);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Test]
+    public async Task CanUserEditProposalAsync_ShouldReturnFalse_WhenUserIsNotOwner()
+    {
+        // Arrange
+        var proposalId = 1;
+        var userId = "user123";
+        var differentUserId = "user456";
+
+        var proposal = new Proposal
+        {
+            Id = proposalId,
+            CreatedById = differentUserId,
+            Status = InfrastructureProposalStatus.Active
+        };
+
+        _mockProposalRepository
+            .Setup(x => x.GetByIdAsync(proposalId))
+            .ReturnsAsync(proposal);
+
+        // Act
+        var result = await _proposalService.CanUserEditProposalAsync(proposalId, userId);
+
+        // Assert
+        result.ShouldBeFalse();
     }
 }

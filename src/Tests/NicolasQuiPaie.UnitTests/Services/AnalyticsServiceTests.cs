@@ -1,12 +1,3 @@
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore;
-using NicolasQuiPaieAPI.Application.Interfaces;
-using NicolasQuiPaieAPI.Application.Services;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using NicolasQuiPaieAPI.Infrastructure.Data;
-using NicolasQuiPaieData.DTOs;
-using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
-
 namespace NicolasQuiPaie.UnitTests.Services;
 
 [TestFixture]
@@ -26,9 +17,9 @@ public class AnalyticsServiceTests
 
         _context = new ApplicationDbContext(options);
         _mockLogger = new Mock<ILogger<AnalyticsService>>();
-        
+
         _analyticsService = new AnalyticsService(_context, _mockLogger.Object);
-        
+
         // Seed test data
         SeedTestData();
     }
@@ -76,7 +67,7 @@ public class AnalyticsServiceTests
         result.ShouldNotBeNull();
         result.Distribution.ShouldNotBeNull();
         result.Distribution.Count.ShouldBe(4);
-        
+
         var petitNicolas = result.Distribution.FirstOrDefault(d => d.LevelName == "PetitNicolas");
         petitNicolas.ShouldNotBeNull();
         petitNicolas.UserCount.ShouldBe(2);
@@ -94,7 +85,7 @@ public class AnalyticsServiceTests
         result.TopProposers.ShouldNotBeNull();
         result.TopVoters.ShouldNotBeNull();
         result.TopCommenters.ShouldNotBeNull();
-        
+
         result.TopProposers.Count.ShouldBeGreaterThan(0);
         result.TopVoters.Count.ShouldBeGreaterThan(0);
         result.TopCommenters.Count.ShouldBeGreaterThan(0);

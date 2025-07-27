@@ -1,13 +1,4 @@
-// C# 13.0 - Enhanced JWT Service Tests with latest language features
-
-using Microsoft.Extensions.Configuration;
-using NicolasQuiPaie.UnitTests.Helpers;
-using NicolasQuiPaieAPI.Application.Services;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-
-namespace Tests.NicolasQuiPaie.UnitTests.Services;
+namespace NicolasQuiPaie.UnitTests.Services;
 
 /// <summary>
 /// C# 13.0 - JWT service tests using collection expressions, params collections, and modern patterns
