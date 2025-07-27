@@ -85,6 +85,20 @@ public class ProposalService(
         return await _apiProposalService.CreateProposalAsync(proposal);
     }
 
+    /// <summary>
+    /// C# 13.0 - Toggle proposal status (SuperUser/Admin only)
+    /// </summary>
+    public async Task<ProposalDto?> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus)
+    {
+        if (_maintenanceSettings.IsReadOnlyMode)
+        {
+            _logger.LogWarning("Cannot toggle proposal status in read-only mode");
+            throw new InvalidOperationException("La modification du statut des propositions n'est pas disponible en mode démonstration.");
+        }
+
+        return await _apiProposalService.ToggleProposalStatusAsync(proposalId, newStatus);
+    }
+
     public async Task IncrementViewsAsync(int proposalId)
     {
         if (_maintenanceSettings.IsReadOnlyMode)

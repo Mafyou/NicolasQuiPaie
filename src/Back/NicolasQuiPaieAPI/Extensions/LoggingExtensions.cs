@@ -1,13 +1,9 @@
-using Serilog;
-using Serilog.Sinks.MSSqlServer;
-using System.Data;
-
 namespace NicolasQuiPaieAPI.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Serilog with custom ApiLog table structure
 /// </summary>
-public static class SerilogExtensions
+public static class LoggingExtensions
 {
     /// <summary>
     /// Configures Serilog with SQL Server sink using existing ApiLog table structure
@@ -27,20 +23,20 @@ public static class SerilogExtensions
         columnOptions.Store.Remove(StandardColumn.MessageTemplate);
 
         // Add custom columns to match your ApiLog entity structure
-        columnOptions.AdditionalColumns = new List<SqlColumn>
-        {
-            new SqlColumn { ColumnName = "UserId", DataType = SqlDbType.NVarChar, DataLength = 450, AllowNull = true },
-            new SqlColumn { ColumnName = "UserName", DataType = SqlDbType.NVarChar, DataLength = 256, AllowNull = true },
-            new SqlColumn { ColumnName = "RequestPath", DataType = SqlDbType.NVarChar, DataLength = 2048, AllowNull = true },
-            new SqlColumn { ColumnName = "RequestMethod", DataType = SqlDbType.NVarChar, DataLength = 10, AllowNull = true },
-            new SqlColumn { ColumnName = "StatusCode", DataType = SqlDbType.Int, AllowNull = true },
-            new SqlColumn { ColumnName = "Duration", DataType = SqlDbType.BigInt, AllowNull = true },
-            new SqlColumn { ColumnName = "ClientIP", DataType = SqlDbType.NVarChar, DataLength = 45, AllowNull = true },
-            new SqlColumn { ColumnName = "UserAgent", DataType = SqlDbType.NVarChar, DataLength = 1000, AllowNull = true },
-            new SqlColumn { ColumnName = "Source", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true },
-            new SqlColumn { ColumnName = "Properties", DataType = SqlDbType.NVarChar, DataLength = -1, AllowNull = true },
-            new SqlColumn { ColumnName = "MessageTemplate", DataType = SqlDbType.NVarChar, DataLength = 2000, AllowNull = true }
-        };
+        columnOptions.AdditionalColumns =
+        [
+            new() { ColumnName = "UserId", DataType = SqlDbType.NVarChar, DataLength = 450, AllowNull = true },
+            new() { ColumnName = "UserName", DataType = SqlDbType.NVarChar, DataLength = 256, AllowNull = true },
+            new() { ColumnName = "RequestPath", DataType = SqlDbType.NVarChar, DataLength = 2048, AllowNull = true },
+            new() { ColumnName = "RequestMethod", DataType = SqlDbType.NVarChar, DataLength = 10, AllowNull = true },
+            new() { ColumnName = "StatusCode", DataType = SqlDbType.Int, AllowNull = true },
+            new() { ColumnName = "Duration", DataType = SqlDbType.BigInt, AllowNull = true },
+            new() { ColumnName = "ClientIP", DataType = SqlDbType.NVarChar, DataLength = 45, AllowNull = true },
+            new() { ColumnName = "UserAgent", DataType = SqlDbType.NVarChar, DataLength = 1000, AllowNull = true },
+            new() { ColumnName = "Source", DataType = SqlDbType.NVarChar, DataLength = 100, AllowNull = true },
+            new() { ColumnName = "Properties", DataType = SqlDbType.NVarChar, DataLength = -1, AllowNull = true },
+            new() { ColumnName = "MessageTemplate", DataType = SqlDbType.NVarChar, DataLength = 2000, AllowNull = true }
+        ];
 
         // Customize standard columns to match your ApiLog entity
         columnOptions.Id.ColumnName = "Id";
@@ -104,11 +100,11 @@ public static class SerilogExtensions
             using (Serilog.Context.LogContext.PushProperty("Source", "NicolasQuiPaieAPI"))
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                
+
                 await next();
-                
+
                 stopwatch.Stop();
-                
+
                 using (Serilog.Context.LogContext.PushProperty("StatusCode", context.Response.StatusCode))
                 using (Serilog.Context.LogContext.PushProperty("Duration", stopwatch.ElapsedMilliseconds))
                 {

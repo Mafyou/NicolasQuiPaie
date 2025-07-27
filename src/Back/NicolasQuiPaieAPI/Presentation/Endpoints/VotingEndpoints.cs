@@ -6,7 +6,8 @@ public static class VotingEndpoints
     {
         var group = app.MapGroup("/api/votes")
             .WithTags("Voting")
-            .WithOpenApi();
+            .WithOpenApi()
+            .AllowAnonymous();
 
         // POST /api/votes
         group.MapPost("/", [Authorize] async (
@@ -23,14 +24,14 @@ public static class VotingEndpoints
             {
                 if (string.IsNullOrEmpty(userId))
                 {
-                    logger.LogWarning("Unauthorized vote attempt for proposal {ProposalId} from IP: {ClientIP}", 
+                    logger.LogWarning("Unauthorized vote attempt for proposal {ProposalId} from IP: {ClientIP}",
                         voteDto.ProposalId, clientIp);
                     return Results.Unauthorized();
                 }
 
                 if (voteDto.ProposalId <= 0)
                 {
-                    logger.LogWarning("Invalid proposal ID for vote: {ProposalId} by user {UserId}", 
+                    logger.LogWarning("Invalid proposal ID for vote: {ProposalId} by user {UserId}",
                         voteDto.ProposalId, userId);
                     return Results.BadRequest("Invalid proposal ID");
                 }
@@ -40,19 +41,19 @@ public static class VotingEndpoints
             }
             catch (InvalidOperationException ex)
             {
-                logger.LogWarning(ex, "Invalid vote operation for proposal {ProposalId} by user {UserId}: {Message}", 
+                logger.LogWarning(ex, "Invalid vote operation for proposal {ProposalId} by user {UserId}: {Message}",
                     voteDto.ProposalId, userId, ex.Message);
                 return Results.BadRequest(ex.Message);
             }
             catch (ArgumentException ex)
             {
-                logger.LogError(ex, "Invalid arguments for vote on proposal {ProposalId} by user {UserId}", 
+                logger.LogError(ex, "Invalid arguments for vote on proposal {ProposalId} by user {UserId}",
                     voteDto.ProposalId, userId);
                 return Results.BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Critical error casting vote for proposal {ProposalId} by user {UserId}", 
+                logger.LogError(ex, "Critical error casting vote for proposal {ProposalId} by user {UserId}",
                     voteDto.ProposalId, userId);
                 return Results.Problem("Error casting vote");
             }
@@ -62,7 +63,8 @@ public static class VotingEndpoints
         .Produces<VoteDto>(201)
         .Produces(400)
         .Produces(401)
-        .Produces(500);
+        .Produces(500)
+        .RequireUserRole();
 
         // GET /api/votes/proposal/{proposalId}
         group.MapGet("/proposal/{proposalId:int}", async (
@@ -106,7 +108,7 @@ public static class VotingEndpoints
         .Produces(500);
 
         // GET /api/votes/user/{userId}/proposal/{proposalId}
-        group.MapGet("/user/{userId}/proposal/{proposalId:int}", [Authorize] async (
+        group.MapGet("/user/{userId}/proposal/{proposalId:int}", async (
             [FromServices] IVotingService votingService,
             [FromServices] ILogger<Program> logger,
             string userId,
@@ -121,27 +123,27 @@ public static class VotingEndpoints
             {
                 if (string.IsNullOrEmpty(currentUserId))
                 {
-                    logger.LogWarning("Unauthorized user vote retrieval attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}", 
+                    logger.LogWarning("Unauthorized user vote retrieval attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}",
                         userId, proposalId, clientIp);
                     return Results.Unauthorized();
                 }
 
                 if (currentUserId != userId)
                 {
-                    logger.LogWarning("Forbidden user vote access: user {CurrentUserId} trying to access votes of user {TargetUserId} for proposal {ProposalId}", 
+                    logger.LogWarning("Forbidden user vote access: user {CurrentUserId} trying to access votes of user {TargetUserId} for proposal {ProposalId}",
                         currentUserId, userId, proposalId);
                     return Results.Forbid();
                 }
 
                 if (proposalId <= 0)
                 {
-                    logger.LogWarning("Invalid proposal ID for user vote retrieval: {ProposalId} by user {UserId}", 
+                    logger.LogWarning("Invalid proposal ID for user vote retrieval: {ProposalId} by user {UserId}",
                         proposalId, userId);
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
                 var vote = await votingService.GetUserVoteForProposalAsync(userId, proposalId);
-                
+
                 if (vote == null)
                 {
                     logger.LogWarning("No vote found for user {UserId} on proposal {ProposalId}", userId, proposalId);
@@ -181,21 +183,21 @@ public static class VotingEndpoints
             {
                 if (string.IsNullOrEmpty(currentUserId))
                 {
-                    logger.LogWarning("Unauthorized vote removal attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}", 
+                    logger.LogWarning("Unauthorized vote removal attempt for user {TargetUserId}, proposal {ProposalId} from IP: {ClientIP}",
                         userId, proposalId, clientIp);
                     return Results.Unauthorized();
                 }
 
                 if (currentUserId != userId)
                 {
-                    logger.LogWarning("Forbidden vote removal: user {CurrentUserId} trying to remove vote of user {TargetUserId} for proposal {ProposalId}", 
+                    logger.LogWarning("Forbidden vote removal: user {CurrentUserId} trying to remove vote of user {TargetUserId} for proposal {ProposalId}",
                         currentUserId, userId, proposalId);
                     return Results.Forbid();
                 }
 
                 if (proposalId <= 0)
                 {
-                    logger.LogWarning("Invalid proposal ID for vote removal: {ProposalId} by user {UserId}", 
+                    logger.LogWarning("Invalid proposal ID for vote removal: {ProposalId} by user {UserId}",
                         proposalId, userId);
                     return Results.BadRequest("Invalid proposal ID");
                 }
@@ -203,7 +205,7 @@ public static class VotingEndpoints
                 await votingService.RemoveVoteAsync(userId, proposalId);
 
                 // Information level for vote removal as it's a successful operation
-                logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}", 
+                logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}",
                     userId, proposalId, clientIp);
 
                 return Results.NoContent();
@@ -226,10 +228,11 @@ public static class VotingEndpoints
         .Produces(401)
         .Produces(403)
         .Produces(404)
-        .Produces(500);
+        .Produces(500)
+        .RequireAdminRole();
 
         // GET /api/votes/user/{userId}
-        group.MapGet("/user/{userId}", [Authorize] async (
+        group.MapGet("/user/{userId}", async (
             [FromServices] IVotingService votingService,
             [FromServices] ILogger<Program> logger,
             string userId,
@@ -243,14 +246,14 @@ public static class VotingEndpoints
             {
                 if (string.IsNullOrEmpty(currentUserId))
                 {
-                    logger.LogWarning("Unauthorized user votes retrieval attempt for user {TargetUserId} from IP: {ClientIP}", 
+                    logger.LogWarning("Unauthorized user votes retrieval attempt for user {TargetUserId} from IP: {ClientIP}",
                         userId, clientIp);
                     return Results.Unauthorized();
                 }
 
                 if (currentUserId != userId)
                 {
-                    logger.LogWarning("Forbidden user votes access: user {CurrentUserId} trying to access votes of user {TargetUserId}", 
+                    logger.LogWarning("Forbidden user votes access: user {CurrentUserId} trying to access votes of user {TargetUserId}",
                         currentUserId, userId);
                     return Results.Forbid();
                 }

@@ -101,7 +101,7 @@ public class ProposalService : IProposalService
         {
             var proposal = createDto.ToEntity();
             proposal.CreatedById = userId;
-            proposal.Status = Infrastructure.Models.ProposalStatus.Active;
+            proposal.Status = ProposalStatus.Active;
             proposal.CreatedAt = DateTime.UtcNow;
 
             var createdProposal = await _unitOfWork.Proposals.AddAsync(proposal);
@@ -121,12 +121,7 @@ public class ProposalService : IProposalService
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id);
-            if (proposal == null)
-            {
-                throw new ArgumentException($"Proposition {id} non trouvée");
-            }
-
+            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id) ?? throw new ArgumentException($"Proposition {id} non trouvée");
             if (proposal.CreatedById != userId)
             {
                 throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à modifier cette proposition");
@@ -153,16 +148,55 @@ public class ProposalService : IProposalService
         }
     }
 
+    /// <summary>
+    /// C# 13.0 - Toggle proposal status (SuperUser/Admin only) with modern pattern matching
+    /// </summary>
+    public async Task<ProposalDto> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId)
+    {
+        try
+        {
+            var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId) ?? throw new ArgumentException($"Proposition {proposalId} non trouvée");
+
+            // Convert DTO enum to Infrastructure enum using C# 13.0 pattern matching
+            var infrastructureStatus = newStatus switch
+            {
+                ProposalStatus.Draft => ProposalStatus.Draft,
+                ProposalStatus.Active => ProposalStatus.Active,
+                ProposalStatus.Closed => ProposalStatus.Closed,
+                ProposalStatus.Archived => ProposalStatus.Archived,
+                _ => throw new ArgumentException($"Statut non valide: {newStatus}")
+            };
+
+            var oldStatus = proposal.Status;
+            proposal.Status = infrastructureStatus;
+            proposal.UpdatedAt = DateTime.UtcNow;
+
+            // Set ClosedAt when closing a proposal
+            if (infrastructureStatus == ProposalStatus.Closed && proposal.ClosedAt == null)
+            {
+                proposal.ClosedAt = DateTime.UtcNow;
+            }
+
+            var updatedProposal = await _unitOfWork.Proposals.UpdateAsync(proposal);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Proposition status changed: {ProposalId} from {OldStatus} to {NewStatus} by SuperUser/Admin {UserId}",
+                proposalId, oldStatus, infrastructureStatus, userId);
+
+            return updatedProposal.ToDto();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erreur lors du changement de statut de la proposition {ProposalId} par {UserId}", proposalId, userId);
+            throw;
+        }
+    }
+
     public async Task DeleteProposalAsync(int id, string userId)
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id);
-            if (proposal == null)
-            {
-                throw new ArgumentException($"Proposition {id} non trouvée");
-            }
-
+            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id) ?? throw new ArgumentException($"Proposition {id} non trouvée");
             if (proposal.CreatedById != userId)
             {
                 throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à supprimer cette proposition");
@@ -185,7 +219,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId);
-            return proposal != null && proposal.CreatedById == userId;
+            return proposal is not null && proposal.CreatedById == userId;
         }
         catch (Exception ex)
         {
@@ -199,7 +233,7 @@ public class ProposalService : IProposalService
         try
         {
             var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId);
-            if (proposal != null)
+            if (proposal is not null)
             {
                 proposal.ViewsCount++;
                 await _unitOfWork.Proposals.UpdateAsync(proposal);

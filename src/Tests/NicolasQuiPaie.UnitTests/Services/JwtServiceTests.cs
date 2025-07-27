@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace NicolasQuiPaie.UnitTests.Services;
 
 /// <summary>
@@ -7,12 +9,13 @@ namespace NicolasQuiPaie.UnitTests.Services;
 public class JwtServiceTests
 {
     private Mock<IConfiguration> _mockConfiguration = null!;
+    private Mock<UserManager<ApplicationUser>> _mockUserManager = null!;
     private JwtService _jwtService = null!;
 
     // C# 13.0 - Collection expressions for test configuration
     private readonly Dictionary<string, string?> _testConfiguration = new()
     {
-        ["Jwt:Key"] = "MySecretKeyForNicolasQuiPaie2024TestingPurposes123!",
+        ["Jwt:Key"] = "MySecretKeyForNicolasQuiPaie2025TestingPurposes123!",
         ["Jwt:Issuer"] = "NicolasQuiPaieAPI.Tests",
         ["Jwt:Audience"] = "NicolasQuiPaieClient.Tests",
         ["Jwt:ExpiryInMinutes"] = "60"
@@ -29,7 +32,7 @@ public class JwtServiceTests
             _mockConfiguration.Setup(x => x[key]).Returns(value);
         }
 
-        _jwtService = new JwtService(_mockConfiguration.Object);
+        _jwtService = new JwtService(_mockConfiguration.Object, _mockUserManager.Object);
     }
 
     // C# 13.0 - Record for test user data

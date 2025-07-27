@@ -208,3 +208,41 @@ public record CategoryFrustration
     public int VotesAgainst { get; init; }
     public int TotalVotes { get; init; }
 }
+
+/// <summary>
+/// User engagement DTO with modern record syntax
+/// </summary>
+public record UserEngagementDto
+{
+    public int TotalActiveUsers { get; init; }
+    public int DailyActiveUsers { get; init; }
+    public int WeeklyActiveUsers { get; init; }
+    public int MonthlyActiveUsers { get; init; }
+    public TimeSpan AverageSessionDuration { get; init; }
+    public double BounceRate { get; init; }
+}
+
+/// <summary>
+/// Moderation statistics DTO
+/// </summary>
+public record ModerationStatsDto
+{
+    public int PendingProposals { get; init; }
+    public int FlaggedComments { get; init; }
+    public int ReportedUsers { get; init; }
+    public int ProcessedReports { get; init; }
+    public TimeSpan AverageModerationTime { get; init; }
+}
+
+/// <summary>
+/// System health DTO
+/// </summary>
+public record SystemHealthDto
+{
+    public string DatabaseHealth { get; init; } = string.Empty;
+    public TimeSpan ApiResponseTime { get; init; }
+    public double MemoryUsage { get; init; }
+    public double CpuUsage { get; init; }
+    public int ActiveConnections { get; init; }
+    public double ErrorRate { get; init; }
+}

@@ -1,15 +1,9 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using NicolasQuiPaieAPI.Infrastructure.Data;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using Serilog;
-
 namespace NicolasQuiPaieAPI.Extensions;
 
 /// <summary>
 /// Extension methods for application configuration and database initialization
 /// </summary>
-public static class ApplicationExtensions
+public static class SeedExtensions
 {
     /// <summary>
     /// Initializes the database with seeded data
@@ -22,7 +16,7 @@ public static class ApplicationExtensions
         await using var scope = app.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var logger = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
         try
         {

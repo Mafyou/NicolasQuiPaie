@@ -10,11 +10,11 @@
             <i class="fas fa-coins me-2"></i>
             <span class="fw-bold">Nicolas Qui Paie</span>
         </a>
-        
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
+
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
@@ -26,11 +26,52 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/trending"><i class="fas fa-fire me-1"></i>Trending</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/analytics"><i class="fas fa-chart-line me-1"></i>Analytics</a>
-                </li>
-                
-                <!-- Developer Tools Section - Only for Sata77@gmail.com -->
+
+                @* <!-- Analytics - User role and above -->
+                <AuthorizeView Roles="User,SuperUser,Admin,Developer">
+                    <Authorized>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/analytics"><i class="fas fa-chart-line me-1"></i>Analytics</a>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- SuperUser Tools Section -->
+                <AuthorizeView Roles="SuperUser,Admin,Developer">
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-tools me-1"></i>SuperUser
+                                <span class="badge bg-warning text-dark ms-1">SU</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/proposals"><i class="fas fa-cog me-2"></i>Gérer Propositions</a></li>
+                                <li><a class="dropdown-item" href="/admin/moderation"><i class="fas fa-shield-alt me-2"></i>Modération</a></li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                </AuthorizeView>
+
+                <!-- Admin Tools Section -->
+                <AuthorizeView Roles="Admin,Developer">
+                    <Authorized>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-shield-alt me-1"></i>Admin
+                                <span class="badge bg-danger ms-1">ADMIN</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users me-2"></i>Utilisateurs</a></li>
+                                <li><a class="dropdown-item" href="/admin/logs"><i class="fas fa-list-alt me-2"></i>Logs API</a></li>
+                                <li><a class="dropdown-item" href="/admin/roles"><i class="fas fa-user-tag me-2"></i>Rôles</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/system"><i class="fas fa-server me-2"></i>Système</a></li>
+                            </ul>
+                        </li>
+                    </Authorized>
+                </AuthorizeView> *@
+
+                <!-- Developer Tools Section -->
                 <AuthorizeView>
                     <Authorized>
                         @if (IsDeveloperUser(context.User))
@@ -38,6 +79,7 @@
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-cogs me-1"></i>Dev Tools
+                                    <span class="badge bg-success ms-1">DEV</span>
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="/log42"><i class="fas fa-terminal me-2"></i>Log42 📊</a></li>
@@ -48,12 +90,12 @@
                         }
                     </Authorized>
                 </AuthorizeView>
-                
+
                 <li class="nav-item">
                     <a class="nav-link" href="/about"><i class="fas fa-info-circle me-1"></i>À Propos</a>
                 </li>
             </ul>
-            
+
             <AuthorizeView>
                 <Authorized>
                     <ul class="navbar-nav">
@@ -62,10 +104,20 @@
                                 <i class="fas fa-user-circle me-1"></i>
                                 @(context.User.FindFirst("DisplayName")?.Value ?? context.User.Identity?.Name ?? "Nicolas")
                                 <span class="nicolas-badge ms-2">@GetCurrentUserBadge(context.User)</span>
+                                @if (GetUserRole(context.User) != "User")
+                                {
+                                    <span class="badge bg-info ms-1">@GetUserRole(context.User)</span>
+                                }
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>Mon Profil</a></li>
                                 <li><a class="dropdown-item" href="/create-proposal"><i class="fas fa-plus me-2"></i>Nouvelle Proposition</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <span class="dropdown-item-text text-muted">
+                                        <i class="fas fa-shield-alt me-2"></i>Rôle: @GetUserRole(context.User)
+                                    </span>
+                                </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <button class="dropdown-item" @onclick="HandleLogout">
@@ -100,13 +152,13 @@
     {
         // Try to get ContributionLevel
         var levelClaim = user.FindFirst("ContributionLevel")?.Value;
-        
+
         if (Enum.TryParse<ContributionLevel>(levelClaim, out var level))
         {
             return level switch
             {
                 ContributionLevel.PetitNicolas => "🥉 Petit Nicolas",
-                ContributionLevel.GrosMoyenNicolas => "🥈 Moyen Nicolas", 
+                ContributionLevel.GrosMoyenNicolas => "🥈 Moyen Nicolas",
                 ContributionLevel.GrosNicolas => "🥇 Gros Nicolas",
                 ContributionLevel.NicolasSupreme => "👑 Nicolas Suprême",
                 _ => "🥉 Petit Nicolas"
@@ -115,11 +167,25 @@
         return "🥉 Petit Nicolas";
     }
 
+    private string GetUserRole(System.Security.Claims.ClaimsPrincipal user)
+    {
+        // 🎯 FIXED: Use IsInRole() which now works correctly with the updated ClaimsIdentity
+        if (user.IsInRole("Developer"))
+            return "Developer";
+        if (user.IsInRole("Admin"))
+            return "Admin";
+        if (user.IsInRole("SuperUser"))
+            return "SuperUser";
+        if (user.IsInRole("User"))
+            return "User";
+
+        return "Guest";
+    }
+
     private bool IsDeveloperUser(System.Security.Claims.ClaimsPrincipal user)
     {
-        // Check if the user email matches the developer email
-        var userEmail = user.FindFirst("email")?.Value ?? user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
-        return string.Equals(userEmail, "Sata77@gmail.com", StringComparison.OrdinalIgnoreCase);
+        // 🎯 FIXED: Use IsInRole() which now works correctly with the updated ClaimsIdentity
+        return user.IsInRole("Developer");
     }
 
     private async Task HandleLogout()

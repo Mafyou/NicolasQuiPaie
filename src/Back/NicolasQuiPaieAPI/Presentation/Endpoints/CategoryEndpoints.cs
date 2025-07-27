@@ -6,7 +6,8 @@ public static class CategoryEndpoints
     {
         var group = app.MapGroup("/api/categories")
             .WithTags("Categories")
-            .WithOpenApi();
+            .WithOpenApi()
+            .RequireUserRole();
 
         // GET /api/categories
         group.MapGet("/", async (

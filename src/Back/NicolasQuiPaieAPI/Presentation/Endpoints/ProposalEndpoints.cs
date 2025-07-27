@@ -6,7 +6,8 @@ public static class ProposalEndpoints
     {
         var group = app.MapGroup("/api/proposals")
             .WithTags("Proposals")
-            .WithOpenApi();
+            .WithOpenApi()
+            .AllowAnonymous();
 
         // GET /api/proposals
         group.MapGet("/", async (
@@ -37,7 +38,7 @@ public static class ProposalEndpoints
 
                 if (proposalsList.Count == 0)
                 {
-                    logger.LogWarning("No proposals found for filters: skip={Skip}, take={Take}, categoryId={CategoryId}, search={Search}", 
+                    logger.LogWarning("No proposals found for filters: skip={Skip}, take={Take}, categoryId={CategoryId}, search={Search}",
                         skip, take, categoryId, search);
                 }
 
@@ -45,7 +46,7 @@ public static class ProposalEndpoints
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving proposals: skip={Skip}, take={Take}, categoryId={CategoryId}, search={Search}", 
+                logger.LogError(ex, "Error retrieving proposals: skip={Skip}, take={Take}, categoryId={CategoryId}, search={Search}",
                     skip, take, categoryId, search);
                 return Results.Problem("Error retrieving proposals");
             }
@@ -84,7 +85,7 @@ public static class ProposalEndpoints
 
                 if (proposalsList.Count == 0)
                 {
-                    logger.LogWarning("No recent proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    logger.LogWarning("No recent proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}",
                         skip, take, category, search);
                 }
 
@@ -92,7 +93,7 @@ public static class ProposalEndpoints
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving recent proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                logger.LogError(ex, "Error retrieving recent proposals: skip={Skip}, take={Take}, category={Category}, search={Search}",
                     skip, take, category, search);
                 return Results.Problem("Error retrieving recent proposals");
             }
@@ -131,7 +132,7 @@ public static class ProposalEndpoints
 
                 if (proposalsList.Count == 0)
                 {
-                    logger.LogWarning("No popular proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    logger.LogWarning("No popular proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}",
                         skip, take, category, search);
                 }
 
@@ -139,7 +140,7 @@ public static class ProposalEndpoints
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving popular proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                logger.LogError(ex, "Error retrieving popular proposals: skip={Skip}, take={Take}, category={Category}, search={Search}",
                     skip, take, category, search);
                 return Results.Problem("Error retrieving popular proposals");
             }
@@ -178,7 +179,7 @@ public static class ProposalEndpoints
 
                 if (proposalsList.Count == 0)
                 {
-                    logger.LogWarning("No controversial proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                    logger.LogWarning("No controversial proposals found for filters: skip={Skip}, take={Take}, category={Category}, search={Search}",
                         skip, take, category, search);
                 }
 
@@ -186,7 +187,7 @@ public static class ProposalEndpoints
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error retrieving controversial proposals: skip={Skip}, take={Take}, category={Category}, search={Search}", 
+                logger.LogError(ex, "Error retrieving controversial proposals: skip={Skip}, take={Take}, category={Category}, search={Search}",
                     skip, take, category, search);
                 return Results.Problem("Error retrieving controversial proposals");
             }
@@ -248,7 +249,7 @@ public static class ProposalEndpoints
                 }
 
                 var proposal = await proposalService.GetProposalByIdAsync(id);
-                
+
                 if (proposal == null)
                 {
                     logger.LogWarning("Proposal not found: {ProposalId}", id);
@@ -297,7 +298,7 @@ public static class ProposalEndpoints
 
                 if (createDto.Title.Length > 200)
                 {
-                    logger.LogWarning("Invalid proposal creation: title too long ({Length} chars) by user {UserId}", 
+                    logger.LogWarning("Invalid proposal creation: title too long ({Length} chars) by user {UserId}",
                         createDto.Title.Length, userId);
                     return Results.BadRequest("Title must be 200 characters or less");
                 }
@@ -321,7 +322,8 @@ public static class ProposalEndpoints
         .Produces<ProposalDto>(201)
         .Produces(400)
         .Produces(401)
-        .Produces(500);
+        .Produces(500)
+        .RequireUserRole();
 
         // POST /api/proposals/{id}/views
         group.MapPost("/{id:int}/views", async (
@@ -367,8 +369,8 @@ public static class ProposalEndpoints
             ClaimsPrincipal user,
             HttpContext context) =>
         {
-            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var clientIp = context.Connection.RemoteIpAddress?.ToString();
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var clientIp = $"{context.Connection.RemoteIpAddress}";
 
             try
             {
@@ -416,7 +418,69 @@ public static class ProposalEndpoints
         .Produces(401)
         .Produces(403)
         .Produces(404)
-        .Produces(500);
+        .Produces(500)
+        .RequireUserRole();
+
+        // PATCH /api/proposals/{id}/status - SuperUser/Admin only endpoint
+        group.MapPatch("/{id:int}/status", async (
+            [FromServices] IProposalService proposalService,
+            [FromServices] ILogger<Program> logger,
+            int id,
+            [FromBody] ToggleProposalStatusDto statusDto,
+            ClaimsPrincipal user,
+            HttpContext context) =>
+        {
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = user.FindFirstValue(ClaimTypes.Role);
+            var clientIp = $"{context.Connection.RemoteIpAddress}";
+
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    logger.LogWarning("Unauthorized proposal status toggle attempt for {ProposalId} from IP: {ClientIP}", id, clientIp);
+                    return Results.Unauthorized();
+                }
+
+                if (id <= 0)
+                {
+                    logger.LogWarning("Invalid proposal ID for status toggle: {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                    return Results.BadRequest("Invalid proposal ID");
+                }
+
+                var proposal = await proposalService.ToggleProposalStatusAsync(id, (ProposalStatus)statusDto.NewStatus, userId);
+
+                // Log the status change as a warning (important action)
+                logger.LogWarning("Proposal status changed: {ProposalId} -> {NewStatus} by {Role} user {UserId} from IP: {ClientIP}",
+                    id, statusDto.NewStatus, userRole, userId, clientIp);
+
+                return Results.Ok(proposal);
+            }
+            catch (ArgumentException ex)
+            {
+                logger.LogError(ex, "Proposal not found for status toggle: {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                return Results.NotFound();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                logger.LogWarning(ex, "Unauthorized status toggle attempt for proposal {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                return Results.Forbid();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Critical error toggling status for proposal {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                return Results.Problem("Error toggling proposal status");
+            }
+        })
+        .WithName("ToggleProposalStatus")
+        .WithSummary("Change le statut d'une proposition (SuperUser/Admin uniquement)")
+        .Produces<ProposalDto>()
+        .Produces(400)
+        .Produces(401)
+        .Produces(403)
+        .Produces(404)
+        .Produces(500)
+        .RequireSuperUserRole(); // Require SuperUser or Admin role
 
         // DELETE /api/proposals/{id}
         group.MapDelete("/{id:int}", [Authorize] async (
@@ -426,8 +490,8 @@ public static class ProposalEndpoints
             ClaimsPrincipal user,
             HttpContext context) =>
         {
-            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var clientIp = context.Connection.RemoteIpAddress?.ToString();
+            var userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+            var clientIp = $"{context.Connection.RemoteIpAddress}";
 
             try
             {
@@ -444,10 +508,10 @@ public static class ProposalEndpoints
                 }
 
                 await proposalService.DeleteProposalAsync(id, userId);
-                
+
                 // Warning level for deletion as it's an important action
                 logger.LogWarning("Proposal deleted: {ProposalId} by user {UserId} from IP: {ClientIP}", id, userId, clientIp);
-                
+
                 return Results.NoContent();
             }
             catch (ArgumentException ex)
@@ -473,6 +537,7 @@ public static class ProposalEndpoints
         .Produces(401)
         .Produces(403)
         .Produces(404)
-        .Produces(500);
+        .Produces(500)
+        .RequireUserRole();
     }
 }
