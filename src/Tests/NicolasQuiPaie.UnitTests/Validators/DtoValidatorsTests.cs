@@ -1,10 +1,6 @@
-// C# 13.0 - Enhanced DTO Validator Tests with latest language features
+using VoteDto = NicolasQuiPaieData.DTOs.VoteType;
 
-using FluentValidation.TestHelper;
-using NicolasQuiPaieAPI.Application.Validators;
-using NicolasQuiPaieData.DTOs;
-
-namespace Tests.NicolasQuiPaie.UnitTests.Validators;
+namespace NicolasQuiPaie.UnitTests.Validators;
 
 /// <summary>
 /// C# 13.0 - DTO validator tests using collection expressions, params collections, and primary constructors
@@ -187,16 +183,16 @@ public class DtoValidatorsTests
     // C# 13.0 - Collection expressions for vote validation
     public static readonly object[][] CreateVoteTestCases =
     [
-        [1, VoteType.For, true, null],
-        [999, VoteType.Against, true, null],
-        [0, VoteType.For, false, "ProposalId"],
-        [-1, VoteType.Against, false, "ProposalId"]
+        [1, VoteDto.For, true, null],
+        [999, VoteDto.Against, true, null],
+        [0, VoteDto.For, false, "ProposalId"],
+        [-1, VoteDto.Against, false, "ProposalId"]
     ];
 
     [Test]
     [TestCaseSource(nameof(CreateVoteTestCases))]
     public void CreateVoteDtoValidator_ShouldValidateCorrectly(
-        int proposalId, VoteType voteType, bool shouldBeValid, string? expectedErrorProperty)
+        int proposalId, VoteDto voteType, bool shouldBeValid, string? expectedErrorProperty)
     {
         // Arrange
         var dto = new CreateVoteDto
@@ -233,7 +229,7 @@ public class DtoValidatorsTests
         var dto = new CreateVoteDto
         {
             ProposalId = 1,
-            VoteType = VoteType.For,
+            VoteType = VoteDto.For,
             Comment = comment
         };
 
@@ -358,7 +354,7 @@ public class DtoValidatorsTests
                 Vote = new CreateVoteDto
                 {
                     ProposalId = 1,
-                    VoteType = VoteType.For,
+                    VoteType = VoteDto.For,
                     Comment = "Excellente proposition qui va dans le bon sens pour l'environnement"
                 },
                 Comment = new CreateCommentDto
@@ -381,7 +377,7 @@ public class DtoValidatorsTests
                 Vote = new CreateVoteDto
                 {
                     ProposalId = 2,
-                    VoteType = VoteType.Against,
+                    VoteType = VoteDto.Against,
                     Comment = "Les coûts de cette mesure semblent trop élevés pour les finances publiques"
                 },
                 Comment = new CreateCommentDto
@@ -423,7 +419,7 @@ public class DtoValidatorsTests
             {
                 Title = $"Performance Test Proposal {i}",
                 Description = $"This is performance test proposal number {i} with a description that meets all the validation requirements for testing purposes.",
-                CategoryId = (i % 5) + 1
+                CategoryId = i % 5 + 1
             }).ToArray();
 
         // Act

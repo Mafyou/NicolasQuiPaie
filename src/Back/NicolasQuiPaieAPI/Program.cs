@@ -137,9 +137,6 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Configuration AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
-
 // Configuration FluentValidation
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProposalDtoValidator>();
 

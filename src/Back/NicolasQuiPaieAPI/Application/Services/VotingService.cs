@@ -1,11 +1,10 @@
-namespace NicolasQuiPaieAPI.Application.Services;
+﻿namespace NicolasQuiPaieAPI.Application.Services;
 
 /// <summary>
 /// Enhanced voting service with C# 13.0 improvements and democratic voting (1 vote = 1 voice)
 /// </summary>
 public class VotingService(
     IUnitOfWork unitOfWork,
-    IMapper mapper,
     ILogger<VotingService> logger,
     IUserRepository userRepository) : IVotingService
 {
@@ -22,11 +21,7 @@ public class VotingService(
             await unitOfWork.BeginTransactionAsync();
 
             // Get user for reputation updates and badge tracking
-            var user = await userRepository.GetByIdAsync(userId);
-            if (user is null)
-            {
-                throw new InvalidOperationException($"User with ID {userId} not found");
-            }
+            var user = await userRepository.GetByIdAsync(userId) ?? throw new InvalidOperationException($"User with ID {userId} not found");
 
             // Check if user already voted for this proposal
             var existingVote = await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, voteDto.ProposalId);
@@ -47,7 +42,7 @@ public class VotingService(
             // Update user reputation and badge progression
             await UpdateUserReputationAsync(user, voteDto.VoteType);
 
-            // ?? FIX: Save changes FIRST so the new vote is visible to the count query
+            // 🔧 FIX: Save changes FIRST so the new vote is visible to the count query
             await unitOfWork.SaveChangesAsync();
 
             // Update proposal vote counts AFTER saving the vote
@@ -81,7 +76,7 @@ public class VotingService(
         try
         {
             var vote = await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, proposalId);
-            return vote?.ToVoteDto();
+            return vote?.ToDto();
         }
         catch (Exception ex)
         {
@@ -114,7 +109,7 @@ public class VotingService(
                     await AdjustReputationForVoteRemovalAsync(user, vote.VoteType);
                 }
 
-                // ?? FIX: Save changes FIRST so the deleted vote is no longer counted
+                // 🔧 FIX: Save changes FIRST so the deleted vote is no longer counted
                 await unitOfWork.SaveChangesAsync();
 
                 // Update proposal vote counts AFTER deleting the vote
@@ -145,7 +140,7 @@ public class VotingService(
         try
         {
             var votes = await unitOfWork.Votes.GetVotesForProposalAsync(proposalId);
-            return votes.Select(v => v.ToVoteDto()).ToList().AsReadOnly();
+            return votes.Select(v => v.ToDto()).ToList().AsReadOnly();
         }
         catch (Exception ex)
         {
@@ -164,7 +159,7 @@ public class VotingService(
         try
         {
             var votes = await unitOfWork.Votes.GetUserVotesAsync(userId);
-            return votes.Select(v => v.ToVoteDto()).ToList().AsReadOnly();
+            return votes.Select(v => v.ToDto()).ToList().AsReadOnly();
         }
         catch (Exception ex)
         {
@@ -186,7 +181,7 @@ public class VotingService(
         existingVote.Weight = 1; // Democratic equality: 1 Nicolas = 1 voice
 
         var updatedVote = await unitOfWork.Votes.UpdateAsync(existingVote);
-        return updatedVote.ToVoteDto();
+        return updatedVote.ToDto();
     }
 
     /// <summary>
@@ -205,7 +200,7 @@ public class VotingService(
         };
 
         var createdVote = await unitOfWork.Votes.AddAsync(vote);
-        return createdVote.ToVoteDto();
+        return createdVote.ToDto();
     }
 
     /// <summary>
@@ -274,51 +269,4 @@ public class VotingService(
     }
 
     #endregion
-}
-
-/// <summary>
-/// Extension methods for mapping between Vote models and DTOs
-/// </summary>
-public static class VoteExtensions
-{
-    /// <summary>
-    /// Converts a Vote entity to VoteDto
-    /// </summary>
-    public static VoteDto ToVoteDto(this Vote vote) => new()
-    {
-        Id = vote.Id,
-        VoteType = (NicolasQuiPaieData.DTOs.VoteType)(int)vote.VoteType,
-        VotedAt = vote.VotedAt,
-        Weight = vote.Weight,
-        Comment = vote.Comment,
-        UserId = vote.UserId,
-        ProposalId = vote.ProposalId,
-        Proposal = vote.Proposal?.ToProposalDto()
-    };
-
-    /// <summary>
-    /// Converts a Proposal entity to ProposalDto (basic mapping)
-    /// </summary>
-    public static ProposalDto ToProposalDto(this Proposal proposal) => new()
-    {
-        Id = proposal.Id,
-        Title = proposal.Title,
-        Description = proposal.Description,
-        Status = (NicolasQuiPaieData.DTOs.ProposalStatus)(int)proposal.Status,
-        CreatedAt = proposal.CreatedAt,
-        UpdatedAt = proposal.UpdatedAt,
-        ClosedAt = proposal.ClosedAt,
-        VotesFor = proposal.VotesFor,
-        VotesAgainst = proposal.VotesAgainst,
-        ViewsCount = proposal.ViewsCount,
-        IsFeatured = proposal.IsFeatured,
-        ImageUrl = proposal.ImageUrl,
-        Tags = proposal.Tags,
-        CreatedById = proposal.CreatedById,
-        CreatedByDisplayName = proposal.CreatedBy?.DisplayName ?? "",
-        CategoryId = proposal.CategoryId,
-        CategoryName = proposal.Category?.Name ?? "",
-        CategoryColor = proposal.Category?.Color ?? "",
-        CategoryIcon = proposal.Category?.IconClass ?? ""
-    };
 }

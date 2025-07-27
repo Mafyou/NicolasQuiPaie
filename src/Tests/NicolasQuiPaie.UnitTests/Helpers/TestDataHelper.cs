@@ -1,9 +1,3 @@
-using AutoMapper;
-using Microsoft.Extensions.Logging;
-using NicolasQuiPaieAPI.Application.Interfaces;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using NicolasQuiPaieData.DTOs;
-using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
 using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
 
 namespace NicolasQuiPaie.UnitTests.Helpers;
@@ -125,10 +119,9 @@ public static class TestDataHelper
         new(MockBehavior.Loose); // Changed from Strict to Loose
 
     // C# 13.0 - Enhanced method with tuple deconstruction and pattern matching
-    public static (Mock<IUnitOfWork> unitOfWork, Mock<IMapper> mapper, Mock<ILogger<TService>> logger)
+    public static (Mock<IUnitOfWork> unitOfWork, Mock<ILogger<TService>> logger)
         CreateServiceMocks<TService>() where TService : class =>
         (CreateMockWithDefaults<IUnitOfWork>(),
-         CreateMockWithDefaults<IMapper>(),
          CreateMockWithDefaults<ILogger<TService>>());
 
     // C# 13.0 - Extension method for fluent test data setup with modern null checking
