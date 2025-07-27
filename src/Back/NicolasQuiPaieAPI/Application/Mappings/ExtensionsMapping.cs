@@ -1,7 +1,4 @@
-﻿using NicolasQuiPaieAPI.Infrastructure.Models;
-using NicolasQuiPaieData.DTOs;
-
-namespace NicolasQuiPaieAPI.Application.Mappings;
+﻿namespace NicolasQuiPaieAPI.Application.Mappings;
 
 public static class ExtensionsMapping
 {
@@ -120,7 +117,7 @@ public static class ExtensionsMapping
     {
         ProposalId = comment.ProposalId,
         ParentCommentId = comment.ParentCommentId,
-        Content = comment.Content,
+        Content = comment.Content
     };
 
     // Reverse mapping from DTOs to domain models
