@@ -61,3 +61,37 @@ public record PasswordResetConfirmDto
     public string Token { get; init; } = "";
     public string NewPassword { get; init; } = "";
 }
+
+/// <summary>
+/// Static constants for role names using modern constant patterns
+/// </summary>
+public static class NicolasRoles
+{
+    public const string User = "User";
+    public const string SuperUser = "SuperUser";
+    public const string Admin = "Admin";
+    public const string Developer = "Developer";
+
+    /// <summary>
+    /// Collection expression for all roles
+    /// </summary>
+    public static readonly string[] All = [User, SuperUser, Admin, Developer];
+
+    /// <summary>
+    /// Collection expression for elevated roles
+    /// </summary>
+    public static readonly string[] Elevated = [SuperUser, Admin, Developer];
+}
+
+/// <summary>
+/// Static constants for policy names using modern constant patterns
+/// </summary>
+public static class NicolasPolicies
+{
+    public const string User = "UserPolicy";
+    public const string SuperUser = "SuperUserPolicy";
+    public const string Admin = "AdminPolicy";
+    public const string Developer = "DeveloperPolicy";
+    public const string HighContributor = "HighContributorPolicy";
+    public const string Verified = "VerifiedPolicy";
+}

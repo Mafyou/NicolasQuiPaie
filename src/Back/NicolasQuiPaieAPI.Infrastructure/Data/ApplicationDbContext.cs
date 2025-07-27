@@ -1,238 +1,272 @@
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 using NicolasQuiPaieAPI.Infrastructure.Models;
 
-namespace NicolasQuiPaieAPI.Infrastructure.Data
+namespace NicolasQuiPaieAPI.Infrastructure.Data;
+
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public DbSet<Proposal> Proposals { get; set; } = null!;
+    public DbSet<Category> Categories { get; set; } = null!;
+    public DbSet<Vote> Votes { get; set; } = null!;
+    public DbSet<Comment> Comments { get; set; } = null!;
+    public DbSet<CommentLike> CommentLikes { get; set; } = null!;
+    public DbSet<ApiLog> ApiLogs { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
+        base.OnModelCreating(builder);
+
+        // Configuration des entités
+        ConfigureProposal(builder);
+        ConfigureVote(builder);
+        ConfigureComment(builder);
+        ConfigureCommentLike(builder);
+        ConfigureCategory(builder);
+        ConfigureApiLog(builder);
+
+        // Seed roles
+        SeedRoles(builder);
+
+        // Données de test
+        SeedData(builder);
+    }
+
+    private static void ConfigureProposal(ModelBuilder builder)
+    {
+        builder.Entity<Proposal>(entity =>
         {
-        }
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
 
-        public DbSet<Proposal> Proposals { get; set; } = null!;
-        public DbSet<Category> Categories { get; set; } = null!;
-        public DbSet<Vote> Votes { get; set; } = null!;
-        public DbSet<Comment> Comments { get; set; } = null!;
-        public DbSet<CommentLike> CommentLikes { get; set; } = null!;
-        public DbSet<ApiLog> ApiLogs { get; set; } = null!;
+            entity.HasOne(p => p.CreatedBy)
+                .WithMany(u => u.Proposals)
+                .HasForeignKey(p => p.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
 
-        protected override void OnModelCreating(ModelBuilder builder)
+            entity.HasOne(p => p.Category)
+                .WithMany(c => c.Proposals)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CategoryId);
+        });
+    }
+
+    private static void ConfigureVote(ModelBuilder builder)
+    {
+        builder.Entity<Vote>(entity =>
         {
-            base.OnModelCreating(builder);
+            entity.HasKey(e => e.Id);
 
-            // Configuration des entités
-            ConfigureProposal(builder);
-            ConfigureVote(builder);
-            ConfigureComment(builder);
-            ConfigureCommentLike(builder);
-            ConfigureCategory(builder);
-            ConfigureApiLog(builder);
+            entity.HasOne(v => v.User)
+                .WithMany(u => u.Votes)
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Données de test
-            SeedData(builder);
-        }
+            entity.HasOne(v => v.Proposal)
+                .WithMany(p => p.Votes)
+                .HasForeignKey(v => v.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-        private static void ConfigureProposal(ModelBuilder builder)
+            // Un utilisateur ne peut voter qu'une fois par proposition
+            entity.HasIndex(e => new { e.UserId, e.ProposalId }).IsUnique();
+            entity.HasIndex(e => e.VotedAt);
+        });
+    }
+
+    private static void ConfigureComment(ModelBuilder builder)
+    {
+        builder.Entity<Comment>(entity =>
         {
-            builder.Entity<Proposal>(entity =>
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(1000);
+
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.Proposal)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.ProposalId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(c => c.ParentCommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ProposalId);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+    }
+
+    private static void ConfigureCommentLike(ModelBuilder builder)
+    {
+        builder.Entity<CommentLike>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(cl => cl.User)
+                .WithMany(u => u.CommentLikes)
+                .HasForeignKey(cl => cl.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cl => cl.Comment)
+                .WithMany(c => c.Likes)
+                .HasForeignKey(cl => cl.CommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Un utilisateur ne peut liker qu'une fois par commentaire
+            entity.HasIndex(e => new { e.UserId, e.CommentId }).IsUnique();
+        });
+    }
+
+    private static void ConfigureCategory(ModelBuilder builder)
+    {
+        builder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Color).HasMaxLength(7);
+            entity.Property(e => e.IconClass).HasMaxLength(50);
+
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.SortOrder);
+        });
+    }
+
+    private static void ConfigureApiLog(ModelBuilder builder)
+    {
+        builder.Entity<ApiLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Message).HasMaxLength(4000);
+            entity.Property(e => e.MessageTemplate).HasMaxLength(2000);
+            entity.Property(e => e.Level).IsRequired();
+            entity.Property(e => e.TimeStamp).IsRequired();
+            entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
+
+            // Additional properties constraints
+            entity.Property(e => e.UserId).HasMaxLength(450);
+            entity.Property(e => e.UserName).HasMaxLength(256);
+            entity.Property(e => e.RequestPath).HasMaxLength(2048);
+            entity.Property(e => e.RequestMethod).HasMaxLength(10);
+            entity.Property(e => e.ClientIP).HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(1000);
+            entity.Property(e => e.Source).HasMaxLength(100);
+
+            // Indexes for efficient querying
+            entity.HasIndex(e => e.TimeStamp);
+            entity.HasIndex(e => e.Level);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.Level, e.TimeStamp });
+        });
+    }
+
+    private static void SeedRoles(ModelBuilder builder)
+    {
+        var userRoleId = "1af17a5e-3d0e-4366-ab16-bc988f7cfd6b";
+        var superUserRoleId = "5611b112-f104-4f6d-86cb-1c2b5a79ec40";
+        var adminRoleId = "ffbea19a-4701-4b91-b145-a0723ec78f89";
+        var developerRoleId = "ffbea19a-4701-4b91-b145-a0723ec78f8A";
+
+        builder.Entity<IdentityRole>().HasData(
+            new IdentityRole
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
-                entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
-                entity.Property(e => e.CreatedAt).IsRequired();
-                entity.Property(e => e.Status).IsRequired();
-
-                entity.HasOne(p => p.CreatedBy)
-                    .WithMany(u => u.Proposals)
-                    .HasForeignKey(p => p.CreatedById)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(p => p.Category)
-                    .WithMany(c => c.Proposals)
-                    .HasForeignKey(p => p.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => e.CreatedAt);
-                entity.HasIndex(e => e.Status);
-                entity.HasIndex(e => e.CategoryId);
-            });
-        }
-
-        private static void ConfigureVote(ModelBuilder builder)
-        {
-            builder.Entity<Vote>(entity =>
+                Id = userRoleId,
+                Name = "User",
+                NormalizedName = "USER",
+                ConcurrencyStamp = "59a7a3e9-20b8-4169-99a5-ee9be36a486b"
+            },
+            new IdentityRole
             {
-                entity.HasKey(e => e.Id);
-                
-                entity.HasOne(v => v.User)
-                    .WithMany(u => u.Votes)
-                    .HasForeignKey(v => v.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(v => v.Proposal)
-                    .WithMany(p => p.Votes)
-                    .HasForeignKey(v => v.ProposalId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                // Un utilisateur ne peut voter qu'une fois par proposition
-                entity.HasIndex(e => new { e.UserId, e.ProposalId }).IsUnique();
-                entity.HasIndex(e => e.VotedAt);
-            });
-        }
-
-        private static void ConfigureComment(ModelBuilder builder)
-        {
-            builder.Entity<Comment>(entity =>
+                Id = superUserRoleId,
+                Name = "SuperUser",
+                NormalizedName = "SUPERUSER",
+                ConcurrencyStamp = "87841e58-d992-4236-ae83-7ccf4efe36c0"
+            },
+            new IdentityRole
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Content).IsRequired().HasMaxLength(1000);
-
-                entity.HasOne(c => c.User)
-                    .WithMany(u => u.Comments)
-                    .HasForeignKey(c => c.UserId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(c => c.Proposal)
-                    .WithMany(p => p.Comments)
-                    .HasForeignKey(c => c.ProposalId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(c => c.ParentComment)
-                    .WithMany(c => c.Replies)
-                    .HasForeignKey(c => c.ParentCommentId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(e => e.ProposalId);
-                entity.HasIndex(e => e.CreatedAt);
-            });
-        }
-
-        private static void ConfigureCommentLike(ModelBuilder builder)
-        {
-            builder.Entity<CommentLike>(entity =>
+                Id = adminRoleId,
+                Name = "Admin",
+                NormalizedName = "ADMIN",
+                ConcurrencyStamp = "7469e6ee-42c9-44aa-89be-d35e68e10e44"
+            },
+            new IdentityRole
             {
-                entity.HasKey(e => e.Id);
+                Id = developerRoleId,
+                Name = "Developer",
+                NormalizedName = "DEVELOPER",
+                ConcurrencyStamp = "7469e6ee-42c9-44aa-89be-d35e68e10e45"
+            }
+        );
+    }
 
-                entity.HasOne(cl => cl.User)
-                    .WithMany(u => u.CommentLikes)
-                    .HasForeignKey(cl => cl.UserId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(cl => cl.Comment)
-                    .WithMany(c => c.Likes)
-                    .HasForeignKey(cl => cl.CommentId)
-                    .OnDelete(DeleteBehavior.Cascade);
-
-                // Un utilisateur ne peut liker qu'une fois par commentaire
-                entity.HasIndex(e => new { e.UserId, e.CommentId }).IsUnique();
-            });
-        }
-
-        private static void ConfigureCategory(ModelBuilder builder)
-        {
-            builder.Entity<Category>(entity =>
+    private static void SeedData(ModelBuilder builder)
+    {
+        // Catégories par défaut
+        builder.Entity<Category>().HasData(
+            new Category
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-                entity.Property(e => e.Description).HasMaxLength(500);
-                entity.Property(e => e.Color).HasMaxLength(7);
-                entity.Property(e => e.IconClass).HasMaxLength(50);
-
-                entity.HasIndex(e => e.Name).IsUnique();
-                entity.HasIndex(e => e.SortOrder);
-            });
-        }
-
-        private static void ConfigureApiLog(ModelBuilder builder)
-        {
-            builder.Entity<ApiLog>(entity =>
+                Id = 1,
+                Name = "Fiscalité",
+                Description = "Propositions liées aux impôts et taxes",
+                Color = "#dc3545",
+                IconClass = "fas fa-coins",
+                SortOrder = 1
+            },
+            new Category
             {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Message).HasMaxLength(4000);
-                entity.Property(e => e.MessageTemplate).HasMaxLength(2000);
-                entity.Property(e => e.Level).IsRequired();
-                entity.Property(e => e.TimeStamp).IsRequired();
-                entity.Property(e => e.Exception).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.Properties).HasColumnType("nvarchar(max)");
-                
-                // Additional properties constraints
-                entity.Property(e => e.UserId).HasMaxLength(450);
-                entity.Property(e => e.UserName).HasMaxLength(256);
-                entity.Property(e => e.RequestPath).HasMaxLength(2048);
-                entity.Property(e => e.RequestMethod).HasMaxLength(10);
-                entity.Property(e => e.ClientIP).HasMaxLength(45);
-                entity.Property(e => e.UserAgent).HasMaxLength(1000);
-                entity.Property(e => e.Source).HasMaxLength(100);
-
-                // Indexes for efficient querying
-                entity.HasIndex(e => e.TimeStamp);
-                entity.HasIndex(e => e.Level);
-                entity.HasIndex(e => e.UserId);
-                entity.HasIndex(e => new { e.Level, e.TimeStamp });
-            });
-        }
-
-        private static void SeedData(ModelBuilder builder)
-        {
-            // Catégories par défaut
-            builder.Entity<Category>().HasData(
-                new Category
-                {
-                    Id = 1,
-                    Name = "Fiscalité",
-                    Description = "Propositions liées aux impôts et taxes",
-                    Color = "#dc3545",
-                    IconClass = "fas fa-coins",
-                    SortOrder = 1
-                },
-                new Category
-                {
-                    Id = 2,
-                    Name = "Dépenses Publiques",
-                    Description = "Propositions sur l'utilisation de l'argent public",
-                    Color = "#28a745",
-                    IconClass = "fas fa-hand-holding-usd",
-                    SortOrder = 2
-                },
-                new Category
-                {
-                    Id = 3,
-                    Name = "Services Publics",
-                    Description = "Amélioration des services publics",
-                    Color = "#007bff",
-                    IconClass = "fas fa-building",
-                    SortOrder = 3
-                },
-                new Category
-                {
-                    Id = 4,
-                    Name = "Infrastructure",
-                    Description = "Investissements dans les infrastructures",
-                    Color = "#fd7e14",
-                    IconClass = "fas fa-road",
-                    SortOrder = 4
-                },
-                new Category
-                {
-                    Id = 5,
-                    Name = "Éducation",
-                    Description = "Financement et réforme de l'éducation",
-                    Color = "#6f42c1",
-                    IconClass = "fas fa-graduation-cap",
-                    SortOrder = 5
-                },
-                new Category
-                {
-                    Id = 6,
-                    Name = "Santé",
-                    Description = "Système de santé et financement",
-                    Color = "#20c997",
-                    IconClass = "fas fa-heartbeat",
-                    SortOrder = 6
-                }
-            );
-        }
+                Id = 2,
+                Name = "Dépenses Publiques",
+                Description = "Propositions sur l'utilisation de l'argent public",
+                Color = "#28a745",
+                IconClass = "fas fa-hand-holding-usd",
+                SortOrder = 2
+            },
+            new Category
+            {
+                Id = 3,
+                Name = "Services Publics",
+                Description = "Amélioration des services publics",
+                Color = "#007bff",
+                IconClass = "fas fa-building",
+                SortOrder = 3
+            },
+            new Category
+            {
+                Id = 4,
+                Name = "Infrastructure",
+                Description = "Investissements dans les infrastructures",
+                Color = "#fd7e14",
+                IconClass = "fas fa-road",
+                SortOrder = 4
+            },
+            new Category
+            {
+                Id = 5,
+                Name = "Éducation",
+                Description = "Financement et réforme de l'éducation",
+                Color = "#6f42c1",
+                IconClass = "fas fa-graduation-cap",
+                SortOrder = 5
+            },
+            new Category
+            {
+                Id = 6,
+                Name = "Santé",
+                Description = "Système de santé et financement",
+                Color = "#20c997",
+                IconClass = "fas fa-heartbeat",
+                SortOrder = 6
+            }
+        );
     }
 }

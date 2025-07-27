@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NicolasQuiPaieAPI.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using NicolasQuiPaieAPI.Infrastructure.Data;
 namespace NicolasQuiPaieAPI.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250727181712_AddRoles")]
+    partial class AddRoles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,13 +72,6 @@ namespace NicolasQuiPaieAPI.Infrastructure.Migrations
                             ConcurrencyStamp = "7469e6ee-42c9-44aa-89be-d35e68e10e44",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = "ffbea19a-4701-4b91-b145-a0723ec78f8A",
-                            ConcurrencyStamp = "7469e6ee-42c9-44aa-89be-d35e68e10e45",
-                            Name = "Developer",
-                            NormalizedName = "DEVELOPER"
                         });
                 });
 

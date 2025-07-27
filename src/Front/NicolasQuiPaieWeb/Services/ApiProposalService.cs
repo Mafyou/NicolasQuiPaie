@@ -207,6 +207,52 @@ public class ApiProposalService
     }
 
     /// <summary>
+    /// C# 13.0 - Toggle proposal status (SuperUser/Admin only)
+    /// </summary>
+    public async Task<ProposalDto?> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus)
+    {
+        try
+        {
+            var statusDto = new ToggleProposalStatusDto { NewStatus = newStatus };
+            var url = $"/api/proposals/{proposalId}/status";
+
+            var response = await _httpClient.PatchAsJsonAsync(url, statusDto, _jsonOptions);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var updatedProposal = await response.Content.ReadFromJsonAsync<ProposalDto>(_jsonOptions);
+                _logger.LogInformation("Proposal status toggled successfully: {ProposalId} -> {NewStatus}", proposalId, newStatus);
+                return updatedProposal;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                _logger.LogWarning("Access denied for proposal status toggle: {ProposalId}. User lacks SuperUser/Admin role", proposalId);
+                return null;
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("Proposal not found for status toggle: {ProposalId}", proposalId);
+                return null;
+            }
+            else
+            {
+                _logger.LogWarning("Failed to toggle proposal status: {ProposalId}. Status: {StatusCode}", proposalId, response.StatusCode);
+                return null;
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Network error while toggling proposal status: {ProposalId}", proposalId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error while toggling proposal status: {ProposalId}", proposalId);
+            return null;
+        }
+    }
+
+    /// <summary>
     /// Incrémente le nombre de vues d'une proposition via l'API
     /// </summary>
     public async Task IncrementViewsAsync(int proposalId)

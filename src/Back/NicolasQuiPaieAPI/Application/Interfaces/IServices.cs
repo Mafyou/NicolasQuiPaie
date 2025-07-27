@@ -16,6 +16,7 @@ public interface IProposalService
     Task DeleteProposalAsync(int id, string userId);
     Task<bool> CanUserEditProposalAsync(int proposalId, string userId);
     Task IncrementViewsAsync(int proposalId);
+    Task<ProposalDto> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId);
 }
 
 /// <summary>
@@ -82,10 +83,55 @@ public interface IUserService
 
 public interface IJwtService
 {
+    /// <summary>
+    /// Generate JWT token with user roles (async version)
+    /// </summary>
+    Task<string> GenerateTokenAsync(ApplicationUser user);
+    
+    /// <summary>
+    /// Generate JWT token (backward compatibility, adds default User role)
+    /// </summary>
     string GenerateToken(ApplicationUser user);
+    
+    /// <summary>
+    /// Generate refresh token
+    /// </summary>
     string GenerateRefreshToken();
+    
+    /// <summary>
+    /// Get principal from expired token
+    /// </summary>
     ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
+    
+    /// <summary>
+    /// Validate token
+    /// </summary>
     bool IsTokenValid(string token);
+    
+    /// <summary>
+    /// Validate token and return principal
+    /// </summary>
+    ClaimsPrincipal? ValidateToken(string token);
+    
+    /// <summary>
+    /// C# 13.0 - Extract user roles from token
+    /// </summary>
+    IEnumerable<string> GetUserRoles(string token);
+    
+    /// <summary>
+    /// C# 13.0 - Check if user has specific role
+    /// </summary>
+    bool HasRole(string token, string role);
+    
+    /// <summary>
+    /// C# 13.0 - Check if user has any of the specified roles
+    /// </summary>
+    bool HasAnyRole(string token, params string[] roles);
+    
+    /// <summary>
+    /// C# 13.0 - Get highest role using modern pattern matching
+    /// </summary>
+    string GetHighestRole(string token);
 }
 
 public interface IEmailService

@@ -28,9 +28,55 @@
                         <i class="fas fa-fire me-1"></i>Hot
                     </span>
                 }
+                <!-- Status Badge -->
+                <span class="badge ms-1 @GetStatusBadgeClass(Proposal.Status)">
+                    <i class="@GetStatusIcon(Proposal.Status) me-1"></i>@GetStatusText(Proposal.Status)
+                </span>
             </div>
             <small class="text-muted">@Proposal.CreatedAt.ToString("dd/MM/yyyy")</small>
         </div>
+
+        <!-- SuperUser/Admin Controls - C# 13.0 Role-based Authorization -->
+        <AuthorizeView Roles="SuperUser,Admin">
+            <Authorized>
+                <div class="alert alert-info py-2 px-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="mb-0">
+                            <i class="fas fa-tools me-1"></i>
+                            <strong>Contrôles SuperUser/Admin</strong>
+                        </small>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
+                                    data-bs-toggle="dropdown" disabled="@isToggling">
+                                @if (isToggling)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1"></span>
+                                }
+                                <i class="fas fa-cog me-1"></i>Statut
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><button class="dropdown-item" @onclick="() => ToggleStatus(ProposalStatus.Active)"
+                                          disabled="@(Proposal.Status == ProposalStatus.Active || isToggling)">
+                                    <i class="fas fa-play text-success me-2"></i>Activer
+                                </button></li>
+                                <li><button class="dropdown-item" @onclick="() => ToggleStatus(ProposalStatus.Closed)"
+                                          disabled="@(Proposal.Status == ProposalStatus.Closed || isToggling)">
+                                    <i class="fas fa-stop text-warning me-2"></i>Fermer
+                                </button></li>
+                                <li><button class="dropdown-item" @onclick="() => ToggleStatus(ProposalStatus.Archived)"
+                                          disabled="@(Proposal.Status == ProposalStatus.Archived || isToggling)">
+                                    <i class="fas fa-archive text-secondary me-2"></i>Archiver
+                                </button></li>
+                                <li><button class="dropdown-item" @onclick="() => ToggleStatus(ProposalStatus.Draft)"
+                                          disabled="@(Proposal.Status == ProposalStatus.Draft || isToggling)">
+                                    <i class="fas fa-edit text-info me-2"></i>Brouillon
+                                </button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
         <!-- Title and Description -->
         <h5 class="card-title fw-bold mb-2">
@@ -92,7 +138,7 @@
         </div>
 
         <!-- Action Buttons -->
-        @if (ShowActions)
+        @if (ShowActions && Proposal.Status == ProposalStatus.Active)
         {
             <AuthorizeView>
                 <Authorized>
@@ -133,6 +179,15 @@
                 </NotAuthorized>
             </AuthorizeView>
         }
+        else if (Proposal.Status != ProposalStatus.Active)
+        {
+            <div class="alert alert-secondary text-center py-2">
+                <small>
+                    <i class="fas fa-info-circle me-1"></i>
+                    Cette proposition est <strong>@GetStatusText(Proposal.Status).ToLower()</strong> et ne peut plus recevoir de votes.
+                </small>
+            </div>
+        }
 
         <!-- Comments and Share -->
         <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
@@ -160,6 +215,7 @@
     private VoteDto? userVote;
     private bool isVoting = false;
     private VoteType? pendingVoteType;
+    private bool isToggling = false; // C# 13.0 - Status toggle state
 
     protected override async Task OnInitializedAsync()
     {
@@ -236,6 +292,41 @@
         }
     }
 
+    /// <summary>
+    /// C# 13.0 - Toggle proposal status (SuperUser/Admin only) with modern pattern matching
+    /// </summary>
+    private async Task ToggleStatus(ProposalStatus newStatus)
+    {
+        try
+        {
+            isToggling = true;
+            StateHasChanged();
+
+            var updatedProposal = await ProposalService.ToggleProposalStatusAsync(Proposal.Id, newStatus);
+            
+            if (updatedProposal is not null)
+            {
+                // Update the proposal with new status
+                Proposal = updatedProposal;
+                
+                // Notify parent component
+                await OnProposalUpdated.InvokeAsync(updatedProposal);
+                
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Error toggling proposal status: {ex.Message}");
+        }
+        finally
+        {
+            isToggling = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task ShareProposal()
     {
         var url = $"{Navigation.BaseUri}proposal/{Proposal.Id}";
@@ -270,4 +361,40 @@
                user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ??
                user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
     }
+
+    /// <summary>
+    /// C# 13.0 - Get status badge CSS class using pattern matching
+    /// </summary>
+    private static string GetStatusBadgeClass(ProposalStatus status) => status switch
+    {
+        ProposalStatus.Active => "bg-success",
+        ProposalStatus.Closed => "bg-warning text-dark",
+        ProposalStatus.Archived => "bg-secondary",
+        ProposalStatus.Draft => "bg-info",
+        _ => "bg-light text-dark"
+    };
+
+    /// <summary>
+    /// C# 13.0 - Get status icon using pattern matching
+    /// </summary>
+    private static string GetStatusIcon(ProposalStatus status) => status switch
+    {
+        ProposalStatus.Active => "fas fa-play",
+        ProposalStatus.Closed => "fas fa-stop",
+        ProposalStatus.Archived => "fas fa-archive",
+        ProposalStatus.Draft => "fas fa-edit",
+        _ => "fas fa-question"
+    };
+
+    /// <summary>
+    /// C# 13.0 - Get status text using pattern matching
+    /// </summary>
+    private static string GetStatusText(ProposalStatus status) => status switch
+    {
+        ProposalStatus.Active => "Active",
+        ProposalStatus.Closed => "Fermée",
+        ProposalStatus.Archived => "Archivée",
+        ProposalStatus.Draft => "Brouillon",
+        _ => "Inconnu"
+    };
 }

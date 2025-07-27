@@ -260,3 +260,12 @@ public record ActivityItemDto
     public string UserName { get; init; } = "";
     public DateTime CreatedAt { get; init; }
 }
+
+/// <summary>
+/// DTO for proposal status toggling
+/// </summary>
+
+public record ToggleProposalStatusDto
+{
+    public ProposalStatus NewStatus { get; init; }
+}

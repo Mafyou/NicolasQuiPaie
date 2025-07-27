@@ -1,12 +1,9 @@
-using Microsoft.AspNetCore.Mvc;
-using NicolasQuiPaieAPI.Application.Interfaces;
-
-namespace NicolasQuiPaieAPI.Extensions;
+namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 /// <summary>
 /// Extension methods for API endpoint configuration
 /// </summary>
-public static class EndpointExtensions
+public static class ApplicationEndpoints
 {
     /// <summary>
     /// Maps all API endpoints
@@ -36,7 +33,7 @@ public static class EndpointExtensions
             try
             {
                 logger.LogWarning("Health check endpoint accessed - testing SQL logging with custom ApiLog table");
-                
+
                 return Results.Ok(new
                 {
                     Status = "Healthy",
@@ -76,12 +73,12 @@ public static class EndpointExtensions
                 }
 
                 // Parse and validate level parameter
-                NicolasQuiPaieAPI.Infrastructure.Models.LogLevel? logLevel = null;
+                Infrastructure.Models.LogLevel? logLevel = null;
                 if (!string.IsNullOrEmpty(level))
                 {
-                    if (!Enum.TryParse<NicolasQuiPaieAPI.Infrastructure.Models.LogLevel>(level, true, out var parsedLevel))
+                    if (!Enum.TryParse<Infrastructure.Models.LogLevel>(level, true, out var parsedLevel))
                     {
-                        var validLevels = string.Join(", ", Enum.GetNames<NicolasQuiPaieAPI.Infrastructure.Models.LogLevel>());
+                        var validLevels = string.Join(", ", Enum.GetNames<Infrastructure.Models.LogLevel>());
                         logger.LogWarning("Invalid level parameter: {Level}", level);
                         return Results.BadRequest($"Invalid level parameter. Valid values: {validLevels}");
                     }
@@ -94,19 +91,19 @@ public static class EndpointExtensions
                 // Convert to response format
                 var logDtos = logs.Select(log => new
                 {
-                    Id = log.Id,
-                    Message = log.Message,
-                    Level = log.Level.ToString(),
-                    TimeStamp = log.TimeStamp,
-                    Exception = log.Exception,
-                    UserId = log.UserId,
-                    UserName = log.UserName,
-                    RequestPath = log.RequestPath,
-                    RequestMethod = log.RequestMethod,
-                    StatusCode = log.StatusCode,
-                    Duration = log.Duration,
-                    ClientIP = log.ClientIP,
-                    Source = log.Source
+                    log.Id,
+                    log.Message,
+                    Level = $"{log.Level}",
+                    log.TimeStamp,
+                    log.Exception,
+                    log.UserId,
+                    log.UserName,
+                    log.RequestPath,
+                    log.RequestMethod,
+                    log.StatusCode,
+                    log.Duration,
+                    log.ClientIP,
+                    log.Source
                 }).ToList();
 
                 if (logDtos.Count == 0)
@@ -119,7 +116,7 @@ public static class EndpointExtensions
                     TotalReturned = logDtos.Count,
                     LevelFilter = level,
                     RequestedCount = take,
-                    AvailableLevels = Enum.GetNames<NicolasQuiPaieAPI.Infrastructure.Models.LogLevel>(),
+                    AvailableLevels = Enum.GetNames<Infrastructure.Models.LogLevel>(),
                     Logs = logDtos
                 });
             }
@@ -134,7 +131,8 @@ public static class EndpointExtensions
         .WithSummary("Récupère les derniers logs de l'API filtrés par niveau")
         .Produces(200)
         .Produces(400)
-        .Produces(500);
+        .Produces(500)
+        .RequireAdminRole();
     }
 
     private static void MapTestLoggingEndpoint(this WebApplication app)
@@ -183,7 +181,8 @@ public static class EndpointExtensions
         .WithName("TestLogging")
         .WithSummary("Crée une entrée de log de test")
         .Produces(200)
-        .Produces(500);
+        .Produces(500)
+        .RequireAdminRole();
     }
 }
 

@@ -3,7 +3,6 @@ namespace NicolasQuiPaieAPI.Infrastructure.Repositories;
 public class UnitOfWork(ApplicationDbContext context) : IUnitOfWork
 {
     private IDbContextTransaction? _transaction;
-
     public IProposalRepository Proposals { get; } = new ProposalRepository(context);
     public IVoteRepository Votes { get; } = new VoteRepository(context);
     public ICommentRepository Comments { get; } = new CommentRepository(context);
