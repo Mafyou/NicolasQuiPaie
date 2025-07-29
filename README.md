@@ -1,5 +1,7 @@
 ﻿# 🇫🇷💰 Nicolas Qui Paie - Plateforme de Démocratie Souveraine Numérique
 
+Démo: [Nicolas Qui Paie](https://nicolasquipaie.eu)
+
 [![.NET 9](https://img.shields.io/badge/.NET-9-purple)](https://dotnet.microsoft.com/) [![C# 13](https://img.shields.io/badge/C%23-13.0-blue)](https://docs.microsoft.com/dotnet/csharp/) [![Blazor WebAssembly](https://img.shields.io/badge/Blazor-WebAssembly-orange)](https://blazor.net/) [![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-green)](https://github.com/jasontaylordev/CleanArchitecture) [![Aspire](https://img.shields.io/badge/Aspire-Cloud%20Native-lightblue)](https://learn.microsoft.com/en-us/dotnet/aspire/) [![JWT Auth](https://img.shields.io/badge/Auth-JWT%20%2B%20Roles-red)](https://jwt.io/)
 
 ### 🎯 Mission
