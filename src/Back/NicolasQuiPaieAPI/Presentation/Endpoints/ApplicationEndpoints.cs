@@ -32,17 +32,10 @@ public static class ApplicationEndpoints
         {
             try
             {
-                logger.LogWarning("Health check endpoint accessed - testing SQL logging with custom ApiLog table");
-
                 return Results.Ok(new
                 {
-                    Status = "Healthy",
-                    Timestamp = DateTime.UtcNow,
-                    Environment = app.Environment.EnvironmentName,
-                    SwaggerAvailable = app.Environment.IsDevelopment(),
-                    LoggingLevel = "Warning, Error, Fatal only",
-                    SqlLoggingEnabled = true,
-                    CustomApiLogTable = true
+                    Status = "healthy",
+                    Timestamp = DateTime.UtcNow
                 });
             }
             catch (Exception ex)
