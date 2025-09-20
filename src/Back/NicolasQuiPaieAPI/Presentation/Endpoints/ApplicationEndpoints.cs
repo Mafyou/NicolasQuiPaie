@@ -19,33 +19,10 @@ public static class ApplicationEndpoints
         app.MapAnalyticsEndpoints();
 
         // Map monitoring and testing endpoints
-        app.MapHealthEndpoint();
         app.MapLogsEndpoint();
         app.MapTestLoggingEndpoint();
 
         return app;
-    }
-
-    private static void MapHealthEndpoint(this WebApplication app)
-    {
-        app.MapGet("/health", (ILogger<Program> logger) =>
-        {
-            try
-            {
-                return Results.Ok(new
-                {
-                    Status = "healthy",
-                    Timestamp = DateTime.UtcNow
-                });
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Critical error in health check endpoint");
-                return Results.Problem("Health check failed");
-            }
-        })
-        .WithTags("Health")
-        .WithSummary("Vérification de l'état de l'API");
     }
 
     private static void MapLogsEndpoint(this WebApplication app)
