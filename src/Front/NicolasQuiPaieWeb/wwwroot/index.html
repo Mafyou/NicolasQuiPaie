@@ -4,365 +4,104 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
-    <title>Nicolas Qui Paie - La Démocratie Souveraine Numérique</title>
-    <meta name="description" content="La plateforme citoyenne où c'est Nicolas qui paie ! Votez et débattez sur les dépenses publiques et la fiscalité française." />
+    <title>Nicolas Qui Paie - Fermeture du site</title>
+    <meta name="description" content="Le site nicolasquipaie.eu ferme ses portes, mais le mouvement Nicolas Qui Paie continue ailleurs !" />
     
-    <!-- Bootstrap 5 - Verified working version -->
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <!-- Font Awesome - Verified working version -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-    <!-- Chart.js - Using unpkg for reliability -->
-    <script src="https://unpkg.com/chart.js@4.4.1/dist/chart.umd.js" crossorigin="anonymous"></script>
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="css/charts.css" />
-    <link rel="stylesheet" href="NicolasQuiPaieWeb.styles.css" />
     
-    <!-- Favicon using data URI to avoid 404 -->
+    <!-- Favicon -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🇫🇷</text></svg>">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .closure-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .flag-icon {
+            font-size: 4rem;
+            animation: wave 2s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+        .fade-in {
+            animation: fadeIn 1.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app">
-        <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
-            <div class="text-center">
-                <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                    <span class="visually-hidden">Chargement...</span>
-                </div>
-                <h4 class="text-primary">Nicolas Qui Paie</h4>
-                <p class="text-muted">Chargement de l'application...</p>
-                <div id="loading-progress" class="mt-3">
-                    <div class="progress" style="height: 8px;">
-                        <div id="loading-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+    <div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="row justify-content-center w-100">
+            <div class="col-md-8 col-lg-6">
+                <div class="closure-card p-5 text-center fade-in">
+                    <div class="mb-4">
+                        <div class="flag-icon">🇫🇷</div>
                     </div>
-                    <small id="loading-stage" class="text-muted mt-2 d-block">Initialisation...</small>
-                </div>
-                <small class="text-muted">Version: 1.0.0 - .NET 9 & C# 13</small>
-                
-                <!-- Demo mode indicator while loading - Static HTML version -->
-                <div id="demo-mode-loading" class="alert alert-warning border-0 rounded-0 mb-0 text-center mt-3" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%); display: none;">
-                    <div class="py-2">
-                        <div class="d-flex align-items-center justify-content-center flex-wrap">
-                            <div class="me-3">
-                                <i class="fas fa-eye text-dark me-2"></i>
-                                <strong>Mode Démonstration</strong>
-                            </div>
-                            <div class="text-dark small me-3">
-                                Données d'exemple • Fonctionnalités limitées 🚧 Site en cours de construction
-                            </div>
-                        </div>
+                    
+                    <h1 class="display-4 text-primary mb-4">
+                        <strong>Nicolas Qui Paie</strong>
+                    </h1>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-door-open text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    
+                    <h2 class="h3 text-dark mb-4">
+                        Le site nicolasquipaie.eu ferme ses portes
+                    </h2>
+                    
+                    <p class="lead text-muted mb-4">
+                        Mais le mouvement <strong>Nicolas Qui Paie</strong> continue ailleurs !
+                    </p>
+                    
+                    <div class="text-muted">
+                        <p class="mb-2">
+                            <i class="fas fa-heart text-danger me-2"></i>
+                            Merci à tous ceux qui ont participé à cette aventure démocratique
+                        </p>
+                        <p class="small">
+                            La démocratie souveraine numérique reste un idéal à poursuivre
+                        </p>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            Site fermé le 23/09/2025
+                        </small>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div id="blazor-error-ui" style="display: none;">
-        <div class="alert alert-danger m-3">
-            <div class="d-flex align-items-center">
-                <i class="fas fa-exclamation-triangle me-3"></i>
-                <div>
-                    <strong>Une erreur inattendue s'est produite.</strong>
-                    <p class="mb-0">L'application sera rechargée automatiquement.</p>
-                    <div id="error-details" class="mt-2 small text-muted"></div>
-                </div>
-            </div>
-            <div class="mt-2">
-                <button type="button" class="btn btn-sm btn-danger" onclick="location.reload()">
-                    <i class="fas fa-redo me-1"></i>Recharger maintenant
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="document.getElementById('blazor-error-ui').style.display='none'">
-                    Ignorer
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-info ms-2" onclick="window.open('/diagnostics', '_blank')">
-                    <i class="fas fa-stethoscope me-1"></i>Diagnostics
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- SignalR connection status indicator -->
-    <div id="signalr-status" class="signalr-status">
-        <i class="fas fa-wifi me-1"></i>
-        <span id="signalr-status-text">Connexion...</span>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     
-    <!-- SignalR - Using unpkg for reliability -->
-    <script src="https://unpkg.com/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js" crossorigin="anonymous"></script>
-    
-    <!-- Maintenance Mode JS -->
-    <script src="js/maintenance.js"></script>
-    
-    <!-- Blazor WebAssembly - Back to default autostart -->
-    <script src="_framework/blazor.webassembly.js"></script>
-    
     <script>
-        // Development-only console logging wrapper
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        // Create development-only console object
-        const devConsole = {
-            log: (...args) => isDevelopment && console.log(...args),
-            error: (...args) => isDevelopment && console.error(...args),
-            warn: (...args) => isDevelopment && console.warn(...args),
-            info: (...args) => isDevelopment && console.info(...args),
-            debug: (...args) => isDevelopment && console.debug(...args),
-            group: (...args) => isDevelopment && console.group(...args),
-            groupEnd: () => isDevelopment && console.groupEnd(),
-            groupCollapsed: (...args) => isDevelopment && console.groupCollapsed(...args)
-        };
-
-        // Simplified loading progress tracking
-        let loadingStage = 0;
-        const loadingStages = [
-            'Initialisation...',
-            'Chargement des bibliothèques...',
-            'Vérification WebAssembly...',
-            'Démarrage Blazor...',
-            'Application prête!'
-        ];
-
-        // Global variables for better debugging
-        window.nicolasQuiPaie = {
-            startTime: performance.now(),
-            loadingStage: 0,
-            errors: [],
-            warnings: [],
-            isDevelopment: isDevelopment,
-            blazorStarted: false,
-            demoModeActive: true
-        };
-
-        function updateLoadingProgress(stage) {
-            window.nicolasQuiPaie.loadingStage = stage;
-            const progressBar = document.getElementById('loading-bar');
-            const stageText = document.getElementById('loading-stage');
-            
-            if (progressBar && stageText) {
-                const progress = (stage / (loadingStages.length - 1)) * 100;
-                progressBar.style.width = `${progress}%`;
-                stageText.textContent = loadingStages[stage] || 'Chargement...';
-                
-                devConsole.log(`📈 Loading progress: ${progress.toFixed(0)}% - ${loadingStages[stage]}`);
-            }
-        }
-
-        // Simplified loading sequence
-        function startLoadingSequence() {
-            updateLoadingProgress(0);
-            
-            setTimeout(() => {
-                updateLoadingProgress(1);
-                
-                setTimeout(() => {
-                    updateLoadingProgress(2);
-                    
-                    setTimeout(() => {
-                        updateLoadingProgress(3);
-                        
-                        setTimeout(() => {
-                            updateLoadingProgress(4);
-                        }, 1000);
-                    }, 800);
-                }, 600);
-            }, 400);
-        }
-
-        // Enhanced Blazor startup with error handling and library availability checks
-        window.addEventListener('DOMContentLoaded', function() {
-            devConsole.log('🚀 Nicolas Qui Paie - Démarrage de l\'application');
-            
-            // Initialize library availability flags
-            window.chartJsAvailable = false;
-            window.signalRAvailable = false;
-            
-            // Check if Chart.js is loaded
-            if (typeof Chart === 'undefined') {
-                devConsole.error('❌ Chart.js failed to load from CDN');
-                window.nicolasQuiPaie.warnings.push('Chart.js not available');
-                if (isDevelopment) showLibraryError('Chart.js');
-            } else {
-                devConsole.log('✅ Chart.js loaded successfully, version:', Chart.version);
-                window.chartJsAvailable = true;
-            }
-
-            // Check if SignalR is loaded
-            if (typeof signalR === 'undefined') {
-                devConsole.error('❌ SignalR failed to load from CDN');
-                window.nicolasQuiPaie.warnings.push('SignalR not available');
-                if (isDevelopment) showLibraryError('SignalR');
-            } else {
-                devConsole.log('✅ SignalR loaded successfully');
-                window.signalRAvailable = true;
-                if (isDevelopment) {
-                    updateSignalRStatus('loaded', 'Bibliothèques chargées');
-                }
-            }
-
-            // Check if Bootstrap is loaded
-            if (typeof bootstrap === 'undefined') {
-                devConsole.warn('⚠️ Bootstrap JavaScript failed to load');
-                window.nicolasQuiPaie.warnings.push('Bootstrap JS not available');
-            } else {
-                devConsole.log('✅ Bootstrap JavaScript loaded successfully');
-            }
-
-            // Check for Browser Link in development
-            if (isDevelopment && typeof window.browserLink !== 'undefined') {
-                devConsole.log('🔗 Visual Studio Browser Link detected and enabled');
-            }
-
-            // Check for WebAssembly support
-            if (typeof WebAssembly === 'undefined') {
-                console.error('❌ WebAssembly not supported in this browser');
-                window.nicolasQuiPaie.errors.push('WebAssembly not supported');
-                if (isDevelopment) showLibraryError('WebAssembly');
-                showErrorDetails('WebAssembly n\'est pas supporté par ce navigateur. Veuillez utiliser un navigateur moderne.');
-                return;
-            } else {
-                devConsole.log('✅ WebAssembly support detected');
-            }
-
-            // Show demo mode indicator early
-            setTimeout(() => {
-                const demoIndicator = document.getElementById('demo-mode-loading');
-                if (demoIndicator) {
-                    demoIndicator.style.display = 'block';
-                    devConsole.log('📝 Demo mode banner displayed (loading screen)');
-                }
-            }, 1000);
-
-            // Start the simplified loading sequence
-            startLoadingSequence();
-        });
-
-        function updateSignalRStatus(status, message) {
-            const statusEl = document.getElementById('signalr-status');
-            const textEl = document.getElementById('signalr-status-text');
-            
-            if (statusEl && textEl) {
-                statusEl.className = `signalr-status ${status} show`;
-                textEl.textContent = message;
-                
-                // Hide after 3 seconds if loaded successfully
-                if (status === 'loaded') {
-                    setTimeout(() => {
-                        statusEl.classList.remove('show');
-                    }, 3000);
-                }
-            }
-        }
-
-        function showLibraryError(libraryName) {
-            devConsole.error(`💥 ${libraryName} failed to load or not supported`);
-            
-            const existingAlerts = document.querySelectorAll('.alert-warning');
-            if (existingAlerts.length > 2) return;
-            
-            // Show user-friendly error message in development only
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed';
-            errorDiv.style.cssText = 'top: 70px; right: 20px; z-index: 9999; max-width: 400px;'; // Adjusted for banner
-            errorDiv.innerHTML = `
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Avertissement:</strong> ${libraryName} n'est pas disponible. 
-                Les fonctionnalités associées pourraient ne pas fonctionner correctement.
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(errorDiv);
-            
-            // Auto-remove after 10 seconds
-            setTimeout(() => {
-                if (errorDiv.parentNode) {
-                    errorDiv.remove();
-                }
-            }, 10000);
-        }
-
-        function showErrorDetails(message) {
-            const errorDetails = document.getElementById('error-details');
-            if (errorDetails) {
-                errorDetails.textContent = message;
-            }
-        }
-
-        // Development environment enhancements
-        if (isDevelopment) {
-            devConsole.log('🔧 Development mode detected - Enhanced debugging enabled');
-            
-            // Enhanced error reporting in development
-            window.addEventListener('error', function(e) {
-                devConsole.group('🚨 JavaScript Error');
-                devConsole.error('Message:', e.message);
-                devConsole.error('File:', e.filename);
-                devConsole.error('Line:', e.lineno, 'Column:', e.colno);
-                devConsole.error('Error object:', e.error);
-                devConsole.groupEnd();
-                
-                window.nicolasQuiPaie.errors.push(`${e.message} at ${e.filename}:${e.lineno}`);
-            });
-
-            // Performance monitoring
-            window.addEventListener('load', function() {
-                setTimeout(() => {
-                    if (window.performance && window.performance.timing) {
-                        const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
-                        devConsole.log(`📊 Page load time: ${loadTime}ms`);
-                        
-                        // Log additional performance metrics
-                        const navigation = performance.getEntriesByType('navigation')[0];
-                        if (navigation) {
-                            devConsole.log(`📊 DOM Content Loaded: ${navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart}ms`);
-                            devConsole.log(`📊 Load Complete: ${navigation.loadEventEnd - navigation.loadEventStart}ms`);
-                        }
-                    }
-                    
-                    // Log current state
-                    devConsole.log('📊 Application state:', {
-                        loadingStage: window.nicolasQuiPaie.loadingStage,
-                        demoModeActive: window.nicolasQuiPaie.demoModeActive,
-                        errors: window.nicolasQuiPaie.errors,
-                        warnings: window.nicolasQuiPaie.warnings,
-                        chartJsAvailable: window.chartJsAvailable,
-                        signalRAvailable: window.signalRAvailable
-                    });
-                }, 0);
-            });
-
-            // Browser Link compatibility check
-            window.addEventListener('load', function() {
-                setTimeout(() => {
-                    if (typeof window.browserLink !== 'undefined') {
-                        devConsole.log('🔗 Browser Link is working correctly');
-                    }
-                }, 1000);
-            });
-        }
-
-        // Global utility functions accessible from Blazor
-        window.updateSignalRStatus = updateSignalRStatus;
-        window.showLibraryError = showLibraryError;
-        window.devConsole = devConsole; // Make development console available globally
-        
-        // Global error handler for unhandled promise rejections
-        window.addEventListener('unhandledrejection', function(event) {
-            // Always log promise rejections (but only in dev mode with details)
-            if (isDevelopment) {
-                devConsole.group('🔍 Promise Rejection Details');
-                devConsole.error('Reason:', event.reason);
-                devConsole.error('Promise:', event.promise);
-                devConsole.groupEnd();
-            }
-            
-            window.nicolasQuiPaie.errors.push('Promise rejection: ' + (event.reason?.message || event.reason));
-            
-            // Prevent the default browser behavior (console error)
-            event.preventDefault();
+        // Simple animation on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('👋 Nicolas Qui Paie - Site fermé mais le mouvement continue !');
         });
     </script>
 </body>
