@@ -17,7 +17,7 @@ public class MaintenanceSettings
     /// <summary>
     /// Si true, utilise les données d'exemple au lieu de l'API (mode lecture seule)
     /// </summary>
-    public bool IsReadOnlyMode { get; set; } = false;
+    public bool IsReadOnlyMode { get; set; } = true;
 
     [Required]
     public string ConstructionMessage { get; set; } = "";

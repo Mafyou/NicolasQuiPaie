@@ -56,7 +56,7 @@ public class SampleDataService
             .Skip(skip)
             .Take(take)
             .ToList();
-        
+
         return Task.FromResult<IEnumerable<ProposalDto>>(result);
     }
 
@@ -83,7 +83,7 @@ public class SampleDataService
             .Skip(skip)
             .Take(take)
             .ToList();
-        
+
         return Task.FromResult<IEnumerable<ProposalDto>>(result);
     }
 
@@ -112,7 +112,7 @@ public class SampleDataService
             .Skip(skip)
             .Take(take)
             .ToList();
-        
+
         return Task.FromResult<IEnumerable<ProposalDto>>(result);
     }
 
@@ -177,8 +177,8 @@ public class SampleDataService
 
     private List<CategoryDto> CreateSampleCategories()
     {
-        return new List<CategoryDto>
-        {
+        return
+        [
             new() { Id = 1, Name = "Régalien", Description = "Fonctions de souveraineté : police, justice, défense", Color = "#002E5D", IconClass = "fa-solid fa-gavel" },
             new() { Id = 2, Name = "Économie", Description = "Fiscalité, compétitivité, marché libre", Color = "#007ACC", IconClass = "fa-solid fa-chart-line" },
             new() { Id = 3, Name = "Gouvernance", Description = "Transparence, lutte contre la corruption", Color = "#5A189A", IconClass = "fa-solid fa-scale-balanced" },
@@ -190,13 +190,13 @@ public class SampleDataService
             new() { Id = 9, Name = "Institutions", Description = "Processus législatif et contre-pouvoirs", Color = "#3C096C", IconClass = "fa-solid fa-landmark" },
             new() { Id = 10, Name = "Europe", Description = "Relations et souveraineté vis-à-vis de l'UE", Color = "#003399", IconClass = "fa-brands fa-eu" },
             new() { Id = 11, Name = "Immigration", Description = "Contrôle des flux et intégration", Color = "#8E2A2A", IconClass = "fa-solid fa-passport" }
-        };
+        ];
     }
 
     private List<ProposalDto> CreateSampleProposals()
     {
-        return new List<ProposalDto>
-        {
+        return
+        [
             new()
             {
                 Id = 1,
@@ -418,10 +418,10 @@ public class SampleDataService
                 CreatedById = "user13",
                 Status = ProposalStatus.Active
             }
-        };
+        ];
     }
 
-    private List<CommentDto> CreateSampleComments()
+    private static List<CommentDto> CreateSampleComments()
     {
         var comments = new List<CommentDto>();
 

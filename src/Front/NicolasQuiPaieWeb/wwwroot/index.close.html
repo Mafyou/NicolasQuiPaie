@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>Nicolas Qui Paie - Fermeture du site</title>
+ <meta name="description" content="Le site nicolasquipaie.eu ferme ses portes, mais le mouvement Nicolas Qui Paie continue ailleurs !" />
+ 
+ <!-- Bootstrap5 -->
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+ <!-- Font Awesome -->
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+ 
+ <!-- Favicon -->
+ <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='003232'><text y='24' font-size='24'>????</text></svg>">
+ 
+ <style>
+ body {
+ background: linear-gradient(135deg, #667eea0%, #764ba2100%);
+ min-height:100vh;
+ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+ }
+ .closure-card {
+ background: rgba(255,255,255,0.95);
+ backdrop-filter: blur(10px);
+ border-radius:20px;
+ box-shadow:020px40px rgba(0,0,0,0.1);
+ border:1px solid rgba(255,255,255,0.2);
+ }
+ .flag-icon {
+ font-size:4rem;
+ animation: wave2s ease-in-out infinite;
+ }
+ @keyframes wave {
+0%,100% { transform: rotate(0deg); }
+25% { transform: rotate(-10deg); }
+75% { transform: rotate(10deg); }
+ }
+ .fade-in {
+ animation: fadeIn1.5s ease-in;
+ }
+ @keyframes fadeIn {
+ from { opacity:0; transform: translateY(30px); }
+ to { opacity:1; transform: translateY(0); }
+ }
+ </style>
+</head>
+
+<body>
+ <div class="container-fluid d-flex justify-content-center align-items-center" style="min-height:100vh;">
+ <div class="row justify-content-center w-100">
+ <div class="col-md-8 col-lg-6">
+ <div class="closure-card p-5 text-center fade-in">
+ <div class="mb-4">
+ <div class="flag-icon">????</div>
+ </div>
+ 
+ <h1 class="display-4 text-primary mb-4">
+ <strong>Nicolas Qui Paie</strong>
+ </h1>
+ 
+ <div class="mb-4">
+ <i class="fas fa-door-open text-warning" style="font-size:3rem;"></i>
+ </div>
+ 
+ <h2 class="h3 text-dark mb-4">
+ Le site nicolasquipaie.eu ferme ses portes
+ </h2>
+ 
+ <p class="lead text-muted mb-4">
+ Mais le mouvement <strong>Nicolas Qui Paie</strong> continue ailleurs !
+ </p>
+ 
+ <div class="text-muted">
+ <p class="mb-2">
+ <i class="fas fa-heart text-danger me-2"></i>
+ Merci à tous ceux qui ont participé à cette aventure démocratique
+ </p>
+ <p class="small">
+ La démocratie souveraine numérique reste un idéal à poursuivre
+ </p>
+ </div>
+ 
+ <hr class="my-4">
+ 
+ <div class="text-center">
+ <small class="text-muted">
+ <i class="fas fa-calendar me-1"></i>
+ Site fermé le23/09/2025
+ </small>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- Bootstrap JS -->
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+ 
+ <script>
+ // Simple animation on load
+ document.addEventListener('DOMContentLoaded', function() {
+ console.log('?? Nicolas Qui Paie - Site fermé mais le mouvement continue !');
+ });
+ </script>
+</body>
+
+</html>
