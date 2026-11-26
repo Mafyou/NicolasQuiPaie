@@ -1,4 +1,4 @@
-using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
+ï»¿using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
 
 namespace NicolasQuiPaie.UnitTests.Helpers;
 
@@ -69,7 +69,7 @@ public static class TestDataHelper
         new()
         {
             Id = 1,
-            Name = "Fiscalité Test",
+            Name = "FiscalitÃ© Test",
             Description = "Propositions fiscales de test",
             Color = "#FF6B6B",
             IconClass = "fas fa-coins",
@@ -89,8 +89,8 @@ public static class TestDataHelper
         new()
         {
             Id = 3,
-            Name = "Économie Test",
-            Description = "Propositions économiques de test",
+            Name = "Ã‰conomie Test",
+            Description = "Propositions Ã©conomiques de test",
             Color = "#45B7D1",
             IconClass = "fas fa-chart-line",
             IsActive = true,

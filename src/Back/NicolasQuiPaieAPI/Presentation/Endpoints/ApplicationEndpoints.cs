@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Presentation.Endpoints;
+ï»¿namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 /// <summary>
 /// Extension methods for API endpoint configuration
@@ -105,7 +105,7 @@ public static class ApplicationEndpoints
         })
         .WithTags("Monitoring")
         .WithName("GetApiLogs")
-        .WithSummary("Récupère les derniers logs de l'API filtrés par niveau")
+        .WithSummary("RÃ©cupÃ¨re les derniers logs de l'API filtrÃ©s par niveau")
         .Produces(200)
         .Produces(400)
         .Produces(500)
@@ -156,7 +156,7 @@ public static class ApplicationEndpoints
         })
         .WithTags("Testing")
         .WithName("TestLogging")
-        .WithSummary("Crée une entrée de log de test")
+        .WithSummary("CrÃ©e une entrÃ©e de log de test")
         .Produces(200)
         .Produces(500)
         .RequireAdminRole();

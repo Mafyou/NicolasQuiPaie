@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Application.Services;
+ï»¿namespace NicolasQuiPaieAPI.Application.Services;
 
 /// <summary>
 /// Service for analytics and statistics
@@ -170,7 +170,7 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
                 .Select(p => new RecentActivityItem
                 {
                     Type = "Proposal",
-                    Description = $"a créé la proposition '{p.Title}'",
+                    Description = $"a crÃ©Ã© la proposition '{p.Title}'",
                     UserId = p.CreatedById,
                     UserDisplayName = p.CreatedBy.DisplayName ?? "Anonymous",
                     Timestamp = p.CreatedAt,
@@ -189,8 +189,8 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
                 {
                     Type = "Vote",
                     Description = v.VoteType == Infrastructure.Models.VoteType.For ?
-                        $"a voté POUR '{v.Proposal.Title}'" :
-                        $"a voté CONTRE '{v.Proposal.Title}'",
+                        $"a votÃ© POUR '{v.Proposal.Title}'" :
+                        $"a votÃ© CONTRE '{v.Proposal.Title}'",
                     UserId = v.UserId,
                     UserDisplayName = v.User.DisplayName ?? "Anonymous",
                     Timestamp = v.VotedAt,
@@ -244,10 +244,10 @@ public class AnalyticsService(ApplicationDbContext context, ILogger<AnalyticsSer
             var currentMood = frustrationLevel switch
             {
                 < 20 => "Calme",
-                < 40 => "Légèrement frustré",
-                < 60 => "Frustré",
-                < 80 => "Très frustré",
-                _ => "Ras-le-bol général"
+                < 40 => "LÃ©gÃ¨rement frustrÃ©",
+                < 60 => "FrustrÃ©",
+                < 80 => "TrÃ¨s frustrÃ©",
+                _ => "Ras-le-bol gÃ©nÃ©ral"
             };
 
             return new FrustrationBarometerDto

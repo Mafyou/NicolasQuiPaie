@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Presentation.Endpoints;
+ï»¿namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 public static class ProposalEndpoints
 {
@@ -52,7 +52,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetProposals")
-        .WithSummary("Récupère les propositions actives")
+        .WithSummary("RÃ©cupÃ¨re les propositions actives")
         .Produces<IEnumerable<ProposalDto>>()
         .Produces(400)
         .Produces(500);
@@ -99,7 +99,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetRecentProposals")
-        .WithSummary("Récupère les propositions les plus récentes")
+        .WithSummary("RÃ©cupÃ¨re les propositions les plus rÃ©centes")
         .Produces<IEnumerable<ProposalDto>>()
         .Produces(400)
         .Produces(500);
@@ -146,7 +146,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetPopularProposals")
-        .WithSummary("Récupère les propositions les plus populaires (nombre de votes positifs)")
+        .WithSummary("RÃ©cupÃ¨re les propositions les plus populaires (nombre de votes positifs)")
         .Produces<IEnumerable<ProposalDto>>()
         .Produces(400)
         .Produces(500);
@@ -193,7 +193,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetControversialProposals")
-        .WithSummary("Récupère les propositions les plus controversées (équilibre votes pour/contre)")
+        .WithSummary("RÃ©cupÃ¨re les propositions les plus controversÃ©es (Ã©quilibre votes pour/contre)")
         .Produces<IEnumerable<ProposalDto>>()
         .Produces(400)
         .Produces(500);
@@ -229,7 +229,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetTrendingProposals")
-        .WithSummary("Récupère les propositions tendances")
+        .WithSummary("RÃ©cupÃ¨re les propositions tendances")
         .Produces<IEnumerable<ProposalDto>>()
         .Produces(400)
         .Produces(500);
@@ -266,7 +266,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("GetProposalById")
-        .WithSummary("Récupère une proposition par son ID")
+        .WithSummary("RÃ©cupÃ¨re une proposition par son ID")
         .Produces<ProposalDto>()
         .Produces(400)
         .Produces(404)
@@ -319,7 +319,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("CreateProposal")
-        .WithSummary("Crée une nouvelle proposition")
+        .WithSummary("CrÃ©e une nouvelle proposition")
         .Produces<ProposalDto>(201)
         .Produces(400)
         .Produces(401)
@@ -355,7 +355,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("IncrementViews")
-        .WithSummary("Incrémente le nombre de vues d'une proposition")
+        .WithSummary("IncrÃ©mente le nombre de vues d'une proposition")
         .Produces(200)
         .Produces(400)
         .Produces(404)
@@ -414,7 +414,7 @@ public static class ProposalEndpoints
             }
         })
         .WithName("UpdateProposal")
-        .WithSummary("Met à jour une proposition")
+        .WithSummary("Met Ã  jour une proposition")
         .Produces<ProposalDto>()
         .Produces(400)
         .Produces(401)

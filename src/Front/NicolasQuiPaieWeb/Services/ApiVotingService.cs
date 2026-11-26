@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Services
+ï»¿namespace NicolasQuiPaieWeb.Services
 {
     public class ApiVotingService
     {
@@ -28,12 +28,12 @@ namespace NicolasQuiPaieWeb.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Vote soumis avec succès pour la proposition {ProposalId}", voteDto.ProposalId);
+                    _logger.LogInformation("Vote soumis avec succÃ¨s pour la proposition {ProposalId}", voteDto.ProposalId);
                     return true;
                 }
                 else
                 {
-                    _logger.LogWarning("Échec de soumission du vote. Status: {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("Ã‰chec de soumission du vote. Status: {StatusCode}", response.StatusCode);
                     return false;
                 }
             }
@@ -45,7 +45,7 @@ namespace NicolasQuiPaieWeb.Services
         }
 
         /// <summary>
-        /// Récupère les votes d'une proposition via l'API
+        /// RÃ©cupÃ¨re les votes d'une proposition via l'API
         /// </summary>
         public async Task<IEnumerable<VoteDto>> GetProposalVotesAsync(int proposalId)
         {
@@ -57,13 +57,13 @@ namespace NicolasQuiPaieWeb.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des votes pour la proposition {ProposalId}", proposalId);
+                _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des votes pour la proposition {ProposalId}", proposalId);
                 return [];
             }
         }
 
         /// <summary>
-        /// Récupère les votes de l'utilisateur actuel via l'API
+        /// RÃ©cupÃ¨re les votes de l'utilisateur actuel via l'API
         /// </summary>
         public async Task<IEnumerable<VoteDto>> GetUserVotesAsync(string userId)
         {
@@ -74,7 +74,7 @@ namespace NicolasQuiPaieWeb.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erreur lors de la récupération des votes de l'utilisateur");
+                _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des votes de l'utilisateur");
                 return [];
             }
         }
@@ -91,12 +91,12 @@ namespace NicolasQuiPaieWeb.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("Vote supprimé avec succès pour la proposition {ProposalId}", proposalId);
+                    _logger.LogInformation("Vote supprimÃ© avec succÃ¨s pour la proposition {ProposalId}", proposalId);
                     return true;
                 }
                 else
                 {
-                    _logger.LogWarning("Échec de suppression du vote. Status: {StatusCode}", response.StatusCode);
+                    _logger.LogWarning("Ã‰chec de suppression du vote. Status: {StatusCode}", response.StatusCode);
                     return false;
                 }
             }

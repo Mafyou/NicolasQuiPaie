@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Services;
+ï»¿namespace NicolasQuiPaieWeb.Services;
 
 public class ApiProposalService
 {
@@ -18,7 +18,7 @@ public class ApiProposalService
     }
 
     /// <summary>
-    /// Récupère les propositions actives depuis l'API
+    /// RÃ©cupÃ¨re les propositions actives depuis l'API
     /// </summary>
     public async Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
@@ -44,13 +44,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions actives");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions actives");
             return [];
         }
     }
 
     /// <summary>
-    /// Récupère les propositions récentes depuis l'API
+    /// RÃ©cupÃ¨re les propositions rÃ©centes depuis l'API
     /// </summary>
     public async Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
@@ -76,13 +76,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions récentes");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions rÃ©centes");
             return [];
         }
     }
 
     /// <summary>
-    /// Récupère les propositions populaires depuis l'API
+    /// RÃ©cupÃ¨re les propositions populaires depuis l'API
     /// </summary>
     public async Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
@@ -108,13 +108,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions populaires");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions populaires");
             return [];
         }
     }
 
     /// <summary>
-    /// Récupère les propositions controversées depuis l'API
+    /// RÃ©cupÃ¨re les propositions controversÃ©es depuis l'API
     /// </summary>
     public async Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
@@ -140,13 +140,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions controversées");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions controversÃ©es");
             return [];
         }
     }
 
     /// <summary>
-    /// Récupère les propositions tendances depuis l'API
+    /// RÃ©cupÃ¨re les propositions tendances depuis l'API
     /// </summary>
     public async Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5)
     {
@@ -158,13 +158,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions tendances");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions tendances");
             return [];
         }
     }
 
     /// <summary>
-    /// Récupère une proposition spécifique par ID depuis l'API
+    /// RÃ©cupÃ¨re une proposition spÃ©cifique par ID depuis l'API
     /// </summary>
     public async Task<ProposalDto?> GetProposalDtoByIdAsync(int id)
     {
@@ -175,13 +175,13 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération de la proposition {ProposalId}", id);
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration de la proposition {ProposalId}", id);
             return null;
         }
     }
 
     /// <summary>
-    /// Crée une nouvelle proposition via l'API
+    /// CrÃ©e une nouvelle proposition via l'API
     /// </summary>
     public async Task<ProposalDto?> CreateProposalAsync(CreateProposalDto createProposalDto)
     {
@@ -195,13 +195,13 @@ public class ApiProposalService
             }
             else
             {
-                _logger.LogWarning("Échec de la création de proposition. Status: {StatusCode}", response.StatusCode);
+                _logger.LogWarning("Ã‰chec de la crÃ©ation de proposition. Status: {StatusCode}", response.StatusCode);
                 return null;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la création de la proposition");
+            _logger.LogError(ex, "Erreur lors de la crÃ©ation de la proposition");
             return null;
         }
     }
@@ -253,7 +253,7 @@ public class ApiProposalService
     }
 
     /// <summary>
-    /// Incrémente le nombre de vues d'une proposition via l'API
+    /// IncrÃ©mente le nombre de vues d'une proposition via l'API
     /// </summary>
     public async Task IncrementViewsAsync(int proposalId)
     {
@@ -287,7 +287,7 @@ public class ApiProposalService
     }
 
     /// <summary>
-    /// Récupère toutes les catégories actives depuis l'API
+    /// RÃ©cupÃ¨re toutes les catÃ©gories actives depuis l'API
     /// </summary>
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
@@ -298,7 +298,7 @@ public class ApiProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des catégories");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des catÃ©gories");
             return [];
         }
     }

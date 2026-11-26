@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Services;
+ï»¿namespace NicolasQuiPaieWeb.Services;
 
 public class ApiLogsService
 {
@@ -18,7 +18,7 @@ public class ApiLogsService
     }
 
     /// <summary>
-    /// Récupère les logs depuis l'API avec filtrage optionnel par niveau
+    /// RÃ©cupÃ¨re les logs depuis l'API avec filtrage optionnel par niveau
     /// </summary>
     public async Task<ApiLogsResponseDto?> GetLogsAsync(string? level = null, int take = 100)
     {
@@ -40,13 +40,13 @@ public class ApiLogsService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des logs avec niveau: {Level}, take: {Take}", level, take);
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des logs avec niveau: {Level}, take: {Take}", level, take);
             return null;
         }
     }
 
     /// <summary>
-    /// Crée un log de test via l'API
+    /// CrÃ©e un log de test via l'API
     /// </summary>
     public async Task<bool> CreateTestLogAsync(string message, string level = "Warning")
     {
@@ -73,23 +73,23 @@ public class ApiLogsService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la création du log de test");
+            _logger.LogError(ex, "Erreur lors de la crÃ©ation du log de test");
             return false;
         }
     }
 
     /// <summary>
-    /// Récupère tous les niveaux de log disponibles
+    /// RÃ©cupÃ¨re tous les niveaux de log disponibles
     /// </summary>
     public IReadOnlyList<string> GetAvailableLogLevels() => AvailableLogLevels;
 
     /// <summary>
-    /// Obtient la couleur associée à un niveau de log
+    /// Obtient la couleur associÃ©e Ã  un niveau de log
     /// </summary>
     public string GetLogLevelColor(string level) => StyleOf(level).Color;
 
     /// <summary>
-    /// Obtient l'icône associée à un niveau de log
+    /// Obtient l'icÃ´ne associÃ©e Ã  un niveau de log
     /// </summary>
     public string GetLogLevelIcon(string level) => StyleOf(level).Icon;
 

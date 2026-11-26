@@ -9,4 +9,10 @@
     <ProjectReference Include="..\NicolasQuiPaieWeb\NicolasQuiPaieWeb.csproj" />
   </ItemGroup>
 
+  <!-- App Service starts the only *.runtimeconfig.json it finds; the Blazor project brings its own, which is not an app
+       to run: without it, the platform falls back to its default page. -->
+  <Target Name="RemoveFrontRuntimeConfig" AfterTargets="Publish">
+    <Delete Files="$(PublishDir)NicolasQuiPaieWeb.runtimeconfig.json" />
+  </Target>
+
 </Project>

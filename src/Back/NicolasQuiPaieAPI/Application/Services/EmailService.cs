@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Application.Services;
+ï»¿namespace NicolasQuiPaieAPI.Application.Services;
 
 public class EmailService : IEmailService
 {
@@ -32,15 +32,15 @@ public class EmailService : IEmailService
         var subject = "Bienvenue sur Nicolas Qui Paie !";
         var body = $@"
                 <h1>Bienvenue {displayName} !</h1>
-                <p>Votre compte Nicolas Qui Paie a été créé avec succès.</p>
+                <p>Votre compte Nicolas Qui Paie a Ã©tÃ© crÃ©Ã© avec succÃ¨s.</p>
                 <p>Vous pouvez maintenant :</p>
                 <ul>
-                    <li>Créer des propositions fiscales</li>
-                    <li>Voter sur les propositions de la communauté</li>
-                    <li>Participer aux débats citoyens</li>
+                    <li>CrÃ©er des propositions fiscales</li>
+                    <li>Voter sur les propositions de la communautÃ©</li>
+                    <li>Participer aux dÃ©bats citoyens</li>
                 </ul>
-                <p>Ensemble, reprenons le contrôle de nos finances publiques !</p>
-                <p><strong>L'équipe Nicolas Qui Paie</strong></p>
+                <p>Ensemble, reprenons le contrÃ´le de nos finances publiques !</p>
+                <p><strong>L'Ã©quipe Nicolas Qui Paie</strong></p>
             ";
 
         await SendEmailAsync(to, subject, body);
@@ -48,15 +48,15 @@ public class EmailService : IEmailService
 
     public async Task SendPasswordResetEmailAsync(string to, string resetLink)
     {
-        var subject = "Réinitialisation de votre mot de passe - Nicolas Qui Paie";
+        var subject = "RÃ©initialisation de votre mot de passe - Nicolas Qui Paie";
         var body = $@"
-                <h1>Réinitialisation de mot de passe</h1>
-                <p>Vous avez demandé la réinitialisation de votre mot de passe.</p>
-                <p>Cliquez sur le lien suivant pour définir un nouveau mot de passe :</p>
-                <p><a href='{resetLink}'>Réinitialiser mon mot de passe</a></p>
+                <h1>RÃ©initialisation de mot de passe</h1>
+                <p>Vous avez demandÃ© la rÃ©initialisation de votre mot de passe.</p>
+                <p>Cliquez sur le lien suivant pour dÃ©finir un nouveau mot de passe :</p>
+                <p><a href='{resetLink}'>RÃ©initialiser mon mot de passe</a></p>
                 <p>Ce lien expirera dans 24 heures.</p>
-                <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
-                <p><strong>L'équipe Nicolas Qui Paie</strong></p>
+                <p>Si vous n'avez pas demandÃ© cette rÃ©initialisation, ignorez cet email.</p>
+                <p><strong>L'Ã©quipe Nicolas Qui Paie</strong></p>
             ";
 
         await SendEmailAsync(to, subject, body);

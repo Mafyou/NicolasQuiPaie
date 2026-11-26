@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace NicolasQuiPaie.UnitTests.Services;
 
@@ -55,7 +55,7 @@ public class JwtServiceTests
         new("user-petit", "petit@nicolas.fr", "Petit Nicolas", ContributionLevel.PetitNicolas, 100),
         new("user-moyen", "moyen@nicolas.fr", "Moyen Nicolas", ContributionLevel.GrosMoyenNicolas, 250),
         new("user-gros", "gros@nicolas.fr", "Gros Nicolas", ContributionLevel.GrosNicolas, 500),
-        new("user-supreme", "supreme@nicolas.fr", "Nicolas Supr�me", ContributionLevel.NicolasSupreme, 1000),
+        new("user-supreme", "supreme@nicolas.fr", "Nicolas Suprême", ContributionLevel.NicolasSupreme, 1000),
         new("user-unverified", "unverified@nicolas.fr", "Unverified User", ContributionLevel.PetitNicolas, 50, false)
     ];
 

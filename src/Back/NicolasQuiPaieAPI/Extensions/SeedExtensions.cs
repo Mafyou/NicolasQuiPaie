@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Extensions;
+ï»¿namespace NicolasQuiPaieAPI.Extensions;
 
 /// <summary>
 /// Extension methods for application configuration and database initialization
@@ -54,15 +54,15 @@ public static class SeedExtensions
                 Category[] categories = [
                     new()
                     {
-                        Name = "Fiscalité",
-                        Description = "Propositions concernant les impôts et taxes",
+                        Name = "FiscalitÃ©",
+                        Description = "Propositions concernant les impÃ´ts et taxes",
                         Color = "#FF6B6B",
                         IconClass = "fas fa-coins",
                         IsActive = true
                     },
                     new()
                     {
-                        Name = "Dépenses Publiques",
+                        Name = "DÃ©penses Publiques",
                         Description = "Propositions sur l'utilisation des deniers publics",
                         Color = "#4ECDC4",
                         IconClass = "fas fa-hand-holding-usd",
@@ -71,15 +71,15 @@ public static class SeedExtensions
                     new()
                     {
                         Name = "Social",
-                        Description = "Propositions sociales et de solidarité",
+                        Description = "Propositions sociales et de solidaritÃ©",
                         Color = "#45B7D1",
                         IconClass = "fas fa-users",
                         IsActive = true
                     },
                     new()
                     {
-                        Name = "Économie",
-                        Description = "Propositions économiques et de relance",
+                        Name = "Ã‰conomie",
+                        Description = "Propositions Ã©conomiques et de relance",
                         Color = "#FFA07A",
                         IconClass = "fas fa-chart-line",
                         IsActive = true
@@ -87,7 +87,7 @@ public static class SeedExtensions
                     new()
                     {
                         Name = "Environnement",
-                        Description = "Propositions écologiques et environnementales",
+                        Description = "Propositions Ã©cologiques et environnementales",
                         Color = "#98D8C8",
                         IconClass = "fas fa-leaf",
                         IsActive = true

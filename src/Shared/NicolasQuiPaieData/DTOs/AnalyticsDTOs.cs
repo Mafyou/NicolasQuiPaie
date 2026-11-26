@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieData.DTOs;
+ï»¿namespace NicolasQuiPaieData.DTOs;
 
 /// <summary>
 /// DTO pour les statistiques globales de la plateforme (record for immutability)
@@ -31,7 +31,7 @@ public record DashboardStatsDto
 }
 
 /// <summary>
-/// DTO pour les statistiques par catégorie (record for immutability)
+/// DTO pour les statistiques par catÃ©gorie (record for immutability)
 /// </summary>
 public record CategoryStatsDto
 {
@@ -111,7 +111,7 @@ public record DailyVoteCount
 }
 
 /// <summary>
-/// DTO pour le nombre de votes par catégorie (record for immutability)
+/// DTO pour le nombre de votes par catÃ©gorie (record for immutability)
 /// </summary>
 public record CategoryVoteCount
 {
@@ -123,7 +123,7 @@ public record CategoryVoteCount
 }
 
 /// <summary>
-/// DTO pour la répartition des niveaux de contribution (record for immutability)
+/// DTO pour la rÃ©partition des niveaux de contribution (record for immutability)
 /// </summary>
 public record ContributionLevelDistributionDto
 {
@@ -164,7 +164,7 @@ public record UserContributionDto
 }
 
 /// <summary>
-/// DTO pour l'activité récente (record for immutability)
+/// DTO pour l'activitÃ© rÃ©cente (record for immutability)
 /// </summary>
 public record RecentActivityDto
 {
@@ -172,7 +172,7 @@ public record RecentActivityDto
 }
 
 /// <summary>
-/// DTO pour un élément d'activité récente (record for immutability)
+/// DTO pour un Ã©lÃ©ment d'activitÃ© rÃ©cente (record for immutability)
 /// </summary>
 public record RecentActivityItem
 {
@@ -186,7 +186,7 @@ public record RecentActivityItem
 }
 
 /// <summary>
-/// DTO pour le baromètre de frustration (record for immutability)
+/// DTO pour le baromÃ¨tre de frustration (record for immutability)
 /// </summary>
 public record FrustrationBarometerDto
 {
@@ -198,7 +198,7 @@ public record FrustrationBarometerDto
 }
 
 /// <summary>
-/// DTO pour la frustration par catégorie (record for immutability)
+/// DTO pour la frustration par catÃ©gorie (record for immutability)
 /// </summary>
 public record CategoryFrustration
 {
