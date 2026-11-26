@@ -21,12 +21,14 @@
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="11.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Back\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" />
     <ProjectReference Include="..\..\Back\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Shared\NicolasQuiPaieData\NicolasQuiPaieData.csproj" />
+    <ProjectReference Include="..\..\Front\NicolasQuiPaieWeb.Host\NicolasQuiPaieWeb.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

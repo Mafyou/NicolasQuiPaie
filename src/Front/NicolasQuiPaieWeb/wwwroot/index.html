@@ -18,12 +18,17 @@
     <link rel="stylesheet" href="app.css" />
     <link rel="stylesheet" href="css/charts.css" />
     <link rel="stylesheet" href="NicolasQuiPaieWeb.styles.css" />
+    <!-- Presenter mode (js/demo.js): during a demo, animations play even when the system asks for reduced motion -->
+    <link rel="stylesheet" href="css/demo.css" />
+    <script>(function (root) { try { if ((sessionStorage.getItem('nqp-demo') !== null || new URLSearchParams(location.search).has('demo') || location.pathname.toLowerCase() === '/demo') && sessionStorage.getItem('nqp-motion') !== 'system') root.dataset.motion = 'demo'; } catch (e) { } })(document.documentElement);</script>
 
     <!-- Favicon using data URI to avoid 404 -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='24' font-size='24'>🇫🇷</text></svg>">
 </head>
 
 <body>
+    <!-- Presenter mode: the curtain and the guided tour live outside #app, Blazor never renders over them -->
+    <script src="js/demo.js"></script>
     <div id="app">
         <div class="d-flex justify-content-center align-items-center" style="height: 100vh;">
             <div class="text-center">
