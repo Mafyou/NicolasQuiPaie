@@ -345,14 +345,6 @@
         _ => "bg-secondary"
     };
 
-    private string GetLogLevelColor(string level) => level.ToLower() switch
-    {
-        "verbose" => "text-muted",
-        "debug" => "text-info",
-        "information" => "text-primary",
-        "warning" => "text-warning",
-        "error" => "text-danger",
-        "fatal" => "text-danger fw-bold",
-        _ => "text-secondary"
-    };
+    // One table of level colours for the whole site, in ApiLogsService
+    private string GetLogLevelColor(string level) => ApiLogsService.GetLogLevelColor(level);
 }

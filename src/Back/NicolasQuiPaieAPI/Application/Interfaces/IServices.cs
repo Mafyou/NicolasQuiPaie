@@ -2,21 +2,21 @@ namespace NicolasQuiPaieAPI.Application.Interfaces;
 
 public interface IProposalService
 {
-    Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null);
-    Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5);
+    Task<IReadOnlyList<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null);
+    Task<IReadOnlyList<ProposalDto>> GetTrendingProposalsAsync(int take = 5);
     
     // New methods for different sorting strategies
-    Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
-    Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
-    Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IReadOnlyList<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IReadOnlyList<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
+    Task<IReadOnlyList<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
     
-    Task<ProposalDto?> GetProposalByIdAsync(int id);
+    Task<ProposalLookup> GetProposalByIdAsync(int id);
     Task<ProposalDto> CreateProposalAsync(CreateProposalDto createDto, string userId);
-    Task<ProposalDto> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId);
-    Task DeleteProposalAsync(int id, string userId);
+    Task<ProposalChange> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId);
+    Task<ProposalDeletion> DeleteProposalAsync(int id, string userId);
     Task<bool> CanUserEditProposalAsync(int proposalId, string userId);
     Task IncrementViewsAsync(int proposalId);
-    Task<ProposalDto> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId);
+    Task<ProposalChange> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId);
 }
 
 /// <summary>
@@ -32,12 +32,12 @@ public interface IVotingService
     /// <summary>
     /// Gets user's vote for a specific proposal
     /// </summary>
-    Task<VoteDto?> GetUserVoteForProposalAsync(string userId, int proposalId);
+    Task<VoteLookup> GetUserVoteForProposalAsync(string userId, int proposalId);
 
     /// <summary>
     /// Removes a user's vote from a proposal
     /// </summary>
-    Task RemoveVoteAsync(string userId, int proposalId);
+    Task<VoteRemoval> RemoveVoteAsync(string userId, int proposalId);
 
     /// <summary>
     /// Gets all votes for a specific proposal
@@ -52,7 +52,7 @@ public interface IVotingService
 
 public interface ICommentService
 {
-    Task<IEnumerable<CommentDto>> GetCommentsForProposalAsync(int proposalId);
+    Task<IReadOnlyList<CommentDto>> GetCommentsForProposalAsync(int proposalId);
     Task<CommentDto> CreateCommentAsync(CreateCommentDto commentDto, string userId);
     Task<CommentDto> UpdateCommentAsync(int id, string content, string userId);
     Task DeleteCommentAsync(int id, string userId);
@@ -116,7 +116,7 @@ public interface IJwtService
     /// <summary>
     /// C# 13.0 - Extract user roles from token
     /// </summary>
-    IEnumerable<string> GetUserRoles(string token);
+    IReadOnlyList<string> GetUserRoles(string token);
     
     /// <summary>
     /// C# 13.0 - Check if user has specific role

@@ -202,14 +202,14 @@ public class JwtService(IConfiguration configuration, UserManager<ApplicationUse
     /// <summary>
     /// Extract user roles from token using modern pattern matching
     /// </summary>
-    public IEnumerable<string> GetUserRoles(string token)
+    public IReadOnlyList<string> GetUserRoles(string token)
     {
         var principal = ValidateToken(token);
 
         // Modern null checking and LINQ
         var rolesClaims = principal?.FindAll(ClaimTypes.Role)?.Select(c => c.Value) ?? [];
         var roles = principal?.FindAll("role")?.Select(c => c.Value) ?? [];
-        return rolesClaims.Concat(roles).Distinct(StringComparer.OrdinalIgnoreCase);
+        return [.. rolesClaims.Concat(roles).Distinct(StringComparer.OrdinalIgnoreCase)];
     }
 
     /// <summary>
@@ -235,16 +235,9 @@ public class JwtService(IConfiguration configuration, UserManager<ApplicationUse
     /// </summary>
     public string GetHighestRole(string token)
     {
-        var userRoles = GetUserRoles(token).ToList();
+        var userRoles = GetUserRoles(token);
 
-        // Pattern matching for role hierarchy
-        return userRoles switch
-        {
-            var roles when roles.Contains(NicolasRoles.Developer, StringComparer.OrdinalIgnoreCase) => NicolasRoles.Developer,
-            var roles when roles.Contains(NicolasRoles.Admin, StringComparer.OrdinalIgnoreCase) => NicolasRoles.Admin,
-            var roles when roles.Contains(NicolasRoles.SuperUser, StringComparer.OrdinalIgnoreCase) => NicolasRoles.SuperUser,
-            var roles when roles.Contains(NicolasRoles.User, StringComparer.OrdinalIgnoreCase) => NicolasRoles.User,
-            _ => "Guest"
-        };
+        // The first role of the hierarchy the user holds
+        return NicolasRoles.ByRank.FirstOrDefault(role => userRoles.Contains(role, StringComparer.OrdinalIgnoreCase)) ?? "Guest";
     }
 }

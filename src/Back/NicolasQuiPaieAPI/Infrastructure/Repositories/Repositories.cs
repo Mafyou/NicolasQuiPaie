@@ -10,7 +10,7 @@ public class BaseRepository<T>(ApplicationDbContext context) : IRepository<T> wh
         return await _dbSet.FindAsync(id);
     }
 
-    public virtual async Task<IEnumerable<T>> GetAllAsync()
+    public virtual async Task<IReadOnlyList<T>> GetAllAsync()
     {
         return await _dbSet.ToListAsync();
     }
@@ -44,7 +44,7 @@ public class BaseRepository<T>(ApplicationDbContext context) : IRepository<T> wh
 
 public class ProposalRepository(ApplicationDbContext context) : BaseRepository<Proposal>(context), IProposalRepository
 {
-    public async Task<IEnumerable<Proposal>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null)
+    public async Task<IReadOnlyList<Proposal>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null)
     {
         var query = _context.Proposals
             .Include(p => p.CreatedBy)
@@ -68,7 +68,7 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Proposal>> GetTrendingProposalsAsync(int take = 5)
+    public async Task<IReadOnlyList<Proposal>> GetTrendingProposalsAsync(int take = 5)
     {
         var cutoffDate = DateTime.UtcNow.AddDays(-7);
 
@@ -82,7 +82,7 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Proposal>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<Proposal>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         var query = _context.Proposals
             .Include(p => p.CreatedBy)
@@ -106,7 +106,7 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Proposal>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<Proposal>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         var query = _context.Proposals
             .Include(p => p.CreatedBy)
@@ -132,7 +132,7 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Proposal>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<Proposal>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         var query = _context.Proposals
             .Include(p => p.CreatedBy)
@@ -161,7 +161,7 @@ public class ProposalRepository(ApplicationDbContext context) : BaseRepository<P
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Proposal>> GetUserProposalsAsync(string userId)
+    public async Task<IReadOnlyList<Proposal>> GetUserProposalsAsync(string userId)
     {
         return await _context.Proposals
             .Include(p => p.Category)
@@ -195,7 +195,7 @@ public class VoteRepository(ApplicationDbContext context) : BaseRepository<Vote>
             .FirstOrDefaultAsync(v => v.UserId == userId && v.ProposalId == proposalId);
     }
 
-    public async Task<IEnumerable<Vote>> GetVotesForProposalAsync(int proposalId)
+    public async Task<IReadOnlyList<Vote>> GetVotesForProposalAsync(int proposalId)
     {
         return await _context.Votes
             .Include(v => v.User)
@@ -204,7 +204,7 @@ public class VoteRepository(ApplicationDbContext context) : BaseRepository<Vote>
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Vote>> GetUserVotesAsync(string userId)
+    public async Task<IReadOnlyList<Vote>> GetUserVotesAsync(string userId)
     {
         return await _context.Votes
             .Include(v => v.Proposal)
@@ -217,7 +217,7 @@ public class VoteRepository(ApplicationDbContext context) : BaseRepository<Vote>
 
 public class CommentRepository(ApplicationDbContext context) : BaseRepository<Comment>(context), ICommentRepository
 {
-    public async Task<IEnumerable<Comment>> GetCommentsForProposalAsync(int proposalId)
+    public async Task<IReadOnlyList<Comment>> GetCommentsForProposalAsync(int proposalId)
     {
         return await _context.Comments
             .Include(c => c.User)
@@ -227,7 +227,7 @@ public class CommentRepository(ApplicationDbContext context) : BaseRepository<Co
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Comment>> GetUserCommentsAsync(string userId)
+    public async Task<IReadOnlyList<Comment>> GetUserCommentsAsync(string userId)
     {
         return await _context.Comments
             .Include(c => c.Proposal)
@@ -236,7 +236,7 @@ public class CommentRepository(ApplicationDbContext context) : BaseRepository<Co
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Comment>> GetRepliesAsync(int parentCommentId)
+    public async Task<IReadOnlyList<Comment>> GetRepliesAsync(int parentCommentId)
     {
         return await _context.Comments
             .Include(c => c.User)
@@ -249,7 +249,7 @@ public class CommentRepository(ApplicationDbContext context) : BaseRepository<Co
 
 public class CategoryRepository(ApplicationDbContext context) : BaseRepository<Category>(context), ICategoryRepository
 {
-    public async Task<IEnumerable<Category>> GetActiveCategoriesAsync()
+    public async Task<IReadOnlyList<Category>> GetActiveCategoriesAsync()
     {
         return await _context.Categories
             .Where(c => c.IsActive)
@@ -277,7 +277,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
         return user;
     }
 
-    public async Task<IEnumerable<ApplicationUser>> GetTopContributorsAsync(int take = 10)
+    public async Task<IReadOnlyList<ApplicationUser>> GetTopContributorsAsync(int take = 10)
     {
         return await context.Users
             .OrderByDescending(u => u.ReputationScore)
@@ -288,7 +288,7 @@ public class UserRepository(ApplicationDbContext context) : IUserRepository
 
 public class ApiLogRepository(ApplicationDbContext context) : BaseRepository<ApiLog>(context), IApiLogRepository
 {
-    public async Task<IEnumerable<ApiLog>> GetLatestLogsAsync(int take = 100, NicolasQuiPaieAPI.Infrastructure.Models.LogLevel? level = null)
+    public async Task<IReadOnlyList<ApiLog>> GetLatestLogsAsync(int take = 100, NicolasQuiPaieAPI.Infrastructure.Models.LogLevel? level = null)
     {
         var query = _context.ApiLogs.AsQueryable();
         
@@ -305,7 +305,7 @@ public class ApiLogRepository(ApplicationDbContext context) : BaseRepository<Api
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ApiLog>> GetLogsByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level, int take = 100)
+    public async Task<IReadOnlyList<ApiLog>> GetLogsByLevelAsync(NicolasQuiPaieAPI.Infrastructure.Models.LogLevel level, int take = 100)
     {
         return await _context.ApiLogs
             .Where(l => l.Level == level)
@@ -314,7 +314,7 @@ public class ApiLogRepository(ApplicationDbContext context) : BaseRepository<Api
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ApiLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate, int take = 100)
+    public async Task<IReadOnlyList<ApiLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate, int take = 100)
     {
         return await _context.ApiLogs
             .Where(l => l.TimeStamp >= startDate && l.TimeStamp <= endDate)

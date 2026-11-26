@@ -81,42 +81,35 @@ public class ApiLogsService
     /// <summary>
     /// Récupère tous les niveaux de log disponibles
     /// </summary>
-    public string[] GetAvailableLogLevels()
-    {
-        return ["All", "Verbose", "Debug", "Information", "Warning", "Error", "Fatal"];
-    }
+    public IReadOnlyList<string> GetAvailableLogLevels() => AvailableLogLevels;
 
     /// <summary>
     /// Obtient la couleur associée à un niveau de log
     /// </summary>
-    public string GetLogLevelColor(string level)
-    {
-        return level.ToLower() switch
-        {
-            "verbose" => "text-muted",
-            "debug" => "text-info",
-            "information" => "text-primary",
-            "warning" => "text-warning",
-            "error" => "text-danger",
-            "fatal" => "text-danger fw-bold",
-            _ => "text-secondary"
-        };
-    }
+    public string GetLogLevelColor(string level) => StyleOf(level).Color;
 
     /// <summary>
     /// Obtient l'icône associée à un niveau de log
     /// </summary>
-    public string GetLogLevelIcon(string level)
+    public string GetLogLevelIcon(string level) => StyleOf(level).Icon;
+
+    /// <summary>Bootstrap colour and Font Awesome icon of a Serilog level.</summary>
+    private readonly record struct LevelStyle(string Color, string Icon);
+
+    private static readonly IReadOnlyList<string> AvailableLogLevels = ["All", "Verbose", "Debug", "Information", "Warning", "Error", "Fatal"];
+
+    private static readonly LevelStyle UnknownLevel = new("text-secondary", "fas fa-file-alt");
+
+    // Looked up for every log row shown: built once, matched without case (ToLower() depended on the culture).
+    private static readonly FrozenDictionary<string, LevelStyle> Styles = new Dictionary<string, LevelStyle>
     {
-        return level.ToLower() switch
-        {
-            "verbose" => "fas fa-comment-dots",
-            "debug" => "fas fa-bug",
-            "information" => "fas fa-info-circle",
-            "warning" => "fas fa-exclamation-triangle",
-            "error" => "fas fa-times-circle",
-            "fatal" => "fas fa-skull-crossbones",
-            _ => "fas fa-file-alt"
-        };
-    }
+        ["Verbose"] = new("text-muted", "fas fa-comment-dots"),
+        ["Debug"] = new("text-info", "fas fa-bug"),
+        ["Information"] = new("text-primary", "fas fa-info-circle"),
+        ["Warning"] = new("text-warning", "fas fa-exclamation-triangle"),
+        ["Error"] = new("text-danger", "fas fa-times-circle"),
+        ["Fatal"] = new("text-danger fw-bold", "fas fa-skull-crossbones")
+    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+
+    private static LevelStyle StyleOf(string? level) => level is not null && Styles.TryGetValue(level, out var style) ? style : UnknownLevel;
 }

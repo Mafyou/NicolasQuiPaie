@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NicolasQuiPaieAPI.Infrastructure.Data;
@@ -34,6 +35,8 @@ namespace NicolasQuiPaie.IntegrationTests.Fixtures
                 // Be more specific about what we remove - only remove EF/SQL Server services, not application services
                 var descriptorsToRemove = services.Where(d =>
                     d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                    // EF Core 9+: AddDbContext also registers the configuration that calls UseSqlServer
+                    d.ServiceType == typeof(IDbContextOptionsConfiguration<ApplicationDbContext>) ||
                     (d.ServiceType.IsGenericType && d.ServiceType.GetGenericTypeDefinition() == typeof(DbContextOptions<>) && 
                      d.ServiceType.GenericTypeArguments.Contains(typeof(ApplicationDbContext))) ||
                     d.ServiceType.FullName?.Contains("Microsoft.EntityFrameworkCore.SqlServer") == true ||

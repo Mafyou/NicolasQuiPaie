@@ -11,12 +11,12 @@ public class ProposalService : IProposalService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null)
+    public async Task<IReadOnlyList<ProposalDto>> GetActiveProposalsAsync(int skip = 0, int take = 20, int? categoryId = null, string? search = null)
     {
         try
         {
             var proposals = await _unitOfWork.Proposals.GetActiveProposalsAsync(skip, take, categoryId, search);
-            return proposals.Select(p => p.ToDto());
+            return [.. proposals.Select(p => p.ToDto())];
         }
         catch (Exception ex)
         {
@@ -25,12 +25,12 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<IEnumerable<ProposalDto>> GetTrendingProposalsAsync(int take = 5)
+    public async Task<IReadOnlyList<ProposalDto>> GetTrendingProposalsAsync(int take = 5)
     {
         try
         {
             var proposals = await _unitOfWork.Proposals.GetTrendingProposalsAsync(take);
-            return proposals.Select(p => p.ToDto());
+            return [.. proposals.Select(p => p.ToDto())];
         }
         catch (Exception ex)
         {
@@ -39,12 +39,12 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<IEnumerable<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<ProposalDto>> GetRecentProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         try
         {
             var proposals = await _unitOfWork.Proposals.GetRecentProposalsAsync(skip, take, category, search);
-            return proposals.Select(p => p.ToDto());
+            return [.. proposals.Select(p => p.ToDto())];
         }
         catch (Exception ex)
         {
@@ -53,12 +53,12 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<IEnumerable<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<ProposalDto>> GetPopularProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         try
         {
             var proposals = await _unitOfWork.Proposals.GetPopularProposalsAsync(skip, take, category, search);
-            return proposals.Select(p => p.ToDto());
+            return [.. proposals.Select(p => p.ToDto())];
         }
         catch (Exception ex)
         {
@@ -67,12 +67,12 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<IEnumerable<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
+    public async Task<IReadOnlyList<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null)
     {
         try
         {
             var proposals = await _unitOfWork.Proposals.GetControversialProposalsAsync(skip, take, category, search);
-            return proposals.Select(p => p.ToDto());
+            return [.. proposals.Select(p => p.ToDto())];
         }
         catch (Exception ex)
         {
@@ -81,12 +81,11 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<ProposalDto?> GetProposalByIdAsync(int id)
+    public async Task<ProposalLookup> GetProposalByIdAsync(int id)
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id);
-            return proposal?.ToDto();
+            return await _unitOfWork.Proposals.GetByIdAsync(id) is { } proposal ? proposal.ToDto() : new ProposalNotFound(id);
         }
         catch (Exception ex)
         {
@@ -117,15 +116,12 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<ProposalDto> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId)
+    public async Task<ProposalChange> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId)
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id) ?? throw new ArgumentException($"Proposition {id} non trouvée");
-            if (proposal.CreatedById != userId)
-            {
-                throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à modifier cette proposition");
-            }
+            if (await _unitOfWork.Proposals.GetByIdAsync(id) is not { } proposal) return new ProposalNotFound(id);
+            if (proposal.CreatedById != userId) return new NotProposalAuthor(id, userId);
 
             // Update properties manually instead of using AutoMapper
             proposal.Title = updateDto.Title;
@@ -151,11 +147,11 @@ public class ProposalService : IProposalService
     /// <summary>
     /// C# 13.0 - Toggle proposal status (SuperUser/Admin only) with modern pattern matching
     /// </summary>
-    public async Task<ProposalDto> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId)
+    public async Task<ProposalChange> ToggleProposalStatusAsync(int proposalId, ProposalStatus newStatus, string userId)
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(proposalId) ?? throw new ArgumentException($"Proposition {proposalId} non trouvée");
+            if (await _unitOfWork.Proposals.GetByIdAsync(proposalId) is not { } proposal) return new ProposalNotFound(proposalId);
 
             var oldStatus = proposal.Status;
             proposal.Status = newStatus;
@@ -182,20 +178,18 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task DeleteProposalAsync(int id, string userId)
+    public async Task<ProposalDeletion> DeleteProposalAsync(int id, string userId)
     {
         try
         {
-            var proposal = await _unitOfWork.Proposals.GetByIdAsync(id) ?? throw new ArgumentException($"Proposition {id} non trouvée");
-            if (proposal.CreatedById != userId)
-            {
-                throw new UnauthorizedAccessException("Vous n'êtes pas autorisé à supprimer cette proposition");
-            }
+            if (await _unitOfWork.Proposals.GetByIdAsync(id) is not { } proposal) return new ProposalNotFound(id);
+            if (proposal.CreatedById != userId) return new NotProposalAuthor(id, userId);
 
             await _unitOfWork.Proposals.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.LogInformation("Proposition supprimée: {ProposalId} par {UserId}", id, userId);
+            return new ProposalDeleted(id);
         }
         catch (Exception ex)
         {

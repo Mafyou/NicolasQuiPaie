@@ -15,3 +15,4 @@ global using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.Contrib
 global using DtoProposalStatus = NicolasQuiPaieData.DTOs.ProposalStatus;
 global using InfrastructureContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
 global using InfrastructureProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
+global using NicolasQuiPaieAPI.Application.Results;
