@@ -4,6 +4,9 @@ name: Build, Test & Deploy (App Service)
 on:
   push:
     branches: [main]
+  # Pull requests run the build and the tests only: both deployments are for main.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -27,8 +30,23 @@ jobs:
       - name: Install the WebAssembly tools
         run: dotnet workload install wasm-tools
 
+      # xUnit v3 (xunit.v3.mtp-off: dotnet test through VSTest), Shouldly and Moq.
       - name: Unit tests
         run: dotnet test src/Tests/NicolasQuiPaie.UnitTests/NicolasQuiPaie.UnitTests.csproj --configuration Release
+
+      # The API on SQLite; the SQL Server tests start their own container (Docker is on the runner, skipped without it).
+      - name: Integration tests
+        run: dotnet test src/Tests/NicolasQuiPaie.IntegrationTests/NicolasQuiPaie.IntegrationTests.csproj --configuration Release
+
+      # User journeys: the API over HTTP, the Blazor front in Chromium (Playwright), both on loopback ports.
+      - name: Build the functional tests
+        run: dotnet build src/Tests/NicolasQuiPaie.FunctionalTests/NicolasQuiPaie.FunctionalTests.csproj --configuration Release
+
+      - name: Install Chromium for Playwright
+        run: pwsh src/Tests/NicolasQuiPaie.FunctionalTests/bin/Release/net11.0/playwright.ps1 install --with-deps chromium
+
+      - name: Functional tests
+        run: dotnet test src/Tests/NicolasQuiPaie.FunctionalTests/NicolasQuiPaie.FunctionalTests.csproj --configuration Release --no-build
 
       - name: Publish the API
         run: dotnet publish src/Back/NicolasQuiPaieAPI/NicolasQuiPaieAPI.csproj --configuration Release --output publish/api

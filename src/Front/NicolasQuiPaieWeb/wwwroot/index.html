@@ -41,9 +41,9 @@
                     <div class="progress" style="height: 8px;">
                         <div id="loading-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
                     </div>
-                    <small id="loading-stage" class="text-muted mt-2 d-block">Initialisation...</small>
+                    <small id="loading-stage" class="text-muted mt-2 d-block">Ouverture des portes...</small>
                 </div>
-                <small class="text-muted">Version: 1.0.0 - .NET 10 & C# 14</small>
+                <small class="text-muted">La plateforme citoyenne où Nicolas décide vraiment.</small>
 
                 <!-- Demo mode indicator while loading - Static HTML version -->
                 <div id="demo-mode-loading" class="alert alert-warning border-0 rounded-0 mb-0 text-center mt-3" style="background: linear-gradient(45deg, #ffc107 0%, #fd7e14 100%); display: none;">
@@ -124,11 +124,11 @@
         // Simplified loading progress tracking
         let loadingStage = 0;
         const loadingStages = [
-            'Initialisation...',
-            'Chargement des bibliothèques...',
-            'Vérification WebAssembly...',
-            'Démarrage Blazor...',
-            'Application prête!'
+            'Ouverture des portes...',
+            'Chargement des propositions...',
+            'Préparation des urnes...',
+            'Comptage des voix...',
+            'C\'est prêt !'
         ];
 
         // Global variables for better debugging
@@ -226,7 +226,7 @@
                 console.error('❌ WebAssembly not supported in this browser');
                 window.nicolasQuiPaie.errors.push('WebAssembly not supported');
                 if (isDevelopment) showLibraryError('WebAssembly');
-                showErrorDetails('WebAssembly n\'est pas supporté par ce navigateur. Veuillez utiliser un navigateur moderne.');
+                showErrorDetails('Ce navigateur est trop ancien pour afficher Nicolas Qui Paie. Mettez-le à jour, ou utilisez Chrome, Edge, Firefox ou Safari.');
                 return;
             } else {
                 devConsole.log('✅ WebAssembly support detected');

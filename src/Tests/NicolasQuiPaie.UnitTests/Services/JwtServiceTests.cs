@@ -5,7 +5,6 @@ namespace NicolasQuiPaie.UnitTests.Services;
 /// <summary>
 /// C# 13.0 - JWT service tests using collection expressions, params collections, and modern patterns
 /// </summary>
-[TestFixture]
 public class JwtServiceTests
 {
     private Mock<IConfiguration> _mockConfiguration = null!;
@@ -21,8 +20,7 @@ public class JwtServiceTests
         ["Jwt:ExpiryInMinutes"] = "60"
     };
 
-    [SetUp]
-    public void Setup()
+    public JwtServiceTests()
     {
         _mockConfiguration = new Mock<IConfiguration>();
 
@@ -59,8 +57,10 @@ public class JwtServiceTests
         new("user-unverified", "unverified@nicolas.fr", "Unverified User", ContributionLevel.PetitNicolas, 50, false)
     ];
 
-    [Test]
-    [TestCaseSource(nameof(TestUsers))]
+    public static TheoryData<TestUserData> TestUserCases => new(TestUsers);
+
+    [Theory]
+    [MemberData(nameof(TestUserCases))]
     public void GenerateToken_ShouldCreateValidJwt_ForAllUserTypes(TestUserData userData)
     {
         // Arrange
@@ -106,7 +106,7 @@ public class JwtServiceTests
         bool.Parse(verifiedClaim).ShouldBe(userData.IsVerified);
     }
 
-    [Test]
+    [Fact]
     public void GenerateToken_ShouldRespectExpiryConfiguration()
     {
         // Arrange
@@ -128,8 +128,8 @@ public class JwtServiceTests
     }
 
     // C# 13.0 - Enhanced error testing with collection expressions and modern null patterns
-    [Test]
-    [TestCaseSource(nameof(InvalidUserScenarios))]
+    [Theory]
+    [MemberData(nameof(InvalidUserScenarios))]
     public void GenerateToken_ShouldThrowException_WithInvalidUser(
         ApplicationUser? invalidUser, Type expectedExceptionType, string expectedMessagePattern)
     {
@@ -165,7 +165,7 @@ public class JwtServiceTests
         // Removed other scenarios as the JWT service doesn't validate user properties
     ];
 
-    [Test]
+    [Fact]
     public void ValidateToken_ShouldReturnClaimsPrincipal_ForValidToken()
     {
         // Arrange
@@ -197,10 +197,10 @@ public class JwtServiceTests
     }
 
     // C# 13.0 - Collection expressions for invalid token testing with modern patterns
-    [Test]
-    [TestCase("", "Token cannot be empty")]
-    [TestCase("invalid.token.format", "Invalid token format")]
-    [TestCase("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature", "Invalid signature")]
+    [Theory]
+    [InlineData("", "Token cannot be empty")]
+    [InlineData("invalid.token.format", "Invalid token format")]
+    [InlineData("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.invalid.signature", "Invalid signature")]
     public void ValidateToken_ShouldReturnNull_ForInvalidTokens(
         string invalidToken, string expectedErrorPattern)
     {
@@ -208,11 +208,11 @@ public class JwtServiceTests
         var result = _jwtService.ValidateToken(invalidToken);
 
         // Assert - The service returns null for invalid tokens instead of throwing
-        result.ShouldBeNull();
+        result.ShouldBeNull(expectedErrorPattern);
     }
 
     // C# 13.0 - Modern async testing with collection expressions and null safety
-    [Test]
+    [Fact]
     public async Task GenerateRefreshToken_ShouldCreateUniqueTokens_ForMultipleUsers()
     {
         // Arrange - C# 13.0 collection expressions
@@ -223,7 +223,7 @@ public class JwtServiceTests
         var tokens = new List<string>();
         foreach (var user in users)
         {
-            await Task.Delay(1); // Ensure unique timestamps
+            await Task.Delay(1, TestContext.Current.CancellationToken); // Ensure unique timestamps
             tokens.Add(_jwtService.GenerateToken(user));
         }
 
@@ -240,9 +240,4 @@ public class JwtServiceTests
         }
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        _mockConfiguration?.Reset();
-    }
 }

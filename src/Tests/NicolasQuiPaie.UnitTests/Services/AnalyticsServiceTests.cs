@@ -1,14 +1,12 @@
 ﻿namespace NicolasQuiPaie.UnitTests.Services;
 
-[TestFixture]
-public class AnalyticsServiceTests
+public class AnalyticsServiceTests : IDisposable
 {
     private ApplicationDbContext _context = null!;
     private Mock<ILogger<AnalyticsService>> _mockLogger = null!;
     private AnalyticsService _analyticsService = null!;
 
-    [SetUp]
-    public void SetUp()
+    public AnalyticsServiceTests()
     {
         // Use in-memory database for testing
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
@@ -24,7 +22,7 @@ public class AnalyticsServiceTests
         SeedTestData();
     }
 
-    [Test]
+    [Fact]
     public async Task GetGlobalStatsAsync_ShouldReturnCompleteStats()
     {
         // Act
@@ -40,7 +38,7 @@ public class AnalyticsServiceTests
         result.AverageParticipationRate.ShouldBe(2.0); // (6 + 4) / 5
     }
 
-    [Test]
+    [Fact]
     public async Task GetDashboardStatsAsync_ShouldReturnDashboardStats()
     {
         // Act
@@ -57,7 +55,7 @@ public class AnalyticsServiceTests
         result.RasLebolMeter.ShouldBe(33.33, 0.01); // 2/6 * 100 = 33.33%
     }
 
-    [Test]
+    [Fact]
     public async Task GetContributionLevelDistributionAsync_ShouldReturnCorrectDistribution()
     {
         // Act
@@ -74,7 +72,7 @@ public class AnalyticsServiceTests
         petitNicolas.Percentage.ShouldBe(40.0);
     }
 
-    [Test]
+    [Fact]
     public async Task GetTopContributorsAsync_ShouldReturnTopContributors()
     {
         // Act
@@ -91,7 +89,7 @@ public class AnalyticsServiceTests
         result.TopCommenters.Count.ShouldBeGreaterThan(0);
     }
 
-    [Test]
+    [Fact]
     public async Task GetFrustrationBarometerAsync_ShouldReturnFrustrationData()
     {
         // Act
@@ -106,7 +104,7 @@ public class AnalyticsServiceTests
         result.CategoryBreakdown.ShouldNotBeNull();
     }
 
-    [Test]
+    [Fact]
     public async Task GetRecentActivityAsync_ShouldReturnRecentActivity()
     {
         // Act
@@ -118,7 +116,7 @@ public class AnalyticsServiceTests
         result.Activities.Count.ShouldBeGreaterThan(0);
     }
 
-    [Test]
+    [Fact]
     public async Task GetVotingTrendsAsync_ShouldReturnVotingTrends()
     {
         // Act
@@ -186,9 +184,9 @@ public class AnalyticsServiceTests
         _context.SaveChanges();
     }
 
-    [TearDown]
-    public void TearDown()
+    public void Dispose()
     {
         _context?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

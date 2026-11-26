@@ -5,7 +5,6 @@ namespace NicolasQuiPaie.UnitTests.Validators;
 /// <summary>
 /// C# 13.0 - DTO validator tests using collection expressions, params collections, and primary constructors
 /// </summary>
-[TestFixture]
 public class DtoValidatorsTests
 {
     private CreateProposalDtoValidator _createProposalValidator = null!;
@@ -13,8 +12,7 @@ public class DtoValidatorsTests
     private CreateVoteDtoValidator _createVoteValidator = null!;
     private CreateCommentDtoValidator _createCommentValidator = null!;
 
-    [SetUp]
-    public void Setup()
+    public DtoValidatorsTests()
     {
         _createProposalValidator = new CreateProposalDtoValidator();
         _updateProposalValidator = new UpdateProposalDtoValidator();
@@ -43,6 +41,8 @@ public class DtoValidatorsTests
         new("Title", "Proposition avec caractères spéciaux @#$%", true)
     ];
 
+    public static TheoryData<ValidationTestCase> CreateProposalTitleCasesData => new(CreateProposalTitleCases);
+
     public static readonly ValidationTestCase[] CreateProposalDescriptionCases =
     [
         new("Description", "This is a valid description that is long enough to meet the minimum requirements for proposal descriptions.", true),
@@ -52,6 +52,8 @@ public class DtoValidatorsTests
         new("Description", "Description avec des caractères spéciaux et des émojis ?? permettant de tester la validation complète", true)
     ];
 
+    public static TheoryData<ValidationTestCase> CreateProposalDescriptionCasesData => new(CreateProposalDescriptionCases);
+
     public static readonly ValidationTestCase[] CreateProposalCategoryCases =
     [
         new("CategoryId", 1, true),
@@ -60,8 +62,10 @@ public class DtoValidatorsTests
         new("CategoryId", -1, false, "Une catégorie doit être sélectionnée")
     ];
 
-    [Test]
-    [TestCaseSource(nameof(CreateProposalTitleCases))]
+    public static TheoryData<ValidationTestCase> CreateProposalCategoryCasesData => new(CreateProposalCategoryCases);
+
+    [Theory]
+    [MemberData(nameof(CreateProposalTitleCasesData))]
     public void CreateProposalDtoValidator_ShouldValidateTitle_Correctly(ValidationTestCase testCase)
     {
         // Arrange - C# 13.0 target-typed object creation
@@ -92,8 +96,8 @@ public class DtoValidatorsTests
         }
     }
 
-    [Test]
-    [TestCaseSource(nameof(CreateProposalDescriptionCases))]
+    [Theory]
+    [MemberData(nameof(CreateProposalDescriptionCasesData))]
     public void CreateProposalDtoValidator_ShouldValidateDescription_Correctly(ValidationTestCase testCase)
     {
         // Arrange
@@ -118,8 +122,8 @@ public class DtoValidatorsTests
         }
     }
 
-    [Test]
-    [TestCaseSource(nameof(CreateProposalCategoryCases))]
+    [Theory]
+    [MemberData(nameof(CreateProposalCategoryCasesData))]
     public void CreateProposalDtoValidator_ShouldValidateCategory_Correctly(ValidationTestCase testCase)
     {
         // Arrange
@@ -145,7 +149,7 @@ public class DtoValidatorsTests
     }
 
     // C# 13.0 - Comprehensive validation test with collection expressions
-    [Test]
+    [Fact]
     public void CreateProposalDtoValidator_ShouldPassValidation_WithCompleteValidDto()
     {
         // Arrange - C# 13.0 collection expressions for valid test data
@@ -189,8 +193,8 @@ public class DtoValidatorsTests
         [-1, VoteDto.Against, false, "ProposalId"]
     ];
 
-    [Test]
-    [TestCaseSource(nameof(CreateVoteTestCases))]
+    [Theory]
+    [MemberData(nameof(CreateVoteTestCases))]
     public void CreateVoteDtoValidator_ShouldValidateCorrectly(
         int proposalId, VoteDto voteType, bool shouldBeValid, string? expectedErrorProperty)
     {
@@ -218,11 +222,11 @@ public class DtoValidatorsTests
     }
 
     // C# 13.0 - Enhanced comment validation testing with modern null patterns
-    [Test]
-    [TestCase("", true)] // Empty comment is allowed
-    [TestCase("Valid comment", true)]
-    [TestCase("Comment with special chars !@#$%^&*()", true)]
-    [TestCase("Commentaire avec émojis ???????", true)]
+    [Theory]
+    [InlineData("", true)] // Empty comment is allowed
+    [InlineData("Valid comment", true)]
+    [InlineData("Comment with special chars !@#$%^&*()", true)]
+    [InlineData("Commentaire avec émojis ???????", true)]
     public void CreateVoteDtoValidator_ShouldAllowOptionalComments(string comment, bool shouldBeValid)
     {
         // Arrange
@@ -261,8 +265,10 @@ public class DtoValidatorsTests
         new("Content", "Commentaire avec émojis et caractères spéciaux ?? @user #hashtag", true)
     ];
 
-    [Test]
-    [TestCaseSource(nameof(CreateCommentContentCases))]
+    public static TheoryData<ValidationTestCase> CreateCommentContentCasesData => new(CreateCommentContentCases);
+
+    [Theory]
+    [MemberData(nameof(CreateCommentContentCasesData))]
     public void CreateCommentDtoValidator_ShouldValidateContent_Correctly(ValidationTestCase testCase)
     {
         // Arrange
@@ -288,12 +294,12 @@ public class DtoValidatorsTests
     }
 
     // C# 13.0 - Enhanced hierarchical comment testing with modern null patterns
-    [Test]
-    [TestCase(1, null, true)] // Root comment
-    [TestCase(1, 5, true)]    // Reply to comment
-    [TestCase(0, null, false)] // Invalid proposal ID
-    [TestCase(1, 0, false)]   // Invalid parent comment ID
-    [TestCase(-1, -1, false)] // Both invalid
+    [Theory]
+    [InlineData(1, null, true)] // Root comment
+    [InlineData(1, 5, true)]    // Reply to comment
+    [InlineData(0, null, false)] // Invalid proposal ID
+    [InlineData(1, 0, false)]   // Invalid parent comment ID
+    [InlineData(-1, -1, false)] // Both invalid
     public void CreateCommentDtoValidator_ShouldValidateHierarchy_Correctly(
         int proposalId, int? parentCommentId, bool shouldBeValid)
     {
@@ -334,7 +340,7 @@ public class DtoValidatorsTests
     #region Cross-Validation Integration Tests
 
     // C# 13.0 - Comprehensive validation test with realistic data and modern null patterns
-    [Test]
+    [Fact]
     public async Task AllValidators_ShouldWork_WithRealisticDataScenarios()
     {
         // Arrange - C# 13.0 collection expressions for realistic test scenarios
@@ -409,7 +415,7 @@ public class DtoValidatorsTests
     #endregion
 
     // C# 13.0 - Modern performance testing with enhanced null safety
-    [Test]
+    [Fact]
     public async Task Validators_ShouldPerformWell_WithLargeDataSets()
     {
         // Arrange - Generate test data using C# 13.0 features
@@ -437,13 +443,4 @@ public class DtoValidatorsTests
         results.All(r => r is not null && !r.Errors.Any()).ShouldBeTrue(); // All should be valid
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        // C# 13.0 - Clean disposal pattern with modern null safety
-        _createProposalValidator = null!;
-        _updateProposalValidator = null!;
-        _createVoteValidator = null!;
-        _createCommentValidator = null!;
-    }
 }

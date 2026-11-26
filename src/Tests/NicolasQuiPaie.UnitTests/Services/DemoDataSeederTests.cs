@@ -1,13 +1,11 @@
 namespace NicolasQuiPaie.UnitTests.Services;
 
 /// <summary>The demo data: only when SeedDemoData is on, only on an empty platform, with real votes behind the counters.</summary>
-[TestFixture]
-public class DemoDataSeederTests
+public class DemoDataSeederTests : IAsyncLifetime
 {
     private ServiceProvider _services = null!;
 
-    [SetUp]
-    public async Task SetUp()
+    public async ValueTask InitializeAsync()
     {
         var name = $"demo-{Guid.NewGuid():N}";
         _services = new ServiceCollection()
@@ -21,8 +19,11 @@ public class DemoDataSeederTests
         await Context.Database.EnsureCreatedAsync();
     }
 
-    [TearDown]
-    public async Task TearDown() => await _services.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        await _services.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
 
     private ApplicationDbContext Context => _services.GetRequiredService<ApplicationDbContext>();
 
@@ -32,20 +33,20 @@ public class DemoDataSeederTests
     private Task SeedAsync(bool seed) =>
         DemoDataSeeder.SeedAsync(Settings(seed), Context, _services.GetRequiredService<UserManager<ApplicationUser>>(), NullLogger.Instance);
 
-    [Test]
+    [Fact]
     public async Task SeedAsync_WhenOff_ShouldAddNothing()
     {
         await SeedAsync(seed: false);
 
-        (await Context.Proposals.AnyAsync()).ShouldBeFalse();
+        (await Context.Proposals.AnyAsync(TestContext.Current.CancellationToken)).ShouldBeFalse();
     }
 
-    [Test]
+    [Fact]
     public async Task SeedAsync_OnAnEmptyPlatform_ShouldAddActiveProposalsWhoseCountersMatchTheirVotes()
     {
         await SeedAsync(seed: true);
 
-        var proposals = await Context.Proposals.Include(proposal => proposal.Votes).ToListAsync();
+        var proposals = await Context.Proposals.Include(proposal => proposal.Votes).ToListAsync(TestContext.Current.CancellationToken);
         proposals.Count.ShouldBeGreaterThan(5);
         proposals.ShouldAllBe(proposal => proposal.Status == InfrastructureProposalStatus.Active);
         foreach (var proposal in proposals)
@@ -53,17 +54,17 @@ public class DemoDataSeederTests
             proposal.VotesFor.ShouldBe(proposal.Votes.Count(vote => vote.VoteType == InfrastructureVoteType.For));
             proposal.VotesAgainst.ShouldBe(proposal.Votes.Count(vote => vote.VoteType == InfrastructureVoteType.Against));
         }
-        (await Context.Comments.AnyAsync()).ShouldBeTrue();
+        (await Context.Comments.AnyAsync(TestContext.Current.CancellationToken)).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public async Task SeedAsync_WhenProposalsExist_ShouldNotAddMore()
     {
         await SeedAsync(seed: true);
-        var count = await Context.Proposals.CountAsync();
+        var count = await Context.Proposals.CountAsync(TestContext.Current.CancellationToken);
 
         await SeedAsync(seed: true);
 
-        (await Context.Proposals.CountAsync()).ShouldBe(count);
+        (await Context.Proposals.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(count);
     }
 }

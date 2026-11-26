@@ -13,7 +13,7 @@ global using System.Text;
 global using System.Text.Json;
 
 // Testing framework usings
-global using NUnit.Framework;
+global using Xunit;
 global using Moq;
 global using Shouldly;
 

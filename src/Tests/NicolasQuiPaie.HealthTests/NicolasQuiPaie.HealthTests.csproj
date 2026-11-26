@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The /health (and the API's /) of Mafyou IT's contract, at three levels: the response writer alone (Unit), each app
+    in memory through WebApplicationFactory (Integration), and each app on a real loopback port read as the health
+    watch reads it (Functional). xUnit v3, Shouldly and Moq.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="xunit.v3.mtp-off" Version="4.0.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.21.0" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="11.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="11.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Both apps declare a global Program: each reference gets an alias of its own. -->
+    <ProjectReference Include="..\..\Back\NicolasQuiPaieAPI\NicolasQuiPaieAPI.csproj" Aliases="Api" />
+    <ProjectReference Include="..\..\Front\NicolasQuiPaieWeb.Host\NicolasQuiPaieWeb.Host.csproj" Aliases="WebHost" />
+    <ProjectReference Include="..\..\Back\NicolasQuiPaieAPI.Infrastructure\NicolasQuiPaieAPI.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
