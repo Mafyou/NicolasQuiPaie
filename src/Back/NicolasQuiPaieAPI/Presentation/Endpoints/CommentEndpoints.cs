@@ -101,6 +101,13 @@ public static class CommentEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
+                // A comment on a proposal that does not exist is refused here, not by the database's foreign key.
+                if (await unitOfWork.Proposals.GetByIdAsync(createDto.ProposalId) is null)
+                {
+                    logger.LogWarning("Comment creation on unknown proposal {ProposalId} by user {UserId}", createDto.ProposalId, userId);
+                    return Results.BadRequest("Proposal not found");
+                }
+
                 var comment = new NicolasQuiPaieAPI.Infrastructure.Models.Comment
                 {
                     Content = createDto.Content,

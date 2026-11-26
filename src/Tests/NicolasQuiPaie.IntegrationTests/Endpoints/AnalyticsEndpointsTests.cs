@@ -1,39 +1,39 @@
 // C# 13.0 - Enhanced Analytics Endpoints Integration Tests with latest language features
 
-using NicolasQuiPaie.IntegrationTests.Fixtures;
-using System.Net;
-using System.Text.Json;
 
-namespace Tests.NicolasQuiPaie.IntegrationTests.Endpoints;
+namespace NicolasQuiPaie.IntegrationTests.Endpoints;
 
 /// <summary>
 /// C# 13.0 - Analytics endpoints integration tests using collection expressions and modern patterns
 /// </summary>
-[TestFixture]
-public class AnalyticsEndpointsTests
+public class AnalyticsEndpointsTests(NicolasQuiPaieApiFactory factory) : IClassFixture<NicolasQuiPaieApiFactory>, IAsyncLifetime
 {
-    private NicolasQuiPaieApiFactory _factory = null!;
-    private HttpClient _client = null!;
+    private readonly HttpClient _client = factory.CreateClient();
 
-    [OneTimeSetUp]
-    public async Task OneTimeSetUp()
+    private static CancellationToken Cancel => TestContext.Current.CancellationToken;
+
+    // The analytics are for signed-in users (User role or higher): every test signs in as the seeded test user.
+    public async ValueTask InitializeAsync() =>
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await factory.CreateTokenAsync());
+
+    public ValueTask DisposeAsync()
     {
-        _factory = new NicolasQuiPaieApiFactory();
-        _client = _factory.CreateClient();
-        
-        // Try to initialize test data, but don't fail if it doesn't work
-        var initialized = await _factory.InitializeTestDataAsync();
-        if (!initialized)
-        {
-            Console.WriteLine("Warning: Test data initialization failed, some tests may not work correctly");
-        }
+        _client.Dispose();
+        GC.SuppressFinalize(this);
+        return ValueTask.CompletedTask;
     }
 
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
+    [Fact]
+    public async Task AnalyticsEndpoint_ShouldReturnUnauthorized_WhenNotSignedIn()
     {
-        _client?.Dispose();
-        _factory?.Dispose();
+        // Arrange
+        using var anonymousClient = factory.CreateClient();
+
+        // Act
+        var response = await anonymousClient.GetAsync("/api/analytics/global-stats", Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     // C# 13.0 - Record for analytics test expectations
@@ -44,6 +44,8 @@ public class AnalyticsEndpointsTests
         string? RequiredProperty = null);
 
     // C# 13.0 - Collection expressions for endpoint test definitions
+    public static TheoryData<AnalyticsEndpointTest> AnalyticsEndpointCases => new(AnalyticsEndpoints);
+
     public static readonly AnalyticsEndpointTest[] AnalyticsEndpoints =
     [
         new("/api/analytics/global-stats", "Global statistics endpoint"),
@@ -55,18 +57,18 @@ public class AnalyticsEndpointsTests
         new("/api/analytics/recent-activity", "Recent activity endpoint")
     ];
 
-    [Test]
-    [TestCaseSource(nameof(AnalyticsEndpoints))]
+    [Theory]
+    [MemberData(nameof(AnalyticsEndpointCases))]
     public async Task AnalyticsEndpoint_ShouldReturnValidResponse(AnalyticsEndpointTest endpointTest)
     {
         // Act
-        var response = await _client.GetAsync(endpointTest.Endpoint);
+        var response = await _client.GetAsync(endpointTest.Endpoint, Cancel);
 
         // Assert - C# 13.0 enhanced validation with modern null checking
         response.StatusCode.ShouldBe(endpointTest.ExpectedStatus);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/json");
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         content.ShouldNotBeNullOrEmpty();
 
         // Validate JSON structure
@@ -74,16 +76,16 @@ public class AnalyticsEndpointsTests
         jsonDocument.RootElement.ValueKind.ShouldBe(JsonValueKind.Object);
     }
 
-    [Test]
+    [Fact]
     public async Task GlobalStatsEndpoint_ShouldReturnExpectedStructure()
     {
         // Act
-        var response = await _client.GetAsync("/api/analytics/global-stats");
+        var response = await _client.GetAsync("/api/analytics/global-stats", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var stats = JsonSerializer.Deserialize<GlobalStatsDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -99,16 +101,16 @@ public class AnalyticsEndpointsTests
         stats.AverageParticipationRate.ShouldBeGreaterThanOrEqualTo(0);
     }
 
-    [Test]
+    [Fact]
     public async Task DashboardStatsEndpoint_ShouldReturnComprehensiveMetrics()
     {
         // Act
-        var response = await _client.GetAsync("/api/analytics/dashboard-stats");
+        var response = await _client.GetAsync("/api/analytics/dashboard-stats", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var dashboard = JsonSerializer.Deserialize<DashboardStatsDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -123,7 +125,7 @@ public class AnalyticsEndpointsTests
         dashboard.RasLebolMeter.ShouldBeLessThanOrEqualTo(100);
     }
 
-    [Test]
+    [Fact]
     public async Task VotingTrendsEndpoint_ShouldReturnTimeSeriesData()
     {
         // Arrange - C# 13.0 collection expressions for time periods
@@ -132,12 +134,12 @@ public class AnalyticsEndpointsTests
         foreach (var days in daysToTest)
         {
             // Act
-            var response = await _client.GetAsync($"/api/analytics/voting-trends?days={days}");
+            var response = await _client.GetAsync($"/api/analytics/voting-trends?days={days}", Cancel);
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             var trends = JsonSerializer.Deserialize<VotingTrendsDto>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -157,16 +159,16 @@ public class AnalyticsEndpointsTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task ContributionDistributionEndpoint_ShouldReturnAllContributionLevels()
     {
         // Act
-        var response = await _client.GetAsync("/api/analytics/contribution-distribution");
+        var response = await _client.GetAsync("/api/analytics/contribution-distribution", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var distribution = JsonSerializer.Deserialize<ContributionLevelDistributionDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -197,7 +199,7 @@ public class AnalyticsEndpointsTests
         Math.Abs(totalPercentage - 100.0).ShouldBeLessThan(0.1); // Allow for rounding
     }
 
-    [Test]
+    [Fact]
     public async Task TopContributorsEndpoint_ShouldReturnRankedUsers()
     {
         // Arrange - C# 13.0 collection expressions for different limits
@@ -206,12 +208,12 @@ public class AnalyticsEndpointsTests
         foreach (var limit in limitsToTest)
         {
             // Act
-            var response = await _client.GetAsync($"/api/analytics/top-contributors?take={limit}");
+            var response = await _client.GetAsync($"/api/analytics/top-contributors?take={limit}", Cancel);
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             var contributors = JsonSerializer.Deserialize<TopContributorsDto>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -223,25 +225,22 @@ public class AnalyticsEndpointsTests
             contributors.TopVoters.Count.ShouldBeLessThanOrEqualTo(limit);
             contributors.TopCommenters.Count.ShouldBeLessThanOrEqualTo(limit);
 
-            // Validate ranking order for proposers (should be descending by reputation score)
-            for (int i = 1; i < contributors.TopProposers.Count; i++)
-            {
-                contributors.TopProposers[i - 1].ReputationScore.ShouldBeGreaterThanOrEqualTo(
-                    contributors.TopProposers[i].ReputationScore);
-            }
+            // The proposers are ranked by the number of proposals: the seeded test user wrote them all.
+            contributors.TopProposers.ShouldNotBeEmpty();
+            contributors.TopProposers[0].UserId.ShouldBe(NicolasQuiPaieApiFactory.TestUserId);
         }
     }
 
-    [Test]
+    [Fact]
     public async Task FrustrationBarometerEndpoint_ShouldReturnValidMeter()
     {
         // Act
-        var response = await _client.GetAsync("/api/analytics/frustration-barometer");
+        var response = await _client.GetAsync("/api/analytics/frustration-barometer", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var barometer = JsonSerializer.Deserialize<FrustrationBarometerDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -257,16 +256,16 @@ public class AnalyticsEndpointsTests
         barometer.CategoryBreakdown.ShouldNotBeNull();
     }
 
-    [Test]
+    [Fact]
     public async Task RecentActivityEndpoint_ShouldReturnValidActivity()
     {
         // Act
-        var response = await _client.GetAsync("/api/analytics/recent-activity");
+        var response = await _client.GetAsync("/api/analytics/recent-activity", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var activity = JsonSerializer.Deserialize<RecentActivityDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -288,7 +287,7 @@ public class AnalyticsEndpointsTests
     }
 
     // C# 13.0 - Collection expressions for comprehensive endpoint testing
-    [Test]
+    [Fact]
     public async Task AllAnalyticsEndpoints_ShouldBeAccessible_AndReturnValidJson()
     {
         // Arrange
@@ -297,11 +296,11 @@ public class AnalyticsEndpointsTests
         // Act & Assert - C# 13.0 parallel testing with modern null checking
         var tasks = endpoints.Select(async endpoint =>
         {
-            var response = await _client.GetAsync(endpoint);
+            var response = await _client.GetAsync(endpoint, Cancel);
             response.StatusCode.ShouldNotBe(HttpStatusCode.NotFound,
                 $"Endpoint {endpoint} should be accessible");
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             Should.NotThrow(() => JsonDocument.Parse(content),
                 $"Endpoint {endpoint} should return valid JSON");
         });
@@ -310,23 +309,23 @@ public class AnalyticsEndpointsTests
     }
 
     // C# 13.0 - Modern error handling testing with pattern matching
-    [Test]
-    [TestCase("/api/analytics/invalid-endpoint", HttpStatusCode.NotFound)]
-    [TestCase("/api/analytics/voting-trends?days=-1", HttpStatusCode.BadRequest)]
-    [TestCase("/api/analytics/top-contributors?take=-1", HttpStatusCode.BadRequest)]
-    [TestCase("/api/analytics/top-contributors?take=1000", HttpStatusCode.BadRequest)]
+    [Theory]
+    [InlineData("/api/analytics/invalid-endpoint", HttpStatusCode.NotFound)]
+    [InlineData("/api/analytics/voting-trends?days=-1", HttpStatusCode.BadRequest)]
+    [InlineData("/api/analytics/top-contributors?take=-1", HttpStatusCode.BadRequest)]
+    [InlineData("/api/analytics/top-contributors?take=1000", HttpStatusCode.BadRequest)]
     public async Task AnalyticsEndpoints_ShouldHandleInvalidRequests_Appropriately(
         string endpoint, HttpStatusCode expectedStatus)
     {
         // Act
-        var response = await _client.GetAsync(endpoint);
+        var response = await _client.GetAsync(endpoint, Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(expectedStatus);
     }
 
     // C# 13.0 - Performance testing with modern patterns
-    [Test]
+    [Fact]
     public async Task AnalyticsEndpoints_ShouldPerformWell_UnderLoad()
     {
         // Arrange
@@ -337,7 +336,7 @@ public class AnalyticsEndpointsTests
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         var tasks = Enumerable.Range(0, concurrentRequests)
-            .Select(_ => _client.GetAsync(endpoint))
+            .Select(_ => _client.GetAsync(endpoint, Cancel))
             .ToArray();
 
         var responses = await Task.WhenAll(tasks);
@@ -348,17 +347,17 @@ public class AnalyticsEndpointsTests
         stopwatch.ElapsedMilliseconds.ShouldBeLessThan(5000); // Should complete in under 5 seconds
 
         // Validate response consistency with modern null checking
-        var contents = await Task.WhenAll(responses.Select(r => r.Content.ReadAsStringAsync()));
+        var contents = await Task.WhenAll(responses.Select(r => r.Content.ReadAsStringAsync(Cancel)));
         contents.All(c => c is not null && c.Length > 0).ShouldBeTrue();
     }
 
     // C# 13.0 - Data consistency testing with modern null patterns
-    [Test]
+    [Fact]
     public async Task AnalyticsEndpoints_ShouldProvideConsistentData_AcrossMultipleCalls()
     {
         // Act - Call the same endpoint multiple times
         var tasks = Enumerable.Range(0, 5)
-            .Select(_ => _client.GetAsync("/api/analytics/global-stats"))
+            .Select(_ => _client.GetAsync("/api/analytics/global-stats", Cancel))
             .ToArray();
 
         var responses = await Task.WhenAll(tasks);
@@ -368,7 +367,7 @@ public class AnalyticsEndpointsTests
 
         var statsResponses = await Task.WhenAll(responses.Select(async r =>
         {
-            var content = await r.Content.ReadAsStringAsync();
+            var content = await r.Content.ReadAsStringAsync(Cancel);
             return JsonSerializer.Deserialize<GlobalStatsDto>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true

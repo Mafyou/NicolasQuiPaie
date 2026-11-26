@@ -1,190 +1,163 @@
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using NicolasQuiPaieAPI.Infrastructure.Data;
-using NicolasQuiPaieAPI.Infrastructure.Models;
-using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
-using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
-using VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
+// The API keeps Serilog's logger in a static: one factory at a time.
+[assembly: CollectionBehavior(CollectionBehavior.CollectionPerAssembly)]
 
-namespace NicolasQuiPaie.IntegrationTests.Fixtures
+namespace NicolasQuiPaie.IntegrationTests.Fixtures;
+
+/// <summary>
+/// The real API, its endpoints, services, repositories and Identity, on a SQLite database of its own (a temporary file:
+/// real transactions, foreign keys and unique indexes) seeded with a known set of users, proposals and votes. One instance per test class (class fixture): the tests of a class share its data.
+/// </summary>
+public class NicolasQuiPaieApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    public class NicolasQuiPaieApiFactory : WebApplicationFactory<Program>
+    public const string TestUserId = "test-user-1";
+    public const string TestUserEmail = "test@test.com";
+    public const string TestUserPassword = "Test123!";
+    public const string OtherUserId = "test-user-2";
+
+    /// <summary>The proposals seeded, ids 1 to 7: "Test Proposal 1" to "Test Proposal 7", all active.</summary>
+    public const int SeededProposalCount = 7;
+
+    /// <summary>The mail sender, the one collaborator replaced: the tests read the reset links it is handed.</summary>
+    public Mock<IEmailService> Emails { get; } = new();
+
+    private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"nqp-integration-{Guid.NewGuid():N}.db");
+
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        private readonly string _databaseName = $"IntegrationTestDb_{Guid.NewGuid()}";
+        builder.UseEnvironment("Testing");
+        builder.UseSetting("DisableDbInitialization", "true");
+        builder.UseSetting("DisableHttpsRedirection", "true");
 
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+        builder.ConfigureServices(services =>
         {
-            builder.UseEnvironment("Testing");
-            
-            builder.ConfigureAppConfiguration((context, configBuilder) =>
+            // Only the EF Core SQL Server registrations go: every application service stays as the API wires it.
+            var descriptorsToRemove = services.Where(descriptor =>
+                descriptor.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                descriptor.ServiceType == typeof(IDbContextOptionsConfiguration<ApplicationDbContext>) ||
+                descriptor.ServiceType.FullName?.Contains("Microsoft.EntityFrameworkCore.SqlServer") == true ||
+                descriptor.ImplementationType?.FullName?.Contains("Microsoft.EntityFrameworkCore.SqlServer") == true).ToList();
+
+            foreach (var descriptor in descriptorsToRemove)
             {
-                configBuilder.AddInMemoryCollection(new[]
-                {
-                    new KeyValuePair<string, string?>("DisableDbInitialization", "true")
-                });
+                services.Remove(descriptor);
+            }
+
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlite($"Data Source={_databasePath}");
+                options.ReplaceService<IModelCustomizer, SqliteModelCustomizer>();
+                options.EnableSensitiveDataLogging();
             });
 
-            builder.ConfigureServices(services =>
-            {
-                // Be more specific about what we remove - only remove EF/SQL Server services, not application services
-                var descriptorsToRemove = services.Where(d =>
-                    d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                    // EF Core 9+: AddDbContext also registers the configuration that calls UseSqlServer
-                    d.ServiceType == typeof(IDbContextOptionsConfiguration<ApplicationDbContext>) ||
-                    (d.ServiceType.IsGenericType && d.ServiceType.GetGenericTypeDefinition() == typeof(DbContextOptions<>) && 
-                     d.ServiceType.GenericTypeArguments.Contains(typeof(ApplicationDbContext))) ||
-                    d.ServiceType.FullName?.Contains("Microsoft.EntityFrameworkCore.SqlServer") == true ||
-                    d.ImplementationType?.FullName?.Contains("Microsoft.EntityFrameworkCore.SqlServer") == true
-                ).ToList();
+            services.RemoveAll<IEmailService>();
+            services.AddSingleton(Emails.Object);
+        });
+    }
 
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
+    public async ValueTask InitializeAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-                // Add our in-memory database
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase(_databaseName);
-                    options.EnableSensitiveDataLogging();
-                });
-            });
-        }
+        // The categories (ids 1 to 5) and the roles come from HasData, created with the database.
+        await context.Database.EnsureCreatedAsync();
 
-        public async Task SeedDatabaseAsync()
+        await CreateUserAsync(userManager, TestUserId, TestUserEmail, "Test User", ContributionLevel.PetitNicolas, 100);
+        await CreateUserAsync(userManager, OtherUserId, "other@test.com", "Other User", ContributionLevel.GrosNicolas, 300);
+        // One user at each of the two other levels: every level has someone in it.
+        await CreateUserAsync(userManager, "test-user-3", "middle@test.com", "Middle User", ContributionLevel.GrosMoyenNicolas, 200);
+        await CreateUserAsync(userManager, "test-user-4", "supreme@test.com", "Supreme User", ContributionLevel.NicolasSupreme, 1000);
+
+        var proposals = Enumerable.Range(1, SeededProposalCount).Select(id => new Proposal
         {
-            // Don't seed database in the factory initialization, do it lazily when first called
-            return;
-        }
+            Id = id,
+            Title = $"Test Proposal {id}",
+            Description = $"This is test proposal {id} for integration testing that meets the minimum length requirement.",
+            Status = ProposalStatus.Active,
+            CreatedById = TestUserId,
+            CategoryId = id % 2 == 0 ? 2 : 1,
+            CreatedAt = DateTime.UtcNow.AddHours(-id),
+            ViewsCount = 10 * id
+        }).ToList();
+        context.Proposals.AddRange(proposals);
 
-        public async Task<bool> InitializeTestDataAsync()
+        // One vote of the other user, with the counter of its proposal in step.
+        context.Votes.Add(new Vote
         {
-            try
-            {
-                // Create client first to ensure services are initialized
-                using var client = CreateClient();
-                
-                using var scope = Services.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            UserId = OtherUserId,
+            ProposalId = 1,
+            VoteType = VoteType.For,
+            Weight = 1,
+            VotedAt = DateTime.UtcNow.AddHours(-2)
+        });
+        proposals[0].VotesFor = 1;
 
-                await context.Database.EnsureCreatedAsync();
+        await context.SaveChangesAsync();
+    }
 
-                // Clear existing data
-                if (context.Votes.Any()) context.RemoveRange(context.Votes);
-                if (context.Comments.Any()) context.RemoveRange(context.Comments); 
-                if (context.Proposals.Any()) context.RemoveRange(context.Proposals);
-                if (context.Categories.Any()) context.RemoveRange(context.Categories);
-                if (context.Users.Any()) context.RemoveRange(context.Users);
-                await context.SaveChangesAsync();
+    /// <summary>A client with the bearer token of the given seeded user, made by the API's own JWT service.</summary>
+    public async Task<HttpClient> CreateAuthenticatedClientAsync(string userId = TestUserId)
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await CreateTokenAsync(userId));
+        return client;
+    }
 
-                // Add test categories
-                var categories = new[]
-                {
-                    new Category { Id = 1, Name = "Test Category 1", Description = "Test Description 1", Color = "#FF0000", IconClass = "fas fa-test", IsActive = true, SortOrder = 1 },
-                    new Category { Id = 2, Name = "Test Category 2", Description = "Test Description 2", Color = "#00FF00", IconClass = "fas fa-test2", IsActive = true, SortOrder = 2 }
-                };
-                context.Categories.AddRange(categories);
-                await context.SaveChangesAsync();
+    public async Task<string> CreateTokenAsync(string userId = TestUserId)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = await userManager.FindByIdAsync(userId) ?? throw new InvalidOperationException($"No seeded user {userId}");
+        return await scope.ServiceProvider.GetRequiredService<IJwtService>().GenerateTokenAsync(user);
+    }
 
-                // Add test user
-                var testUser = new ApplicationUser
-                {
-                    Id = "test-user-1",
-                    UserName = "test@test.com",
-                    Email = "test@test.com",
-                    DisplayName = "Test User",
-                    ContributionLevel = ContributionLevel.PetitNicolas,
-                    ReputationScore = 100,
-                    IsVerified = true,
-                    EmailConfirmed = true,
-                    CreatedAt = DateTime.UtcNow
-                };
+    /// <summary>Adds a user with the "User" role, as the registration does.</summary>
+    public async Task<string> AddUserAsync(string userId, ContributionLevel contributionLevel)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        await CreateUserAsync(userManager, userId, $"{userId}@test.com", $"User {userId}", contributionLevel, 0);
+        return userId;
+    }
 
-                var result = await userManager.CreateAsync(testUser, "Test123!");
-                if (!result.Succeeded)
-                {
-                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                    Console.WriteLine($"User creation errors (may be normal): {errors}");
-                }
+    /// <summary>Reads the database the API writes to, in a scope of its own.</summary>
+    public async Task<T> WithContextAsync<T>(Func<ApplicationDbContext, Task<T>> read)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await read(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
+    }
 
-                // Add test proposals
-                var proposals = new[]
-                {
-                    new Proposal
-                    {
-                        Id = 1,
-                        Title = "Test Proposal 1",
-                        Description = "This is a test proposal for integration testing that meets the minimum length requirement.",
-                        Status = ProposalStatus.Active,
-                        CreatedById = testUser.Id,
-                        CategoryId = 1,
-                        CreatedAt = DateTime.UtcNow,
-                        VotesFor = 5,
-                        VotesAgainst = 2,
-                        ViewsCount = 50
-                    }
-                };
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        SqliteConnection.ClearAllPools();
+        File.Delete(_databasePath);
+        GC.SuppressFinalize(this);
+    }
 
-                context.Proposals.AddRange(proposals);
-                await context.SaveChangesAsync();
-
-                // Add test votes to make analytics tests more realistic
-                var votes = new[]
-                {
-                    new Vote
-                    {
-                        Id = 1,
-                        UserId = testUser.Id,
-                        ProposalId = 1,
-                        VoteType = VoteType.For,
-                        VotedAt = DateTime.UtcNow.AddHours(-2)
-                    },
-                    new Vote
-                    {
-                        Id = 2,
-                        UserId = testUser.Id,
-                        ProposalId = 1,
-                        VoteType = VoteType.Against,
-                        VotedAt = DateTime.UtcNow.AddHours(-1)
-                    }
-                };
-
-                context.Votes.AddRange(votes);
-                await context.SaveChangesAsync();
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Database initialization failed: {ex.Message}");
-                return false;
-            }
-        }
-
-        protected override void Dispose(bool disposing)
+    private static async Task CreateUserAsync(UserManager<ApplicationUser> userManager, string id, string email, string displayName,
+        ContributionLevel contributionLevel, int reputationScore)
+    {
+        var user = new ApplicationUser
         {
-            if (disposing)
-            {
-                try
-                {
-                    using var scope = Services.CreateScope();
-                    var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
-                    context?.Database.EnsureDeleted();
-                }
-                catch
-                {
-                    // Ignore disposal errors
-                }
-            }
-            
-            base.Dispose(disposing);
+            Id = id,
+            UserName = email,
+            Email = email,
+            DisplayName = displayName,
+            ContributionLevel = contributionLevel,
+            ReputationScore = reputationScore,
+            IsVerified = true,
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var created = await userManager.CreateAsync(user, TestUserPassword);
+        if (!created.Succeeded)
+        {
+            throw new InvalidOperationException($"Seeding user {email} failed: {string.Join(", ", created.Errors.Select(error => error.Description))}");
         }
+
+        await userManager.AddToRoleAsync(user, "User");
     }
 }

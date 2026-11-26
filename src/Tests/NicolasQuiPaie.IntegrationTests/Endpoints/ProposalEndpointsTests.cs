@@ -1,44 +1,26 @@
 // C# 13.0 - Enhanced Proposal Endpoints Integration Tests with latest language features
 
-using Microsoft.IdentityModel.Tokens;
-using NicolasQuiPaie.IntegrationTests.Fixtures;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Security.Claims;
-using System.Text.Json;
-using ProposalStatus = NicolasQuiPaieData.DTOs.ProposalStatus;
 
-namespace Tests.NicolasQuiPaie.IntegrationTests.Endpoints;
+namespace NicolasQuiPaie.IntegrationTests.Endpoints;
 
 /// <summary>
 /// C# 13.0 - Proposal endpoints integration tests using collection expressions, primary constructors, and modern patterns
 /// </summary>
-[TestFixture]
-public class ProposalEndpointsTests
+public class ProposalEndpointsTests(NicolasQuiPaieApiFactory factory) : IClassFixture<NicolasQuiPaieApiFactory>, IDisposable
 {
-    private NicolasQuiPaieApiFactory _factory = null!;
-    private HttpClient _client = null!;
+    private readonly HttpClient _client = factory.CreateClient();
 
-    [OneTimeSetUp]
-    public async Task OneTimeSetUp()
+    private static CancellationToken Cancel => TestContext.Current.CancellationToken;
+
+    public void Dispose()
     {
-        _factory = new NicolasQuiPaieApiFactory();
-        _client = _factory.CreateClient();
-        
-        // Try to initialize test data, but don't fail if it doesn't work
-        var initialized = await _factory.InitializeTestDataAsync();
-        if (!initialized)
-        {
-            Console.WriteLine("Warning: Test data initialization failed, some tests may not work correctly");
-        }
+        _client.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    [OneTimeTearDown]
-    public void OneTimeTearDown()
-    {
-        _client?.Dispose();
-        _factory?.Dispose();
-    }
+    /// <summary>Signs the client's requests with a real token of a seeded user.</summary>
+    private async Task AuthenticateAsync(string userId = NicolasQuiPaieApiFactory.TestUserId) =>
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", await factory.CreateTokenAsync(userId));
 
     // C# 13.0 - Record for endpoint test scenarios
     public record ProposalEndpointScenario(
@@ -50,6 +32,8 @@ public class ProposalEndpointsTests
         bool RequiresAuth = false);
 
     // C# 13.0 - Collection expressions for comprehensive endpoint testing
+    public static TheoryData<ProposalEndpointScenario> PublicEndpointCases => new(PublicEndpointScenarios);
+
     public static readonly ProposalEndpointScenario[] PublicEndpointScenarios =
     [
         new("Get all proposals", "/api/proposals", HttpMethod.Get),
@@ -82,8 +66,8 @@ public class ProposalEndpointsTests
         new("Delete proposal", "/api/proposals/1", HttpMethod.Delete, null, HttpStatusCode.NoContent, true)
     ];
 
-    [Test]
-    [TestCaseSource(nameof(PublicEndpointScenarios))]
+    [Theory]
+    [MemberData(nameof(PublicEndpointCases))]
     public async Task PublicProposalEndpoints_ShouldWork_WithoutAuthentication(ProposalEndpointScenario scenario)
     {
         // Act
@@ -93,14 +77,14 @@ public class ProposalEndpointsTests
             request.Content = JsonContent.Create(scenario.RequestBody);
         }
 
-        var response = await _client.SendAsync(request);
+        var response = await _client.SendAsync(request, Cancel);
 
         // Assert - C# 13.0 enhanced validation with modern null checking
         response.StatusCode.ShouldBe(scenario.ExpectedStatus);
 
         if (response.StatusCode == HttpStatusCode.OK)
         {
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             content.ShouldNotBeNullOrEmpty();
 
             // Validate JSON structure
@@ -108,7 +92,7 @@ public class ProposalEndpointsTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task GetProposals_ShouldReturnValidStructure_WithCorrectPagination()
     {
         // Arrange - C# 13.0 collection expressions for pagination tests
@@ -123,12 +107,12 @@ public class ProposalEndpointsTests
         foreach (var scenario in paginationScenarios)
         {
             // Act
-            var response = await _client.GetAsync($"/api/proposals?skip={scenario.Skip}&take={scenario.Take}");
+            var response = await _client.GetAsync($"/api/proposals?skip={scenario.Skip}&take={scenario.Take}", Cancel);
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             var proposals = JsonSerializer.Deserialize<ProposalDto[]>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -144,13 +128,13 @@ public class ProposalEndpointsTests
                 proposal.Id.ShouldBeGreaterThan(0);
                 proposal.Title.ShouldNotBeNullOrEmpty();
                 proposal.Description.ShouldNotBeNullOrEmpty();
-                proposal.Status.ShouldBe(ProposalStatus.Active);
+                proposal.Status.ShouldBe(DtoProposalStatus.Active);
                 proposal.CreatedAt.ShouldBeLessThanOrEqualTo(DateTime.UtcNow);
             }
         }
     }
 
-    [Test]
+    [Fact]
     public async Task GetProposals_ShouldFilterCorrectly_ByCategory()
     {
         // Arrange - Test different categories
@@ -159,12 +143,12 @@ public class ProposalEndpointsTests
         foreach (var categoryId in categoriesToTest)
         {
             // Act
-            var response = await _client.GetAsync($"/api/proposals?categoryId={categoryId}");
+            var response = await _client.GetAsync($"/api/proposals?categoryId={categoryId}", Cancel);
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             var proposals = JsonSerializer.Deserialize<ProposalDto[]>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -178,7 +162,7 @@ public class ProposalEndpointsTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task GetProposals_ShouldSearchCorrectly_ByTitle()
     {
         // Arrange - C# 13.0 collection expressions for search terms
@@ -187,12 +171,12 @@ public class ProposalEndpointsTests
         foreach (var searchTerm in searchTerms)
         {
             // Act
-            var response = await _client.GetAsync($"/api/proposals?search={Uri.EscapeDataString(searchTerm)}");
+            var response = await _client.GetAsync($"/api/proposals?search={Uri.EscapeDataString(searchTerm)}", Cancel);
 
             // Assert
             response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             var proposals = JsonSerializer.Deserialize<ProposalDto[]>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -213,16 +197,16 @@ public class ProposalEndpointsTests
         }
     }
 
-    [Test]
+    [Fact]
     public async Task GetTrendingProposals_ShouldReturnMostPopular_InCorrectOrder()
     {
         // Act
-        var response = await _client.GetAsync("/api/proposals/trending");
+        var response = await _client.GetAsync("/api/proposals/trending", Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var proposals = JsonSerializer.Deserialize<ProposalDto[]>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -245,44 +229,11 @@ public class ProposalEndpointsTests
         }
     }
 
-    // C# 13.0 - Authentication helper with modern JWT and null checking
-    private string GetTestAuthToken(string userId = "test-user-1")
-    {
-        // This would typically call the auth endpoint, but for integration tests
-        // we can create a test token directly
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId),
-            new Claim(ClaimTypes.Email, $"{userId}@test.com"),
-            new Claim("DisplayName", $"Test User {userId}"),
-            new Claim("ContributionLevel", "PetitNicolas"),
-            new Claim("ReputationScore", "100"),
-            new Claim("IsVerified", "true")
-        };
-
-        // Create a test JWT token (simplified for testing)
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = System.Text.Encoding.UTF8.GetBytes("MySecretKeyForNicolasQuiPaie2024TestingPurposes123!");
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
-        };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    [Test]
+    [Fact]
     public async Task CreateProposal_ShouldWork_WithValidAuthentication()
     {
         // Arrange
-        var token = GetTestAuthToken();
-        _client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        await AuthenticateAsync();
 
         var createDto = new CreateProposalDto
         {
@@ -293,12 +244,12 @@ public class ProposalEndpointsTests
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/proposals", createDto);
+        var response = await _client.PostAsJsonAsync("/api/proposals", createDto, Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(Cancel);
         var createdProposal = JsonSerializer.Deserialize<ProposalDto>(content, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
@@ -309,11 +260,11 @@ public class ProposalEndpointsTests
         createdProposal.Title.ShouldBe(createDto.Title);
         createdProposal.Description.ShouldBe(createDto.Description);
         createdProposal.CategoryId.ShouldBe(createDto.CategoryId);
-        createdProposal.Status.ShouldBe(ProposalStatus.Active);
+        createdProposal.Status.ShouldBe(DtoProposalStatus.Active);
         createdProposal.CreatedById.ShouldBe("test-user-1");
     }
 
-    [Test]
+    [Fact]
     public async Task CreateProposal_ShouldFail_WithoutAuthentication()
     {
         // Arrange - Clear any existing authentication
@@ -327,25 +278,23 @@ public class ProposalEndpointsTests
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/proposals", createDto);
+        var response = await _client.PostAsJsonAsync("/api/proposals", createDto, Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     // C# 13.0 - Collection expressions for validation error testing with modern null patterns
-    [Test]
-    [TestCase("", "Valid description that meets minimum length requirements", 1, HttpStatusCode.BadRequest)]
-    [TestCase("Short", "Valid description that meets minimum length requirements", 1, HttpStatusCode.BadRequest)]
-    [TestCase("Valid Title", "Too short", 1, HttpStatusCode.BadRequest)]
-    [TestCase("Valid Title", "Valid description that meets minimum length requirements", 0, HttpStatusCode.BadRequest)]
+    [Theory]
+    [InlineData("", "Valid description that meets minimum length requirements", 1, HttpStatusCode.BadRequest)]
+    [InlineData("Short", "Valid description that meets minimum length requirements", 1, HttpStatusCode.BadRequest)]
+    [InlineData("Valid Title", "Too short", 1, HttpStatusCode.BadRequest)]
+    [InlineData("Valid Title", "Valid description that meets minimum length requirements", 0, HttpStatusCode.BadRequest)]
     public async Task CreateProposal_ShouldValidateInput_AndReturnBadRequest(
         string title, string description, int categoryId, HttpStatusCode expectedStatus)
     {
         // Arrange
-        var token = GetTestAuthToken();
-        _client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        await AuthenticateAsync();
 
         var createDto = new CreateProposalDto
         {
@@ -355,20 +304,20 @@ public class ProposalEndpointsTests
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/proposals", createDto);
+        var response = await _client.PostAsJsonAsync("/api/proposals", createDto, Cancel);
 
         // Assert
         response.StatusCode.ShouldBe(expectedStatus);
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(Cancel);
             content.ShouldContain("validation"); // Should contain validation error details
         }
     }
 
     // C# 13.0 - Performance testing with modern patterns and null checking
-    [Test]
+    [Fact]
     public async Task GetProposals_ShouldPerformWell_WithLargeDataSets()
     {
         // Arrange
@@ -378,7 +327,7 @@ public class ProposalEndpointsTests
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         var tasks = Enumerable.Range(0, concurrentRequests)
-            .Select(i => _client.GetAsync($"/api/proposals?skip={i * 10}&take=10"))
+            .Select(i => _client.GetAsync($"/api/proposals?skip={i * 10}&take=10", Cancel))
             .ToArray();
 
         var responses = await Task.WhenAll(tasks);
@@ -389,17 +338,11 @@ public class ProposalEndpointsTests
         stopwatch.ElapsedMilliseconds.ShouldBeLessThan(10000); // Should complete in under 10 seconds
 
         // Validate all responses have valid content with modern null patterns
-        var contentTasks = responses.Select(r => r.Content.ReadAsStringAsync());
+        var contentTasks = responses.Select(r => r.Content.ReadAsStringAsync(Cancel));
         var contents = await Task.WhenAll(contentTasks);
 
         contents.All(c => c is not null && c.Length > 0).ShouldBeTrue();
         contents.All(c => c.StartsWith('[') || c.StartsWith('{')).ShouldBeTrue(); // Valid JSON arrays or objects
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        // Clean up authentication headers between tests
-        _client.DefaultRequestHeaders.Authorization = null;
-    }
 }

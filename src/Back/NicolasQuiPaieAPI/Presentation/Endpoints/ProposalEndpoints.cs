@@ -275,6 +275,7 @@ public static class ProposalEndpoints
         // POST /api/proposals
         group.MapPost("/", [Authorize] async (
             [FromServices] IProposalService proposalService,
+            [FromServices] IValidator<CreateProposalDto> validator,
             [FromServices] ILogger<Program> logger,
             [FromBody] CreateProposalDto createDto,
             ClaimsPrincipal user,
@@ -289,6 +290,15 @@ public static class ProposalEndpoints
                 {
                     logger.LogWarning("Unauthorized proposal creation attempt from IP: {ClientIP}", clientIp);
                     return Results.Unauthorized();
+                }
+
+                // The rules of CreateProposalDtoValidator (lengths, a category): without them a proposal with no
+                // category reached the database and failed on its foreign key.
+                var validation = await validator.ValidateAsync(createDto);
+                if (!validation.IsValid)
+                {
+                    logger.LogWarning("Invalid proposal creation by user {UserId}: {Errors}", userId, $"{validation}");
+                    return Results.ValidationProblem(validation.ToDictionary());
                 }
 
                 if (string.IsNullOrWhiteSpace(createDto.Title))
