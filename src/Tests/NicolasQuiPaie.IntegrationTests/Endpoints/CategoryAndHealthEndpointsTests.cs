@@ -1,6 +1,6 @@
 namespace NicolasQuiPaie.IntegrationTests.Endpoints;
 
-/// <summary>The categories created with the database (for signed-in users), and the health probe App Service calls.</summary>
+/// <summary>The categories created with the database (public reference data, read by anyone), and the health probe App Service calls.</summary>
 public class CategoryAndHealthEndpointsTests(NicolasQuiPaieApiFactory factory) : IClassFixture<NicolasQuiPaieApiFactory>, IAsyncLifetime
 {
     private readonly HttpClient _client = factory.CreateClient();
@@ -17,17 +17,53 @@ public class CategoryAndHealthEndpointsTests(NicolasQuiPaieApiFactory factory) :
         return ValueTask.CompletedTask;
     }
 
-    [Fact]
-    public async Task GetCategories_ShouldReturnUnauthorized_WhenNotSignedIn()
+    [Theory]
+    [InlineData("/api/categories")]
+    [InlineData("/api/categories/active")]
+    [InlineData("/api/categories/2")]
+    public async Task GetCategories_ShouldAnswer_WhenNotSignedIn(string path)
     {
         // Arrange
         using var anonymousClient = factory.CreateClient();
 
         // Act
-        var response = await anonymousClient.GetAsync("/api/categories", Cancel);
+        var response = await anonymousClient.GetAsync(path, Cancel);
+
+        // Assert: the proposals page filters on them before anyone signs in
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetCategories_ShouldListTheSameCategories_SignedInOrNot()
+    {
+        // Arrange
+        using var anonymousClient = factory.CreateClient();
+
+        // Act
+        var anonymous = await anonymousClient.GetFromJsonAsync<List<CategoryDto>>("/api/categories", Cancel);
+        var signedIn = await _client.GetFromJsonAsync<List<CategoryDto>>("/api/categories", Cancel);
 
         // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        anonymous.ShouldNotBeNull().Select(category => category.Id).ShouldBe(signedIn.ShouldNotBeNull().Select(category => category.Id));
+    }
+
+    [Fact]
+    public async Task Categories_ShouldOfferNoWrite_EvenToAnAnonymousCaller()
+    {
+        // Arrange
+        using var anonymousClient = factory.CreateClient();
+
+        // Act
+        var post = await anonymousClient.PostAsJsonAsync("/api/categories", new { Name = "Nouvelle" }, Cancel);
+        var put = await anonymousClient.PutAsJsonAsync("/api/categories/1", new { Name = "Renommée" }, Cancel);
+        var delete = await anonymousClient.DeleteAsync("/api/categories/1", Cancel);
+
+        // Assert: reads only; the categories stay as the database created them
+        post.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
+        put.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
+        delete.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
+        (await factory.WithContextAsync(context => context.Categories.AnyAsync(category => category.Name == "Nouvelle" || category.Name == "Renommée", Cancel)))
+            .ShouldBeFalse();
     }
 
     [Fact]

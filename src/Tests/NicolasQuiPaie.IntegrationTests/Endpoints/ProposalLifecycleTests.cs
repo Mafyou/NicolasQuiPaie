@@ -39,6 +39,29 @@ public class ProposalLifecycleTests(NicolasQuiPaieApiFactory factory) : IClassFi
         inCategory.ShouldNotBeNull().ShouldContain(proposal => proposal.Id == created.Id);
     }
 
+    [Theory]
+    [InlineData(12345, ProposalMessages.UnknownCategory)]
+    [InlineData(999, ProposalMessages.UnknownCategory)]
+    [InlineData(0, "Veuillez sélectionner une catégorie valide")]
+    [InlineData(-3, "Veuillez sélectionner une catégorie valide")]
+    public async Task CreateProposal_ShouldReturnAValidationProblem_ForACategoryThatDoesNotExist(int categoryId, string message)
+    {
+        // Arrange: above 0, the foreign key of the real database used to refuse the row, as a 500 (ids 1 to 5 exist)
+        using var author = await factory.CreateAuthenticatedClientAsync();
+        var before = await factory.WithContextAsync(context => context.Proposals.CountAsync(Cancel));
+        var proposal = NewProposal("Dans une catégorie inconnue");
+        proposal.CategoryId = categoryId;
+
+        // Act
+        var response = await author.PostAsJsonAsync("/api/proposals", proposal, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var problem = (await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(Cancel)).ShouldNotBeNull();
+        problem.Errors[nameof(CreateProposalDto.CategoryId)].ShouldBe([message]);
+        (await factory.WithContextAsync(context => context.Proposals.CountAsync(Cancel))).ShouldBe(before);
+    }
+
     [Fact]
     public async Task UpdateProposal_ShouldChangeIt_ForItsAuthor()
     {

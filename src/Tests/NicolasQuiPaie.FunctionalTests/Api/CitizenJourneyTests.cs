@@ -148,6 +148,69 @@ public class CitizenJourneyTests(Platform platform) : IDisposable
     }
 
     [Fact]
+    public async Task Visitor_ShouldReadTheCategories_WithoutAnAccount()
+    {
+        // Act: the proposals page filters on them before anyone signs in
+        var categories = await _client.GetFromJsonAsync<List<CategoryDto>>("/api/categories", Cancel);
+        var active = await _client.GetFromJsonAsync<List<CategoryDto>>("/api/categories/active", Cancel);
+        var create = await _client.PostAsJsonAsync("/api/categories", new { Name = "Catégorie d'un visiteur" }, Cancel);
+
+        // Assert: readable by anyone, never writable
+        categories.ShouldNotBeNull().ShouldNotBeEmpty();
+        active.ShouldNotBeNull().ShouldNotBeEmpty();
+        create.IsSuccessStatusCode.ShouldBeFalse();
+        (await _client.GetFromJsonAsync<List<CategoryDto>>("/api/categories", Cancel)).ShouldNotBeNull().Count.ShouldBe(categories.Count);
+    }
+
+    [Fact]
+    public async Task Citizen_ShouldCorrectTheirOwnComment_WhileAnotherCitizenCannot()
+    {
+        // Arrange: two citizens without any role but User, a comment of the first
+        var author = await SignUpAsync("Nicolas Commentateur");
+        var other = await SignUpAsync("Nicolas Correcteur");
+        using var authorClient = AuthenticatedClient(author.Token);
+        using var otherClient = AuthenticatedClient(other.Token);
+        var proposalId = (await _client.GetFromJsonAsync<List<ProposalDto>>("/api/proposals", Cancel)).ShouldNotBeNull().First().Id;
+        var posted = await authorClient.PostAsJsonAsync("/api/comments", new CreateCommentDto { ProposalId = proposalId, Content = "Avec une fote" }, Cancel);
+        var comment = (await posted.Content.ReadFromJsonAsync<CommentDto>(Cancel)).ShouldNotBeNull();
+
+        // Act
+        var hijack = await otherClient.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "Réécrit par un autre" }, Cancel);
+        var correction = await authorClient.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "Sans la faute" }, Cancel);
+        var comments = await _client.GetFromJsonAsync<List<CommentDto>>($"/api/comments/proposal/{proposalId}", Cancel);
+
+        // Assert
+        hijack.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        correction.StatusCode.ShouldBe(HttpStatusCode.OK);
+        comments.ShouldNotBeNull().ShouldContain(item => item.Id == comment.Id && item.Content == "Sans la faute" && item.UserDisplayName == "Nicolas Commentateur");
+    }
+
+    [Fact]
+    public async Task Citizen_ShouldBeToldTheCategoryDoesNotExist_AndNothingIsFiled()
+    {
+        // Arrange
+        var citizen = await SignUpAsync("Nicolas Égaré");
+        using var client = AuthenticatedClient(citizen.Token);
+        var title = $"Dans une catégorie qui n'existe pas {Guid.NewGuid():N}"[..60];
+
+        // Act
+        var response = await client.PostAsJsonAsync("/api/proposals", new CreateProposalDto
+        {
+            Title = title,
+            Description = "Une proposition rangée sous une catégorie que la base ne connaît pas, refusée proprement.",
+            CategoryId = 98765
+        }, Cancel);
+
+        // Assert: a validation problem on the category, not a 500
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Cancel));
+        problem.RootElement.GetProperty("errors").GetProperty(nameof(CreateProposalDto.CategoryId))[0].GetString()
+            .ShouldBe("Cette catégorie n'existe pas : veuillez en choisir une dans la liste");
+        (await _client.GetFromJsonAsync<List<ProposalDto>>("/api/proposals?take=100", Cancel)).ShouldNotBeNull()
+            .ShouldNotContain(proposal => proposal.Title == title);
+    }
+
+    [Fact]
     public async Task SignedInCitizen_ShouldSeeTheirVoteInTheDashboard()
     {
         // Arrange

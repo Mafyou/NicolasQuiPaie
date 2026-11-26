@@ -13,6 +13,12 @@ public sealed record NotProposalAuthor(int ProposalId, string UserId);
 /// <summary>The proposal was deleted.</summary>
 public sealed record ProposalDeleted(int ProposalId);
 
+/// <summary>No category has this id: a proposal cannot be filed under it.</summary>
+public sealed record UnknownCategory(int CategoryId);
+
+/// <summary>A proposal created by a user, or refused because its category does not exist.</summary>
+public readonly union ProposalCreation(ProposalDto, UnknownCategory);
+
 /// <summary>A proposal read by its id.</summary>
 public readonly union ProposalLookup(ProposalDto, ProposalNotFound);
 

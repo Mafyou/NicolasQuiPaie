@@ -26,3 +26,5 @@ global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using NicolasQuiPaieAPI.Presentation.Endpoints;
 global using DotNet.Testcontainers.Builders;
 global using Testcontainers.MsSql;
+global using Microsoft.AspNetCore.Http;
+global using NicolasQuiPaieAPI.Application.Validators;

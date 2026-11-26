@@ -147,6 +147,99 @@ public class CommentEndpointsTests(NicolasQuiPaieApiFactory factory) : IClassFix
         comments.ShouldNotBeNull().ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task PutComment_ShouldEditIt_ForItsAuthorWhoIsNotAdmin()
+    {
+        // Arrange: the test user has the User role only
+        var comment = await PostAsync(new CreateCommentDto { ProposalId = 6, Content = "Avec une faute" });
+        await AuthenticateAsync();
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "Sans la faute" }, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var edited = (await response.Content.ReadFromJsonAsync<CommentDto>(Cancel)).ShouldNotBeNull();
+        edited.Content.ShouldBe("Sans la faute");
+        edited.UserDisplayName.ShouldBe("Test User");
+        edited.UpdatedAt.ShouldNotBeNull();
+        (await StoredContentAsync(comment.Id)).ShouldBe("Sans la faute");
+    }
+
+    [Fact]
+    public async Task PutComment_ShouldLetAnAdminModerateSomeoneElsesComment_UnderItsAuthorsName()
+    {
+        // Arrange: written by the other user, edited by an administrator
+        var comment = await PostAsync(new CreateCommentDto { ProposalId = 6, Content = "Propos à modérer" }, NicolasQuiPaieApiFactory.OtherUserId);
+        using var admin = await factory.CreateAuthenticatedClientAsync(await AddAdminAsync());
+
+        // Act
+        var response = await admin.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "[Modéré]" }, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var edited = (await response.Content.ReadFromJsonAsync<CommentDto>(Cancel)).ShouldNotBeNull();
+        edited.UserId.ShouldBe(NicolasQuiPaieApiFactory.OtherUserId);
+        edited.UserDisplayName.ShouldBe("Other User");
+        (await StoredContentAsync(comment.Id)).ShouldBe("[Modéré]");
+    }
+
+    [Fact]
+    public async Task PutComment_ShouldReturnForbidden_ForSomeoneElseWhoIsNotAdmin()
+    {
+        // Arrange: written by the other user, edited by the test user
+        var comment = await PostAsync(new CreateCommentDto { ProposalId = 6, Content = "Le mien, pas le tien" }, NicolasQuiPaieApiFactory.OtherUserId);
+        await AuthenticateAsync();
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "Réécrit" }, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await StoredContentAsync(comment.Id)).ShouldBe("Le mien, pas le tien");
+    }
+
+    [Fact]
+    public async Task PutComment_ShouldReturnUnauthorized_WhenNotSignedIn()
+    {
+        // Arrange
+        var comment = await PostAsync(new CreateCommentDto { ProposalId = 6, Content = "Intouchable" });
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/comments/{comment.Id}", new UpdateCommentDto { Content = "Anonyme" }, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await StoredContentAsync(comment.Id)).ShouldBe("Intouchable");
+    }
+
+    [Fact]
+    public async Task PutComment_ShouldReturnNotFound_WhenItDoesNotExist_EvenForAnAdmin()
+    {
+        // Arrange
+        using var admin = await factory.CreateAuthenticatedClientAsync(await AddAdminAsync());
+
+        // Act
+        var response = await admin.PutAsJsonAsync("/api/comments/99999", new UpdateCommentDto { Content = "Rien" }, Cancel);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    /// <summary>A new user with the User and Admin roles.</summary>
+    private async Task<string> AddAdminAsync()
+    {
+        var userId = await factory.AddUserAsync($"admin-{Guid.NewGuid():N}", ContributionLevel.PetitNicolas);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var user = (await users.FindByIdAsync(userId)).ShouldNotBeNull();
+        (await users.AddToRoleAsync(user, NicolasRoles.Admin)).Succeeded.ShouldBeTrue();
+        return userId;
+    }
+
+    private Task<string> StoredContentAsync(int commentId) =>
+        factory.WithContextAsync(async context => (await context.Comments.SingleAsync(item => item.Id == commentId, Cancel)).Content);
+
     /// <summary>Posts a comment as the given user, with a client of its own.</summary>
     private async Task<CommentDto> PostAsync(CreateCommentDto comment, string userId = NicolasQuiPaieApiFactory.TestUserId)
     {

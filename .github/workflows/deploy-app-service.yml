@@ -38,6 +38,10 @@ jobs:
       - name: Integration tests
         run: dotnet test src/Tests/NicolasQuiPaie.IntegrationTests/NicolasQuiPaie.IntegrationTests.csproj --configuration Release
 
+      # The standard /health (and the API's /): response writer, each app in memory, each app on a loopback port.
+      - name: Health tests
+        run: dotnet test src/Tests/NicolasQuiPaie.HealthTests/NicolasQuiPaie.HealthTests.csproj --configuration Release
+
       # User journeys: the API over HTTP, the Blazor front in Chromium (Playwright), both on loopback ports.
       - name: Build the functional tests
         run: dotnet build src/Tests/NicolasQuiPaie.FunctionalTests/NicolasQuiPaie.FunctionalTests.csproj --configuration Release
