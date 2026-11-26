@@ -304,8 +304,20 @@ public static class ProposalEndpoints
                     return Results.BadRequest("Title must be 200 characters or less");
                 }
 
-                var proposal = await proposalService.CreateProposalAsync(createDto, userId);
-                return Results.Created($"/api/proposals/{proposal.Id}", proposal);
+                switch (await proposalService.CreateProposalAsync(createDto, userId))
+                {
+                    case ProposalDto proposal:
+                        return Results.Created($"/api/proposals/{proposal.Id}", proposal);
+                    case UnknownCategory unknown:
+                        logger.LogWarning("Invalid proposal creation: unknown category {CategoryId} by user {UserId}",
+                            unknown.CategoryId, userId);
+                        return Results.ValidationProblem(new Dictionary<string, string[]>
+                        {
+                            [nameof(CreateProposalDto.CategoryId)] = [ProposalMessages.UnknownCategory]
+                        });
+                    default:
+                        throw new UnreachableException();
+                }
             }
             catch (ArgumentException ex)
             {
@@ -321,6 +333,7 @@ public static class ProposalEndpoints
         .WithName("CreateProposal")
         .WithSummary("Crée une nouvelle proposition")
         .Produces<ProposalDto>(201)
+        .ProducesValidationProblem()
         .Produces(400)
         .Produces(401)
         .Produces(500)

@@ -188,18 +188,23 @@ public static class CommentEndpoints
                 }
 
                 var comment = await commentRepository.GetByIdAsync(id);
-                if (comment == null)
+                if (comment is null)
                 {
                     logger.LogWarning("Comment not found for update: {CommentId} by user {UserId}", id, userId);
                     return Results.NotFound();
                 }
 
-                if (comment.UserId != userId)
+                if (!user.CanEditComment(comment))
                 {
                     logger.LogWarning("Unauthorized comment update: user {UserId} trying to update comment {CommentId} owned by {OwnerUserId}",
                         userId, id, comment.UserId);
                     return Results.Forbid();
                 }
+
+                // An administrator editing someone else's comment: the comment keeps its author's name
+                var authorDisplayName = user.IsCommentAuthor(comment)
+                    ? user.FindFirstValue("DisplayName")
+                    : (await unitOfWork.Users.GetByIdAsync(comment.UserId))?.DisplayName;
 
                 comment.Content = updateDto.Content;
                 comment.UpdatedAt = DateTime.UtcNow;
@@ -215,7 +220,7 @@ public static class CommentEndpoints
                     UpdatedAt = comment.UpdatedAt,
                     LikesCount = comment.LikesCount,
                     UserId = comment.UserId,
-                    UserDisplayName = user.FindFirst("DisplayName")?.Value ?? "Anonymous",
+                    UserDisplayName = authorDisplayName ?? "Anonymous",
                     ProposalId = comment.ProposalId,
                     ParentCommentId = comment.ParentCommentId,
                     IsDeleted = comment.IsDeleted
@@ -230,14 +235,14 @@ public static class CommentEndpoints
             }
         })
         .WithName("UpdateComment")
-        .WithSummary("Modifier un commentaire")
+        .WithSummary("Modifier un commentaire (son auteur ou un administrateur)")
         .Produces<CommentDto>()
         .Produces(400)
         .Produces(401)
         .Produces(403)
         .Produces(404)
         .Produces(500)
-        .RequireAdminRole();
+        .RequireUserRole();
 
         // DELETE /api/comments/{id}
         group.MapDelete("/{id:int}", [Authorize] async (

@@ -1,0 +1,12 @@
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.IdentityModel.Tokens;
+global using NicolasQuiPaie.IntegrationTests.Fixtures;
+global using NicolasQuiPaieAPI.Application.Validators;
+global using NicolasQuiPaieAPI.Infrastructure.Data;
+global using System.IdentityModel.Tokens.Jwt;
+global using System.Net;
+global using System.Net.Http.Headers;
+global using System.Security.Claims;
+global using System.Text;

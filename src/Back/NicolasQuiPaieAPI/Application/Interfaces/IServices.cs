@@ -11,7 +11,7 @@ public interface IProposalService
     Task<IReadOnlyList<ProposalDto>> GetControversialProposalsAsync(int skip = 0, int take = 20, string? category = null, string? search = null);
     
     Task<ProposalLookup> GetProposalByIdAsync(int id);
-    Task<ProposalDto> CreateProposalAsync(CreateProposalDto createDto, string userId);
+    Task<ProposalCreation> CreateProposalAsync(CreateProposalDto createDto, string userId);
     Task<ProposalChange> UpdateProposalAsync(int id, UpdateProposalDto updateDto, string userId);
     Task<ProposalDeletion> DeleteProposalAsync(int id, string userId);
     Task<bool> CanUserEditProposalAsync(int proposalId, string userId);

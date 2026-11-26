@@ -6,6 +6,7 @@ public class ProposalServiceTests
     private Mock<IUnitOfWork> _mockUnitOfWork;
     private Mock<ILogger<ProposalService>> _mockLogger;
     private Mock<IProposalRepository> _mockProposalRepository;
+    private Mock<ICategoryRepository> _mockCategoryRepository;
     private ProposalService _proposalService;
 
     [SetUp]
@@ -15,7 +16,11 @@ public class ProposalServiceTests
         _mockLogger = new Mock<ILogger<ProposalService>>();
         _mockProposalRepository = new Mock<IProposalRepository>();
 
+        _mockCategoryRepository = new Mock<ICategoryRepository>();
+        _mockCategoryRepository.Setup(x => x.ExistsAsync(It.IsAny<int>())).ReturnsAsync(true);
+
         _mockUnitOfWork.Setup(x => x.Proposals).Returns(_mockProposalRepository.Object);
+        _mockUnitOfWork.Setup(x => x.Categories).Returns(_mockCategoryRepository.Object);
 
         _proposalService = new ProposalService(
             _mockUnitOfWork.Object,
@@ -150,10 +155,14 @@ public class ProposalServiceTests
             .ReturnsAsync(1);
 
         // Act
-        var result = await _proposalService.CreateProposalAsync(createDto, userId);
+        var creation = await _proposalService.CreateProposalAsync(createDto, userId);
 
         // Assert
-        result.ShouldNotBeNull();
+        var result = creation switch
+        {
+            ProposalDto created => created,
+            _ => throw new ShouldAssertException($"Expected the created proposal, got {creation}")
+        };
         result.Title.ShouldBe(createDto.Title);
         result.CreatedById.ShouldBe(userId);
         result.Status.ShouldBe(DtoProposalStatus.Active);
@@ -163,6 +172,27 @@ public class ProposalServiceTests
             p.CreatedById == userId &&
             p.Status == InfrastructureProposalStatus.Active)), Times.Once);
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+    }
+
+    [Test]
+    public async Task CreateProposalAsync_ShouldRefuseAndSaveNothing_WhenCategoryDoesNotExist()
+    {
+        // Arrange
+        _mockCategoryRepository.Setup(x => x.ExistsAsync(42)).ReturnsAsync(false);
+        var createDto = new CreateProposalDto
+        {
+            Title = "Proposal in a category that does not exist",
+            Description = "This proposal points to a category id that no row of the categories table has.",
+            CategoryId = 42
+        };
+
+        // Act
+        var result = await _proposalService.CreateProposalAsync(createDto, "user123");
+
+        // Assert
+        (result is UnknownCategory { CategoryId: 42 }).ShouldBeTrue();
+        _mockProposalRepository.Verify(x => x.AddAsync(It.IsAny<Proposal>()), Times.Never);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
     [Test]

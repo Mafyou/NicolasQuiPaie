@@ -7,7 +7,8 @@ public static class CategoryEndpoints
         var group = app.MapGroup("/api/categories")
             .WithTags("Categories")
             .WithOpenApi()
-            .RequireUserRole();
+            // Categories are public reference data: the proposals list filters on them before anyone signs in
+            .AllowAnonymous();
 
         // GET /api/categories
         group.MapGet("/", async (

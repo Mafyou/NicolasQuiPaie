@@ -1,5 +1,11 @@
 ﻿namespace NicolasQuiPaieAPI.Application.Validators;
 
+/// <summary>Validation messages the endpoints return themselves, when the check needs the database.</summary>
+public static class ProposalMessages
+{
+    public const string UnknownCategory = "Cette catégorie n'existe pas : veuillez en choisir une dans la liste";
+}
+
 public class CreateProposalDtoValidator : AbstractValidator<CreateProposalDto>
 {
     public CreateProposalDtoValidator()

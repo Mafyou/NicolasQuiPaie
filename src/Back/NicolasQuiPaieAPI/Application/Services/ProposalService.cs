@@ -94,10 +94,17 @@ public class ProposalService : IProposalService
         }
     }
 
-    public async Task<ProposalDto> CreateProposalAsync(CreateProposalDto createDto, string userId)
+    public async Task<ProposalCreation> CreateProposalAsync(CreateProposalDto createDto, string userId)
     {
         try
         {
+            // Checked before saving: otherwise the foreign key refuses the row and the caller gets a 500
+            if (!await _unitOfWork.Categories.ExistsAsync(createDto.CategoryId))
+            {
+                _logger.LogWarning("Proposition refusée: la catégorie {CategoryId} n'existe pas ({UserId})", createDto.CategoryId, userId);
+                return new UnknownCategory(createDto.CategoryId);
+            }
+
             var proposal = createDto.ToEntity();
             proposal.CreatedById = userId;
             proposal.Status = ProposalStatus.Active;
