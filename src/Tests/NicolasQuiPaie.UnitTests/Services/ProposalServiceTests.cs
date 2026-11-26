@@ -69,15 +69,19 @@ public class ProposalServiceTests
         var result = await _proposalService.GetProposalByIdAsync(proposalId);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(proposalId);
-        result.Title.ShouldBe("Test Proposal");
+        var dto = result switch
+        {
+            ProposalDto found => found,
+            _ => throw new ShouldAssertException($"Expected the proposal, got {result}")
+        };
+        dto.Id.ShouldBe(proposalId);
+        dto.Title.ShouldBe("Test Proposal");
 
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
     }
 
     [Test]
-    public async Task GetProposalByIdAsync_ShouldReturnNull_WhenProposalDoesNotExist()
+    public async Task GetProposalByIdAsync_ShouldReturnNotFound_WhenProposalDoesNotExist()
     {
         // Arrange
         var proposalId = 999;
@@ -90,7 +94,7 @@ public class ProposalServiceTests
         var result = await _proposalService.GetProposalByIdAsync(proposalId);
 
         // Assert
-        result.ShouldBeNull();
+        (result is ProposalNotFound { ProposalId: 999 }).ShouldBeTrue();
 
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
     }
@@ -221,8 +225,12 @@ public class ProposalServiceTests
         var result = await _proposalService.UpdateProposalAsync(proposalId, updateDto, userId);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Title.ShouldBe(updateDto.Title);
+        var updated = result switch
+        {
+            ProposalDto proposal => proposal,
+            _ => throw new ShouldAssertException($"Expected the updated proposal, got {result}")
+        };
+        updated.Title.ShouldBe(updateDto.Title);
 
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
         _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Once);
@@ -230,7 +238,7 @@ public class ProposalServiceTests
     }
 
     [Test]
-    public async Task UpdateProposalAsync_ShouldThrowUnauthorizedException_WhenUserIsNotOwner()
+    public async Task UpdateProposalAsync_ShouldRefuse_WhenUserIsNotOwner()
     {
         // Arrange
         var proposalId = 1;
@@ -254,11 +262,11 @@ public class ProposalServiceTests
             .Setup(x => x.GetByIdAsync(proposalId))
             .ReturnsAsync(existingProposal);
 
-        // Act & Assert
-        var exception = await Should.ThrowAsync<UnauthorizedAccessException>(
-            () => _proposalService.UpdateProposalAsync(proposalId, updateDto, userId));
+        // Act
+        var result = await _proposalService.UpdateProposalAsync(proposalId, updateDto, userId);
 
-        exception.Message.ShouldBe("Vous n'êtes pas autorisé à modifier cette proposition");
+        // Assert
+        (result is NotProposalAuthor { ProposalId: 1, UserId: "user123" }).ShouldBeTrue();
 
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
         _mockProposalRepository.Verify(x => x.UpdateAsync(It.IsAny<Proposal>()), Times.Never);
@@ -292,9 +300,10 @@ public class ProposalServiceTests
             .ReturnsAsync(1);
 
         // Act
-        await _proposalService.DeleteProposalAsync(proposalId, userId);
+        var result = await _proposalService.DeleteProposalAsync(proposalId, userId);
 
         // Assert
+        (result is ProposalDeleted).ShouldBeTrue();
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
         _mockProposalRepository.Verify(x => x.DeleteAsync(proposalId), Times.Once);
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);

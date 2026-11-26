@@ -16,3 +16,4 @@ global using System.Text.Json;
 global using System.ComponentModel.DataAnnotations;
 global using System.Text.Json.Serialization;
 global using Microsoft.JSInterop;
+global using System.Collections.Frozen;

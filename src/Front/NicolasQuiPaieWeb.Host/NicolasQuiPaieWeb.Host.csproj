@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Serves the Blazor WebAssembly front (NicolasQuiPaieWeb) from an App Service: its files, then index.html for every client route. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="11.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NicolasQuiPaieWeb\NicolasQuiPaieWeb.csproj" />
+  </ItemGroup>
+
+</Project>

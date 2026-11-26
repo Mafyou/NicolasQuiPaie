@@ -59,7 +59,7 @@ public static class LoggingExtensions
                 sinkOptions: new MSSqlServerSinkOptions
                 {
                     TableName = "ApiLogs",
-                    SchemaName = "dbo",
+                    SchemaName = ApplicationDbContext.Schema,
                     AutoCreateSqlTable = false // Don't auto-create since table exists via migrations
                 },
                 columnOptions: columnOptions,

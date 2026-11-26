@@ -47,9 +47,10 @@ public static class ApplicationServicesExtension
                     };
                 });
             });
+        }
 
-            // Configuration CORS
-            services.AddCors(options =>
+        // Configuration CORS (every environment: production uses AllowBlazorClient)
+        services.AddCors(options =>
         {
             options.AddPolicy("AllowBlazorClient", policy =>
             {
@@ -62,7 +63,8 @@ public static class ApplicationServicesExtension
                         "https://localhost:7051",  // API HTTPS
                         "https://happy-ocean-06624de03.2.azurestaticapps.net", // NicolasQuiPaieWeb Azure Static Web App
                         "https://*.azurestaticapps.net",
-                        "https://nicolasquipaie.eu"
+                        "https://nicolasquipaie.eu",
+                        "https://nqp-efg7dvh9dzguchew.francecentral-01.azurewebsites.net" // NicolasQuiPaieWeb.Host on App Service
                       )
                       .SetIsOriginAllowedToAllowWildcardSubdomains() // Allow subdomains
                       .AllowAnyHeader()
@@ -71,55 +73,57 @@ public static class ApplicationServicesExtension
             });
         });
 
-            // In development, also allow any localhost
-            if (env.IsDevelopment())
+        // In development, also allow any localhost
+        if (env.IsDevelopment())
+        {
+            services.AddCors(options =>
             {
-                services.AddCors(options =>
+                options.AddPolicy("DevelopmentCors", policy =>
                 {
-                    options.AddPolicy("DevelopmentCors", policy =>
+                    policy.SetIsOriginAllowed(origin =>
                     {
-                        policy.SetIsOriginAllowed(origin =>
-                        {
-                            if (string.IsNullOrWhiteSpace(origin)) return false;
+                        if (string.IsNullOrWhiteSpace(origin)) return false;
 
-                            // Allow any localhost origin in development
-                            return origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:");
-                        })
-                        .AllowAnyHeader()
-                        .AllowAnyMethod()
-                        .AllowCredentials();
-                    });
+                        // Allow any localhost origin in development
+                        return origin.StartsWith("http://localhost:") || origin.StartsWith("https://localhost:");
+                    })
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
                 });
-            }
-
-            // Configuration Entity Framework
-            services.AddDbContext<ApplicationDbContext>(options =>
-            {
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
-
-            // 🎯 Use extension methods to configure authentication and authorization
-            services.AddNicolasQuiPaieJwtAuthentication(configuration);
-            services.AddNicolasQuiPaieAuthorization();
-
-            // Configuration FluentValidation
-            services.AddValidatorsFromAssemblyContaining<CreateProposalDtoValidator>();
-
-            // Injection des dépendances - Repositories
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
-            services.AddScoped<IProposalRepository, ProposalRepository>();
-            services.AddScoped<IVoteRepository, VoteRepository>();
-            services.AddScoped<ICommentRepository, CommentRepository>();
-            services.AddScoped<ICategoryRepository, CategoryRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IApiLogRepository, ApiLogRepository>();
-
-            // Injection des dépendances - Services
-            services.AddScoped<IProposalService, ProposalService>();
-            services.AddScoped<IVotingService, VotingService>();
-            services.AddScoped<IJwtService, JwtService>();
-            services.AddScoped<IEmailService, EmailService>();
-            services.AddScoped<IAnalyticsService, AnalyticsService>();
         }
+
+        // Configuration Entity Framework
+        services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", ApplicationDbContext.Schema));
+        });
+
+        // 🎯 Use extension methods to configure authentication and authorization
+        // Identity first: AddIdentity makes its cookie the default scheme, and the JWT configuration that follows
+        // puts the bearer token back as the default, the only one the Blazor client sends.
+        services.AddNicolasQuiPaieAuthorization();
+        services.AddNicolasQuiPaieJwtAuthentication(configuration);
+
+        // Configuration FluentValidation
+        services.AddValidatorsFromAssemblyContaining<CreateProposalDtoValidator>();
+
+        // Injection des dépendances - Repositories
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IProposalRepository, ProposalRepository>();
+        services.AddScoped<IVoteRepository, VoteRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IApiLogRepository, ApiLogRepository>();
+
+        // Injection des dépendances - Services
+        services.AddScoped<IProposalService, ProposalService>();
+        services.AddScoped<IVotingService, VotingService>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IAnalyticsService, AnalyticsService>();
     }
 }

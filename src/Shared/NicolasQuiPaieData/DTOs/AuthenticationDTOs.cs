@@ -73,14 +73,19 @@ public static class NicolasRoles
     public const string Developer = "Developer";
 
     /// <summary>
-    /// Collection expression for all roles
+    /// All roles, from the lowest to the highest (read-only: a public array could be changed by any caller)
     /// </summary>
-    public static readonly string[] All = [User, SuperUser, Admin, Developer];
+    public static readonly IReadOnlyList<string> All = [User, SuperUser, Admin, Developer];
 
     /// <summary>
-    /// Collection expression for elevated roles
+    /// All roles, from the highest to the lowest: the order in which the highest role of a user is looked for
     /// </summary>
-    public static readonly string[] Elevated = [SuperUser, Admin, Developer];
+    public static readonly IReadOnlyList<string> ByRank = [Developer, Admin, SuperUser, User];
+
+    /// <summary>
+    /// Roles above User, for membership checks (role names are compared without case, like in the JWT service)
+    /// </summary>
+    public static readonly FrozenSet<string> Elevated = new[] { SuperUser, Admin, Developer }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 }
 
 /// <summary>

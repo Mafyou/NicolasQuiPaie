@@ -142,15 +142,16 @@ public static class VotingEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
-                var vote = await votingService.GetUserVoteForProposalAsync(userId, proposalId);
-
-                if (vote == null)
+                switch (await votingService.GetUserVoteForProposalAsync(userId, proposalId))
                 {
-                    logger.LogWarning("No vote found for user {UserId} on proposal {ProposalId}", userId, proposalId);
-                    return Results.NotFound();
+                    case VoteDto vote:
+                        return Results.Ok(vote);
+                    case NoVote:
+                        logger.LogWarning("No vote found for user {UserId} on proposal {ProposalId}", userId, proposalId);
+                        return Results.NotFound();
+                    default:
+                        throw new UnreachableException();
                 }
-
-                return Results.Ok(vote);
             }
             catch (Exception ex)
             {
@@ -202,18 +203,20 @@ public static class VotingEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
-                await votingService.RemoveVoteAsync(userId, proposalId);
-
-                // Information level for vote removal as it's a successful operation
-                logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}",
-                    userId, proposalId, clientIp);
-
-                return Results.NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                logger.LogError(ex, "Vote not found for removal: user {UserId}, proposal {ProposalId}", userId, proposalId);
-                return Results.NotFound();
+                switch (await votingService.RemoveVoteAsync(userId, proposalId))
+                {
+                    case VoteRemoved:
+                        // Information level for vote removal as it's a successful operation
+                        logger.LogInformation("Vote removed: user {UserId} for proposal {ProposalId} from IP: {ClientIP}",
+                            userId, proposalId, clientIp);
+                        return Results.NoContent();
+                    case NoVote:
+                        // Used to answer 204 although nothing was removed
+                        logger.LogWarning("Vote not found for removal: user {UserId}, proposal {ProposalId}", userId, proposalId);
+                        return Results.NotFound();
+                    default:
+                        throw new UnreachableException();
+                }
             }
             catch (Exception ex)
             {

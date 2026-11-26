@@ -1,5 +1,5 @@
 # Multi-stage build: compile Blazor WASM with wasm-tools, then serve static files via Nginx
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 # WebAssembly AOT toolchain requires python to be available in PATH.

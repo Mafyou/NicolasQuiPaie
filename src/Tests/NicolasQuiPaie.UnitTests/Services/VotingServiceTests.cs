@@ -102,7 +102,8 @@ public class VotingServiceTests
 
         _mockVoteRepository.Verify(x => x.AddAsync(
             It.Is<Vote>(v => v.Weight == 1 && v.UserId == userId)), Times.Once);
-        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
+        // Saved twice: the vote first, so that the count query sees it, then the proposal's new counts
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Exactly(2));
         _mockUnitOfWork.Verify(x => x.CommitTransactionAsync(), Times.Once);
     }
 
@@ -271,15 +272,19 @@ public class VotingServiceTests
         var result = await _votingService.GetUserVoteForProposalAsync(userId, proposalId);
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(existingVote.Id);
-        result.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
-        result.Weight.ShouldBe(1); // Democratic equality
-        result.Comment.ShouldBe("Great proposal!");
+        var vote = result switch
+        {
+            VoteDto found => found,
+            _ => throw new ShouldAssertException($"Expected the vote, got {result}")
+        };
+        vote.Id.ShouldBe(existingVote.Id);
+        vote.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
+        vote.Weight.ShouldBe(1); // Democratic equality
+        vote.Comment.ShouldBe("Great proposal!");
     }
 
     [Test]
-    public async Task GetUserVoteAsync_ShouldReturnNull_WhenVoteDoesNotExist()
+    public async Task GetUserVoteAsync_ShouldReturnNoVote_WhenVoteDoesNotExist()
     {
         // Arrange
         var userId = TestDataHelper.ValidUserIds[2];
@@ -292,8 +297,8 @@ public class VotingServiceTests
         // Act
         var result = await _votingService.GetUserVoteForProposalAsync(userId, proposalId);
 
-        // Assert - C# 13.0 modern null checking
-        result.ShouldBeNull();
+        // Assert
+        (result is NoVote).ShouldBeTrue();
     }
 
     // C# 13.0 - Modern async test with collection expressions

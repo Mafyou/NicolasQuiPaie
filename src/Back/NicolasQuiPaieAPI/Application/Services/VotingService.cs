@@ -69,14 +69,15 @@ public class VotingService(
     /// <summary>
     /// Gets user's vote for a specific proposal
     /// </summary>
-    public async Task<VoteDto?> GetUserVoteForProposalAsync(string userId, int proposalId)
+    public async Task<VoteLookup> GetUserVoteForProposalAsync(string userId, int proposalId)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
 
         try
         {
-            var vote = await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, proposalId);
-            return vote?.ToDto();
+            return await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, proposalId) is { } vote
+                ? vote.ToDto()
+                : new NoVote(userId, proposalId);
         }
         catch (Exception ex)
         {
@@ -89,39 +90,41 @@ public class VotingService(
     /// <summary>
     /// Removes a user's vote from a proposal
     /// </summary>
-    public async Task RemoveVoteAsync(string userId, int proposalId)
+    public async Task<VoteRemoval> RemoveVoteAsync(string userId, int proposalId)
     {
         ArgumentException.ThrowIfNullOrEmpty(userId);
+
+        // Looked up before the transaction: without a vote there is nothing to roll back (the transaction used to stay open)
+        if (await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, proposalId) is not { } vote)
+            return new NoVote(userId, proposalId);
 
         try
         {
             await unitOfWork.BeginTransactionAsync();
 
-            var vote = await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, proposalId);
-            if (vote is not null)
+            await unitOfWork.Votes.DeleteAsync(vote.Id);
+
+            // Optionally adjust user reputation for vote removal
+            var user = await userRepository.GetByIdAsync(userId);
+            if (user is not null)
             {
-                await unitOfWork.Votes.DeleteAsync(vote.Id);
-
-                // Optionally adjust user reputation for vote removal
-                var user = await userRepository.GetByIdAsync(userId);
-                if (user is not null)
-                {
-                    await AdjustReputationForVoteRemovalAsync(user, vote.VoteType);
-                }
-
-                // 🔧 FIX: Save changes FIRST so the deleted vote is no longer counted
-                await unitOfWork.SaveChangesAsync();
-
-                // Update proposal vote counts AFTER deleting the vote
-                await unitOfWork.Proposals.UpdateVoteCountsAsync(proposalId);
-
-                // Save the vote count updates
-                await unitOfWork.SaveChangesAsync();
-                await unitOfWork.CommitTransactionAsync();
-
-                logger.LogInformation("Vote removed for proposal {ProposalId} by user {UserId}",
-                    proposalId, userId);
+                await AdjustReputationForVoteRemovalAsync(user, vote.VoteType);
             }
+
+            // 🔧 FIX: Save changes FIRST so the deleted vote is no longer counted
+            await unitOfWork.SaveChangesAsync();
+
+            // Update proposal vote counts AFTER deleting the vote
+            await unitOfWork.Proposals.UpdateVoteCountsAsync(proposalId);
+
+            // Save the vote count updates
+            await unitOfWork.SaveChangesAsync();
+            await unitOfWork.CommitTransactionAsync();
+
+            logger.LogInformation("Vote removed for proposal {ProposalId} by user {UserId}",
+                proposalId, userId);
+
+            return new VoteRemoved(userId, proposalId);
         }
         catch (Exception ex)
         {

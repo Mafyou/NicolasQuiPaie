@@ -32,6 +32,11 @@ public class JwtServiceTests
             _mockConfiguration.Setup(x => x[key]).Returns(value);
         }
 
+        // UserManager has no parameterless constructor: the mock needs its store, the rest may stay null
+        _mockUserManager = new Mock<UserManager<ApplicationUser>>(
+            Mock.Of<IUserStore<ApplicationUser>>(), null!, null!, null!, null!, null!, null!, null!, null!);
+        _mockUserManager.Setup(manager => manager.GetRolesAsync(It.IsAny<ApplicationUser>())).ReturnsAsync([]);
+
         _jwtService = new JwtService(_mockConfiguration.Object, _mockUserManager.Object);
     }
 

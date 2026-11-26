@@ -8,6 +8,14 @@ public static class ApplicationEndpoints
     /// <summary>
     /// Maps all API endpoints
     /// </summary>
+    /// <summary>The levels of the API logs, in their order of severity.</summary>
+    private static readonly IReadOnlyList<string> LogLevelNames = Enum.GetNames<Infrastructure.Models.LogLevel>();
+
+    // Built once, read on every /api/logs call: only the level names are accepted, whatever their case
+    // (Enum.TryParse also took any number, "42" included).
+    private static readonly FrozenDictionary<string, Infrastructure.Models.LogLevel> LogLevelsByName =
+        Enum.GetValues<Infrastructure.Models.LogLevel>().ToFrozenDictionary(logLevel => $"{logLevel}", StringComparer.OrdinalIgnoreCase);
+
     public static WebApplication MapApiEndpoints(this WebApplication app)
     {
         // Map all endpoint groups
@@ -46,11 +54,10 @@ public static class ApplicationEndpoints
                 Infrastructure.Models.LogLevel? logLevel = null;
                 if (!string.IsNullOrEmpty(level))
                 {
-                    if (!Enum.TryParse<Infrastructure.Models.LogLevel>(level, true, out var parsedLevel))
+                    if (!LogLevelsByName.TryGetValue(level, out var parsedLevel))
                     {
-                        var validLevels = string.Join(", ", Enum.GetNames<Infrastructure.Models.LogLevel>());
                         logger.LogWarning("Invalid level parameter: {Level}", level);
-                        return Results.BadRequest($"Invalid level parameter. Valid values: {validLevels}");
+                        return Results.BadRequest($"Invalid level parameter. Valid values: {string.Join(", ", LogLevelNames)}");
                     }
                     logLevel = parsedLevel;
                 }
@@ -86,7 +93,7 @@ public static class ApplicationEndpoints
                     TotalReturned = logDtos.Count,
                     LevelFilter = level,
                     RequestedCount = take,
-                    AvailableLevels = Enum.GetNames<Infrastructure.Models.LogLevel>(),
+                    AvailableLevels = LogLevelNames,
                     Logs = logDtos
                 });
             }

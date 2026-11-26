@@ -1,0 +1,96 @@
+name: Build, Test & Deploy (App Service)
+
+# The API on nqp-api, the Blazor front (through NicolasQuiPaieWeb.Host) on nqp.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '11.0.x'
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # The front is compiled ahead of time in Release (RunAOTCompilation).
+      - name: Install the WebAssembly tools
+        run: dotnet workload install wasm-tools
+
+      - name: Unit tests
+        run: dotnet test src/Tests/NicolasQuiPaie.UnitTests/NicolasQuiPaie.UnitTests.csproj --configuration Release
+
+      - name: Publish the API
+        run: dotnet publish src/Back/NicolasQuiPaieAPI/NicolasQuiPaieAPI.csproj --configuration Release --output publish/api
+
+      - name: Publish the front
+        run: dotnet publish src/Front/NicolasQuiPaieWeb.Host/NicolasQuiPaieWeb.Host.csproj --configuration Release --output publish/web
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api
+          path: publish/api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: publish/web
+
+  deploy-api:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: api
+          path: api
+
+      # The real connection string lives in the production environment's secrets, never in the repository.
+      - name: Set the connection string
+        env:
+          DEFAULT_CONNECTION: ${{ secrets.DEFAULT_CONNECTION }}
+        run: |
+          if [ -z "$DEFAULT_CONNECTION" ]; then
+            echo "::error::Secret DEFAULT_CONNECTION missing in the production environment"
+            exit 1
+          fi
+          jq --arg cs "$DEFAULT_CONNECTION" '.ConnectionStrings.DefaultConnection = $cs' api/appsettings.json > api/appsettings.json.tmp
+          mv api/appsettings.json.tmp api/appsettings.json
+
+      - name: Deploy the API
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: nqp-api
+          publish-profile: ${{ secrets.AZURE_API_PUBLISH_PROFILE }}
+          package: api
+
+  deploy-web:
+    runs-on: ubuntu-latest
+    # After the API: both apps share one small instance, their containers start better one after the other.
+    needs: [build-and-test, deploy-api]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: web
+
+      - name: Deploy the front
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: nqp
+          publish-profile: ${{ secrets.AZURE_WEB_PUBLISH_PROFILE }}
+          package: web

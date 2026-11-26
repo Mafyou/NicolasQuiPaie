@@ -248,15 +248,16 @@ public static class ProposalEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
-                var proposal = await proposalService.GetProposalByIdAsync(id);
-
-                if (proposal == null)
+                switch (await proposalService.GetProposalByIdAsync(id))
                 {
-                    logger.LogWarning("Proposal not found: {ProposalId}", id);
-                    return Results.NotFound();
+                    case ProposalDto proposal:
+                        return Results.Ok(proposal);
+                    case ProposalNotFound:
+                        logger.LogWarning("Proposal not found: {ProposalId}", id);
+                        return Results.NotFound();
+                    default:
+                        throw new UnreachableException();
                 }
-
-                return Results.Ok(proposal);
             }
             catch (Exception ex)
             {
@@ -392,18 +393,19 @@ public static class ProposalEndpoints
                     return Results.BadRequest("Title is required");
                 }
 
-                var proposal = await proposalService.UpdateProposalAsync(id, updateDto, userId);
-                return Results.Ok(proposal);
-            }
-            catch (ArgumentException ex)
-            {
-                logger.LogError(ex, "Proposal not found for update: {ProposalId} by user {UserId}", id, userId);
-                return Results.NotFound();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                logger.LogWarning(ex, "Unauthorized update attempt for proposal {ProposalId} by user {UserId}", id, userId);
-                return Results.Forbid();
+                switch (await proposalService.UpdateProposalAsync(id, updateDto, userId))
+                {
+                    case ProposalDto proposal:
+                        return Results.Ok(proposal);
+                    case ProposalNotFound:
+                        logger.LogWarning("Proposal not found for update: {ProposalId} by user {UserId}", id, userId);
+                        return Results.NotFound();
+                    case NotProposalAuthor:
+                        logger.LogWarning("Unauthorized update attempt for proposal {ProposalId} by user {UserId}", id, userId);
+                        return Results.Forbid();
+                    default:
+                        throw new UnreachableException();
+                }
             }
             catch (Exception ex)
             {
@@ -448,23 +450,22 @@ public static class ProposalEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
-                var proposal = await proposalService.ToggleProposalStatusAsync(id, (ProposalStatus)statusDto.NewStatus, userId);
-
-                // Log the status change as a warning (important action)
-                logger.LogWarning("Proposal status changed: {ProposalId} -> {NewStatus} by {Role} user {UserId} from IP: {ClientIP}",
-                    id, statusDto.NewStatus, userRole, userId, clientIp);
-
-                return Results.Ok(proposal);
-            }
-            catch (ArgumentException ex)
-            {
-                logger.LogError(ex, "Proposal not found for status toggle: {ProposalId} by {Role} user {UserId}", id, userRole, userId);
-                return Results.NotFound();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                logger.LogWarning(ex, "Unauthorized status toggle attempt for proposal {ProposalId} by {Role} user {UserId}", id, userRole, userId);
-                return Results.Forbid();
+                switch (await proposalService.ToggleProposalStatusAsync(id, (ProposalStatus)statusDto.NewStatus, userId))
+                {
+                    case ProposalDto proposal:
+                        // Log the status change as a warning (important action)
+                        logger.LogWarning("Proposal status changed: {ProposalId} -> {NewStatus} by {Role} user {UserId} from IP: {ClientIP}",
+                            id, statusDto.NewStatus, userRole, userId, clientIp);
+                        return Results.Ok(proposal);
+                    case ProposalNotFound:
+                        logger.LogWarning("Proposal not found for status toggle: {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                        return Results.NotFound();
+                    case NotProposalAuthor:
+                        logger.LogWarning("Unauthorized status toggle attempt for proposal {ProposalId} by {Role} user {UserId}", id, userRole, userId);
+                        return Results.Forbid();
+                    default:
+                        throw new UnreachableException();
+                }
             }
             catch (Exception ex)
             {
@@ -507,22 +508,21 @@ public static class ProposalEndpoints
                     return Results.BadRequest("Invalid proposal ID");
                 }
 
-                await proposalService.DeleteProposalAsync(id, userId);
-
-                // Warning level for deletion as it's an important action
-                logger.LogWarning("Proposal deleted: {ProposalId} by user {UserId} from IP: {ClientIP}", id, userId, clientIp);
-
-                return Results.NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                logger.LogError(ex, "Proposal not found for deletion: {ProposalId} by user {UserId}", id, userId);
-                return Results.NotFound();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                logger.LogWarning(ex, "Unauthorized deletion attempt for proposal {ProposalId} by user {UserId}", id, userId);
-                return Results.Forbid();
+                switch (await proposalService.DeleteProposalAsync(id, userId))
+                {
+                    case ProposalDeleted:
+                        // Warning level for deletion as it's an important action
+                        logger.LogWarning("Proposal deleted: {ProposalId} by user {UserId} from IP: {ClientIP}", id, userId, clientIp);
+                        return Results.NoContent();
+                    case ProposalNotFound:
+                        logger.LogWarning("Proposal not found for deletion: {ProposalId} by user {UserId}", id, userId);
+                        return Results.NotFound();
+                    case NotProposalAuthor:
+                        logger.LogWarning("Unauthorized deletion attempt for proposal {ProposalId} by user {UserId}", id, userId);
+                        return Results.Forbid();
+                    default:
+                        throw new UnreachableException();
+                }
             }
             catch (Exception ex)
             {
