@@ -12,6 +12,7 @@ public static class VotingEndpoints
         // POST /api/votes
         group.MapPost("/", [Authorize] async (
             [FromServices] IVotingService votingService,
+            [FromServices] IValidator<CreateVoteDto> validator,
             [FromServices] ILogger<Program> logger,
             [FromBody] CreateVoteDto voteDto,
             ClaimsPrincipal user,
@@ -34,6 +35,14 @@ public static class VotingEndpoints
                     logger.LogWarning("Invalid proposal ID for vote: {ProposalId} by user {UserId}",
                         voteDto.ProposalId, userId);
                     return Results.BadRequest("Invalid proposal ID");
+                }
+
+                // The rules of CreateVoteDtoValidator: a known vote type, a comment of 500 characters at most.
+                var validation = await validator.ValidateAsync(voteDto);
+                if (!validation.IsValid)
+                {
+                    logger.LogWarning("Invalid vote for proposal {ProposalId} by user {UserId}: {Errors}", voteDto.ProposalId, userId, $"{validation}");
+                    return Results.ValidationProblem(validation.ToDictionary());
                 }
 
                 var vote = await votingService.CastVoteAsync(voteDto, userId);

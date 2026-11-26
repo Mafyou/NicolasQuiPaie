@@ -28,8 +28,10 @@ Le projet implémente une **Clean Architecture** rigoureuse exploitant les derni
 │       └── Tests/                       # Aspire Integration Tests
 ├── 🔗 src/Shared/                      # Shared Components
 │   └── NicolasQuiPaieData/              # DTOs & Common Models
-└── 🧪 src/Tests/                       # Test Projects
-    └── NicolasQuiPaie.UnitTests/        # Unit Tests Suite
+└── 🧪 src/Tests/                       # Test Projects (xUnit v3 + Shouldly + Moq)
+    ├── NicolasQuiPaie.UnitTests/        # Unit Tests Suite
+    ├── NicolasQuiPaie.IntegrationTests/ # API + SQLite (and SQL Server in a container)
+    └── NicolasQuiPaie.FunctionalTests/  # User journeys: API over HTTP, front in Chromium (Playwright)
 ```
 
 ### 🔥 Innovations C# 13.0 & .NET 9
@@ -131,7 +133,7 @@ public async Task<IReadOnlyList<VoteDto>> GetVotesAsync(int proposalId)
 - **Validation** : FluentValidation avec règles métier
 - **Logging** : Serilog avec structured logging + table ApiLog personnalisée
 - **Documentation** : OpenAPI/Swagger intégré + endpoints de debugging
-- **Tests** : NUnit + Moq + Shouldly + Integration Tests
+- **Tests** : xUnit v3 + Moq + Shouldly : unitaires, intégration et fonctionnels
 
 ### 🌐 Frontend Client (Blazor WebAssembly)
 - **Framework** : Blazor WebAssembly .NET 9
@@ -151,8 +153,9 @@ public async Task<IReadOnlyList<VoteDto>> GetVotesAsync(int proposalId)
 - **Development** : Hot reload et debugging améliorés
 
 ### 🧪 Testing & Quality
-- **Tests Unitaires** : NUnit + Moq + Shouldly
-- **Tests d'Intégration** : WebApplicationFactory + TestContainers
+- **Tests Unitaires** : xUnit v3 + Moq + Shouldly
+- **Tests d'Intégration** : WebApplicationFactory + SQLite, SQL Server par Testcontainers (Docker requis, sinon ignorés)
+- **Tests Fonctionnels** : API et front sur des ports locaux, parcours en HTTP et dans Chromium (Playwright)
 - **Coverage** : Coverlet pour métriques de couverture
 - **Code Quality** : Analyse statique intégrée
 - **CI/CD** : Prêt pour GitHub Actions
@@ -499,21 +502,26 @@ POST   /api/test-logging                    # Test de logging (DEBUG)
    ├── Validators avec FluentValidation
    └── DTOs et mappings
    
-🔶 Integration Tests (25%)
-   ├── WebApplicationFactory pour API
-   ├── TestContainers pour base de données
-   ├── Tests authentication endpoints
-   ├── Tests role-based authorization
-   └── Tests bout-en-bout des endpoints
-   
-🔺 E2E Tests (5%)
-   └── Parcours utilisateur complets avec rôles
+🔶 Integration Tests (NicolasQuiPaie.IntegrationTests)
+   ├── WebApplicationFactory pour l'API, base SQLite par classe de test
+   ├── SQL Server par Testcontainers : migrations et démarrage réels (Docker requis)
+   ├── Inscription, connexion, réinitialisation du mot de passe
+   ├── Propositions, votes, commentaires, catégories, analytics
+   └── Rôles et droits de l'auteur
+
+🔺 Functional Tests (NicolasQuiPaie.FunctionalTests)
+   ├── API sur Kestrel, parcours en HTTP boîte noire
+   ├── Front Blazor servi par NicolasQuiPaieWeb.Host, piloté dans Chromium (Playwright)
+   └── Mode présentateur /demo → /?demo, rideau et visite guidée
+
+# Navigateur des tests fonctionnels, une fois après la compilation
+pwsh src/Tests/NicolasQuiPaie.FunctionalTests/bin/Debug/net11.0/playwright.ps1 install chromium
 ```
 
 #### **Tests Unitaires Avancés**
 ```csharp
-[Test]
-[TestCaseSource(nameof(ContributionLevelTestCases))]
+[Theory]
+[MemberData(nameof(ContributionLevelTestCases))]
 public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
     ContributionLevel contributionLevel, int expectedWeight)
 {
@@ -534,7 +542,7 @@ public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
 }
 
 // 🎯 NEW: JWT Service Tests for Role Handling
-[Test]
+[Fact]
 public async Task GenerateTokenAsync_ShouldIncludeUserRoles_WhenUserHasRoles()
 {
     // Arrange

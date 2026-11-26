@@ -1,6 +1,5 @@
 namespace NicolasQuiPaie.UnitTests.Services;
 
-[TestFixture]
 public class ProposalServiceTests
 {
     private Mock<IUnitOfWork> _mockUnitOfWork;
@@ -8,8 +7,7 @@ public class ProposalServiceTests
     private Mock<IProposalRepository> _mockProposalRepository;
     private ProposalService _proposalService;
 
-    [SetUp]
-    public void Setup()
+    public ProposalServiceTests()
     {
         _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockLogger = new Mock<ILogger<ProposalService>>();
@@ -22,7 +20,7 @@ public class ProposalServiceTests
             _mockLogger.Object);
     }
 
-    [Test]
+    [Fact]
     public async Task GetActiveProposalsAsync_ShouldReturnProposals_WhenProposalsExist()
     {
         // Arrange
@@ -53,7 +51,7 @@ public class ProposalServiceTests
         _mockProposalRepository.Verify(x => x.GetActiveProposalsAsync(0, 20, null, null), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task GetProposalByIdAsync_ShouldReturnProposal_WhenProposalExists()
     {
         // Arrange
@@ -80,7 +78,7 @@ public class ProposalServiceTests
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task GetProposalByIdAsync_ShouldReturnNotFound_WhenProposalDoesNotExist()
     {
         // Arrange
@@ -99,7 +97,7 @@ public class ProposalServiceTests
         _mockProposalRepository.Verify(x => x.GetByIdAsync(proposalId), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task CreateProposalAsync_ShouldCreateProposal_WhenValidDataProvided()
     {
         // Arrange
@@ -165,7 +163,7 @@ public class ProposalServiceTests
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task UpdateProposalAsync_ShouldUpdateProposal_WhenUserIsOwner()
     {
         // Arrange
@@ -237,7 +235,7 @@ public class ProposalServiceTests
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task UpdateProposalAsync_ShouldRefuse_WhenUserIsNotOwner()
     {
         // Arrange
@@ -273,7 +271,7 @@ public class ProposalServiceTests
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
     }
 
-    [Test]
+    [Fact]
     public async Task DeleteProposalAsync_ShouldDeleteProposal_WhenUserIsOwner()
     {
         // Arrange
@@ -309,7 +307,7 @@ public class ProposalServiceTests
         _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task CanUserEditProposalAsync_ShouldReturnTrue_WhenUserIsOwner()
     {
         // Arrange
@@ -334,7 +332,7 @@ public class ProposalServiceTests
         result.ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public async Task CanUserEditProposalAsync_ShouldReturnFalse_WhenUserIsNotOwner()
     {
         // Arrange

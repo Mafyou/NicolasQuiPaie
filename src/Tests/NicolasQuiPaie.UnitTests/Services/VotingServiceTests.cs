@@ -3,7 +3,6 @@ namespace NicolasQuiPaie.UnitTests.Services;
 /// <summary>
 /// C# 13.0 - Democratic voting service tests ensuring equal voting rights for all Nicolas
 /// </summary>
-[TestFixture]
 public class VotingServiceTests
 {
     // C# 13.0 - Field keyword for backing fields (simulated with private fields until full support)
@@ -14,8 +13,7 @@ public class VotingServiceTests
     private Mock<IUserRepository> _mockUserRepository = null!;
     private VotingService _votingService = null!;
 
-    [SetUp]
-    public void Setup()
+    public VotingServiceTests()
     {
         // C# 13.0 - Tuple deconstruction with modern setup
         (_mockUnitOfWork, _mockLogger) = TestDataHelper.CreateServiceMocks<VotingService>();
@@ -42,8 +40,8 @@ public class VotingServiceTests
     }
 
     // C# 13.0 - Collection expressions in test data - All votes are equal!
-    [Test]
-    [TestCaseSource(nameof(ContributionLevelTestCases))]
+    [Theory]
+    [MemberData(nameof(ContributionLevelTestCases))]
     public async Task CastVoteAsync_ShouldApplyEqualWeight_ForAllContributionLevels(
         InfrastructureContributionLevel contributionLevel, int expectedWeight)
     {
@@ -96,7 +94,7 @@ public class VotingServiceTests
 
         // Assert
         result.ShouldNotBeNull();
-        result.Weight.ShouldBe(1); // Democratic equality: all votes weigh the same
+        result.Weight.ShouldBe(expectedWeight); // Democratic equality: all votes weigh the same
         result.UserId.ShouldBe(userId);
         result.VoteType.ShouldBe(NicolasQuiPaieData.DTOs.VoteType.For);
 
@@ -116,7 +114,7 @@ public class VotingServiceTests
         [InfrastructureContributionLevel.NicolasSupreme, 1]     // Equal weight
     ];
 
-    [Test]
+    [Fact]
     public async Task CastVoteAsync_ShouldUpdateExistingVote_WhenUserHasAlreadyVoted()
     {
         // Arrange
@@ -189,9 +187,9 @@ public class VotingServiceTests
     }
 
     // C# 13.0 - Params collections for flexible error testing with modern null patterns
-    [Test]
-    [TestCase("", "Proposal ID must be provided")]
-    [TestCase("invalid-user", "User not found")]
+    [Theory]
+    [InlineData("", "Proposal ID must be provided")]
+    [InlineData("invalid-user", "User not found")]
     public async Task CastVoteAsync_ShouldThrowException_WithInvalidInput(
         string invalidUserId, string expectedErrorPattern)
     {
@@ -208,7 +206,7 @@ public class VotingServiceTests
             var exception = await Should.ThrowAsync<ArgumentException>(
                 () => _votingService.CastVoteAsync(createVoteDto, invalidUserId));
 
-            exception.Message.ShouldContain("userId");
+            exception.Message.ShouldContain("userId", customMessage: expectedErrorPattern);
         }
         else
         {
@@ -219,12 +217,31 @@ public class VotingServiceTests
             var exception = await Should.ThrowAsync<InvalidOperationException>(
                 () => _votingService.CastVoteAsync(createVoteDto, invalidUserId));
 
-            exception.Message.ShouldContain("User not found");
+            exception.Message.ShouldContain(expectedErrorPattern);
             _mockUnitOfWork.Verify(x => x.RollbackTransactionAsync(), Times.Once);
         }
     }
 
-    [Test]
+    [Fact]
+    public async Task CastVoteAsync_ShouldRefuseAVote_OnAProposalThatDoesNotExist()
+    {
+        // Arrange
+        var userId = TestDataHelper.ValidUserIds[0];
+        _mockUserRepository.Setup(x => x.GetByIdAsync(userId)).ReturnsAsync(TestDataHelper.CreateTestUser(userId));
+        _mockProposalRepository.Setup(x => x.GetByIdAsync(999)).ReturnsAsync((Proposal?)null);
+        var createVoteDto = new CreateVoteDto { ProposalId = 999, VoteType = NicolasQuiPaieData.DTOs.VoteType.For };
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(() => _votingService.CastVoteAsync(createVoteDto, userId));
+
+        // Assert: nothing written, the transaction rolled back
+        exception.Message.ShouldContain("Proposal with ID 999 not found");
+        _mockVoteRepository.Verify(x => x.AddAsync(It.IsAny<Vote>()), Times.Never);
+        _mockUnitOfWork.Verify(x => x.SaveChangesAsync(), Times.Never);
+        _mockUnitOfWork.Verify(x => x.RollbackTransactionAsync(), Times.Once);
+    }
+
+    [Fact]
     public async Task CastVoteAsync_ShouldThrowException_WithWhitespaceUserId()
     {
         // Arrange
@@ -247,7 +264,7 @@ public class VotingServiceTests
         _mockUnitOfWork.Verify(x => x.RollbackTransactionAsync(), Times.Once);
     }
 
-    [Test]
+    [Fact]
     public async Task GetUserVoteForProposalAsync_ShouldReturnVoteDto_WhenVoteExists()
     {
         // Arrange
@@ -283,7 +300,7 @@ public class VotingServiceTests
         vote.Comment.ShouldBe("Great proposal!");
     }
 
-    [Test]
+    [Fact]
     public async Task GetUserVoteAsync_ShouldReturnNoVote_WhenVoteDoesNotExist()
     {
         // Arrange
@@ -302,7 +319,7 @@ public class VotingServiceTests
     }
 
     // C# 13.0 - Modern async test with collection expressions
-    [Test]
+    [Fact]
     public async Task GetVotesForProposalAsync_ShouldReturnAllVotes_ForSpecificProposal()
     {
         // Arrange
@@ -331,7 +348,7 @@ public class VotingServiceTests
         result.All(v => v.Weight == 1).ShouldBeTrue();
     }
 
-    [Test]
+    [Fact]
     public async Task GetVotesForProposalAsync_ShouldShowDemocraticEquality_InVoteDistribution()
     {
         // Arrange - Test scenario with different contribution levels but equal voting power
@@ -357,14 +374,4 @@ public class VotingServiceTests
         result.Sum(v => v.Weight).ShouldBe(2, "Total vote count should equal number of voters (democratic equality)");
     }
 
-    [TearDown]
-    public void TearDown()
-    {
-        // C# 13.0 - Enhanced cleanup with null conditional operators
-        _mockUnitOfWork?.Reset();
-        _mockLogger?.Reset();
-        _mockVoteRepository?.Reset();
-        _mockProposalRepository?.Reset();
-        _mockUserRepository?.Reset();
-    }
 }

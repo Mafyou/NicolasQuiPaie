@@ -23,6 +23,9 @@ public class VotingService(
             // Get user for reputation updates and badge tracking
             var user = await userRepository.GetByIdAsync(userId) ?? throw new InvalidOperationException($"User with ID {userId} not found");
 
+            // A vote on a proposal that does not exist is refused here, not by the database's foreign key.
+            _ = await unitOfWork.Proposals.GetByIdAsync(voteDto.ProposalId) ?? throw new InvalidOperationException($"Proposal with ID {voteDto.ProposalId} not found");
+
             // Check if user already voted for this proposal
             var existingVote = await unitOfWork.Votes.GetUserVoteForProposalAsync(userId, voteDto.ProposalId);
 

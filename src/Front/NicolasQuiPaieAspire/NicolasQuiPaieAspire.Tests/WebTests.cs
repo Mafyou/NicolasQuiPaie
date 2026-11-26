@@ -1,17 +1,23 @@
-using Microsoft.Extensions.Logging;
-using System.Net;
-
 namespace NicolasQuiPaieAspire.Tests;
 
+/// <summary>
+/// The whole Aspire application (API and front) started by its AppHost. It needs the Aspire orchestrator and the API's
+/// local SQL Server, which neither CI nor every machine has: opt in with NQP_ASPIRE_TESTS=1.
+/// </summary>
 public class WebTests
 {
+    public const string OptInVariable = "NQP_ASPIRE_TESTS";
+
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
 
-    [Test]
+    [Fact]
     public async Task GetWebResourceRootReturnsOkStatusCode()
     {
+        Assert.SkipUnless(Environment.GetEnvironmentVariable(OptInVariable) == "1",
+            $"Set {OptInVariable}=1 to start the Aspire AppHost (orchestrator and local SQL Server needed).");
+
         // Arrange
-        var cancellationToken = TestContext.CurrentContext.CancellationToken;
+        var cancellationToken = TestContext.Current.CancellationToken;
 
         var appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.NicolasQuiPaieAspire_AppHost>(cancellationToken);
         appHost.Services.AddLogging(logging =>
@@ -35,6 +41,6 @@ public class WebTests
         var response = await httpClient.GetAsync("/", cancellationToken);
 
         // Assert
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 }
