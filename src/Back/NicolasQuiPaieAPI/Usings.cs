@@ -29,3 +29,7 @@ global using System.Text;
 global using ProposalStatus = NicolasQuiPaieAPI.Infrastructure.Models.ProposalStatus;
 global using VoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType;
 global using System.Collections.Frozen;
+global using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using System.Reflection;
+global using System.Text.Json;
