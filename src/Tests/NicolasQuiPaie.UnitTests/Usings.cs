@@ -22,3 +22,8 @@ global using Microsoft.AspNetCore.TestHost;
 global using NicolasQuiPaieWeb.Host.Showroom;
 global using NUnit.Framework;
 global using Shouldly;
+global using Microsoft.AspNetCore.Identity;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging.Abstractions;
+global using NicolasQuiPaieAPI.Extensions;
+global using InfrastructureVoteType = NicolasQuiPaieAPI.Infrastructure.Models.VoteType;
