@@ -1,4 +1,4 @@
-using NicolasQuiPaieAPI.Infrastructure.Models;
+ï»¿using NicolasQuiPaieAPI.Infrastructure.Models;
 
 namespace NicolasQuiPaieAPI.Infrastructure.Data;
 
@@ -21,7 +21,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Its own schema: the database is shared with the other demos (bc, mt, crm...), dbo is not ours.
         builder.HasDefaultSchema(Schema);
 
-        // Configuration des entités
+        // Configuration des entitÃ©s
         ConfigureProposal(builder);
         ConfigureVote(builder);
         ConfigureComment(builder);
@@ -32,7 +32,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Seed roles
         SeedRoles(builder);
 
-        // Données de test
+        // DonnÃ©es de test
         SeedData(builder);
     }
 
@@ -217,13 +217,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     private static void SeedData(ModelBuilder builder)
     {
-        // Catégories par défaut
+        // CatÃ©gories par dÃ©faut
         builder.Entity<Category>().HasData(
             new Category
             {
                 Id = 1,
-                Name = "Fiscalité",
-                Description = "Propositions liées aux impôts et taxes",
+                Name = "FiscalitÃ©",
+                Description = "Propositions liÃ©es aux impÃ´ts et taxes",
                 Color = "#dc3545",
                 IconClass = "fas fa-coins",
                 SortOrder = 1
@@ -231,7 +231,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Category
             {
                 Id = 2,
-                Name = "Dépenses Publiques",
+                Name = "DÃ©penses Publiques",
                 Description = "Propositions sur l'utilisation de l'argent public",
                 Color = "#28a745",
                 IconClass = "fas fa-hand-holding-usd",
@@ -241,7 +241,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             {
                 Id = 3,
                 Name = "Services Publics",
-                Description = "Amélioration des services publics",
+                Description = "AmÃ©lioration des services publics",
                 Color = "#007bff",
                 IconClass = "fas fa-building",
                 SortOrder = 3
@@ -258,8 +258,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Category
             {
                 Id = 5,
-                Name = "Éducation",
-                Description = "Financement et réforme de l'éducation",
+                Name = "Ã‰ducation",
+                Description = "Financement et rÃ©forme de l'Ã©ducation",
                 Color = "#6f42c1",
                 IconClass = "fas fa-graduation-cap",
                 SortOrder = 5
@@ -267,8 +267,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             new Category
             {
                 Id = 6,
-                Name = "Santé",
-                Description = "Système de santé et financement",
+                Name = "SantÃ©",
+                Description = "SystÃ¨me de santÃ© et financement",
                 Color = "#20c997",
                 IconClass = "fas fa-heartbeat",
                 SortOrder = 6

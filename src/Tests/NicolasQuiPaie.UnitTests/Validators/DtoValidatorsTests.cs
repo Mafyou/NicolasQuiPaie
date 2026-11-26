@@ -1,4 +1,4 @@
-using VoteDto = NicolasQuiPaieData.DTOs.VoteType;
+ï»¿using VoteDto = NicolasQuiPaieData.DTOs.VoteType;
 
 namespace NicolasQuiPaie.UnitTests.Validators;
 
@@ -35,29 +35,29 @@ public class DtoValidatorsTests
     public static readonly ValidationTestCase[] CreateProposalTitleCases =
     [
         new("Title", "Valid Proposal Title", true),
-        new("Title", "A", false, "Le titre doit contenir au moins 10 caractères"),
+        new("Title", "A", false, "Le titre doit contenir au moins 10 caractÃ¨res"),
         new("Title", "", false, "Le titre est obligatoire"),
         new("Title", "   ", false, "Le titre est obligatoire"),
-        new("Title", new string('x', 201), false, "Le titre ne peut pas dépasser 200 caractères"),
-        new("Title", "Proposition avec émojis ??????", true),
-        new("Title", "Proposition avec caractères spéciaux @#$%", true)
+        new("Title", new string('x', 201), false, "Le titre ne peut pas dÃ©passer 200 caractÃ¨res"),
+        new("Title", "Proposition avec Ã©mojis ??????", true),
+        new("Title", "Proposition avec caractÃ¨res spÃ©ciaux @#$%", true)
     ];
 
     public static readonly ValidationTestCase[] CreateProposalDescriptionCases =
     [
         new("Description", "This is a valid description that is long enough to meet the minimum requirements for proposal descriptions.", true),
-        new("Description", "Too short", false, "La description doit contenir au moins 50 caractères"),
+        new("Description", "Too short", false, "La description doit contenir au moins 50 caractÃ¨res"),
         new("Description", "", false, "La description est obligatoire"),
-        new("Description", new string('x', 2001), false, "La description ne peut pas dépasser 2000 caractères"),
-        new("Description", "Description avec des caractères spéciaux et des émojis ?? permettant de tester la validation complète", true)
+        new("Description", new string('x', 2001), false, "La description ne peut pas dÃ©passer 2000 caractÃ¨res"),
+        new("Description", "Description avec des caractÃ¨res spÃ©ciaux et des Ã©mojis ?? permettant de tester la validation complÃ¨te", true)
     ];
 
     public static readonly ValidationTestCase[] CreateProposalCategoryCases =
     [
         new("CategoryId", 1, true),
         new("CategoryId", 5, true),
-        new("CategoryId", 0, false, "Une catégorie doit être sélectionnée"),
-        new("CategoryId", -1, false, "Une catégorie doit être sélectionnée")
+        new("CategoryId", 0, false, "Une catÃ©gorie doit Ãªtre sÃ©lectionnÃ©e"),
+        new("CategoryId", -1, false, "Une catÃ©gorie doit Ãªtre sÃ©lectionnÃ©e")
     ];
 
     [Test]
@@ -153,18 +153,18 @@ public class DtoValidatorsTests
         {
             new()
             {
-                Title = "Proposition de réforme fiscale progressive",
-                Description = "Cette proposition vise à mettre en place une réforme fiscale progressive qui permettrait une meilleure redistribution des richesses tout en maintenant la compétitivité économique.",
+                Title = "Proposition de rÃ©forme fiscale progressive",
+                Description = "Cette proposition vise Ã  mettre en place une rÃ©forme fiscale progressive qui permettrait une meilleure redistribution des richesses tout en maintenant la compÃ©titivitÃ© Ã©conomique.",
                 CategoryId = 1,
                 ImageUrl = "https://example.com/image.jpg",
-                Tags = "fiscalité,réforme,progressive"
+                Tags = "fiscalitÃ©,rÃ©forme,progressive"
             },
             new()
             {
-                Title = "Amélioration du système de santé publique",
-                Description = "Proposition détaillée pour l'amélioration du système de santé publique français avec un focus sur l'accessibilité et la qualité des soins pour tous les citoyens.",
+                Title = "AmÃ©lioration du systÃ¨me de santÃ© publique",
+                Description = "Proposition dÃ©taillÃ©e pour l'amÃ©lioration du systÃ¨me de santÃ© publique franÃ§ais avec un focus sur l'accessibilitÃ© et la qualitÃ© des soins pour tous les citoyens.",
                 CategoryId = 3,
-                Tags = "santé,public,accessibilité"
+                Tags = "santÃ©,public,accessibilitÃ©"
             }
         };
 
@@ -222,7 +222,7 @@ public class DtoValidatorsTests
     [TestCase("", true)] // Empty comment is allowed
     [TestCase("Valid comment", true)]
     [TestCase("Comment with special chars !@#$%^&*()", true)]
-    [TestCase("Commentaire avec émojis ???????", true)]
+    [TestCase("Commentaire avec Ã©mojis ???????", true)]
     public void CreateVoteDtoValidator_ShouldAllowOptionalComments(string comment, bool shouldBeValid)
     {
         // Arrange
@@ -258,7 +258,7 @@ public class DtoValidatorsTests
         new("Content", "A", false, "minimum"),
         new("Content", "", false, "obligatoire"),
         new("Content", new string('x', 1001), false, "maximum"),
-        new("Content", "Commentaire avec émojis et caractères spéciaux ?? @user #hashtag", true)
+        new("Content", "Commentaire avec Ã©mojis et caractÃ¨res spÃ©ciaux ?? @user #hashtag", true)
     ];
 
     [Test]
@@ -345,11 +345,11 @@ public class DtoValidatorsTests
                 Name = "Complete Proposal Creation Flow",
                 Proposal = new CreateProposalDto
                 {
-                    Title = "Réforme de la fiscalité environnementale",
-                    Description = "Cette proposition détaille une réforme complète de la fiscalité environnementale française, incluant une taxe carbone progressive, des incitations pour les énergies renouvelables, et un système de bonus-malus pour les entreprises basé sur leur empreinte carbone.",
+                    Title = "RÃ©forme de la fiscalitÃ© environnementale",
+                    Description = "Cette proposition dÃ©taille une rÃ©forme complÃ¨te de la fiscalitÃ© environnementale franÃ§aise, incluant une taxe carbone progressive, des incitations pour les Ã©nergies renouvelables, et un systÃ¨me de bonus-malus pour les entreprises basÃ© sur leur empreinte carbone.",
                     CategoryId = 1,
                     ImageUrl = "https://example.com/env-tax-reform.jpg",
-                    Tags = "environnement,fiscalité,carbone,entreprises"
+                    Tags = "environnement,fiscalitÃ©,carbone,entreprises"
                 },
                 Vote = new CreateVoteDto
                 {
@@ -360,7 +360,7 @@ public class DtoValidatorsTests
                 Comment = new CreateCommentDto
                 {
                     ProposalId = 1,
-                    Content = "Cette proposition est très intéressante, mais il faudrait préciser les modalités d'application pour les PME",
+                    Content = "Cette proposition est trÃ¨s intÃ©ressante, mais il faudrait prÃ©ciser les modalitÃ©s d'application pour les PME",
                     ParentCommentId = null
                 }
             },
@@ -369,21 +369,21 @@ public class DtoValidatorsTests
                 Name = "Social Policy Proposal",
                 Proposal = new CreateProposalDto
                 {
-                    Title = "Renforcement du système de protection sociale",
-                    Description = "Proposition pour renforcer le système de protection sociale français en améliorant l'accès aux soins, en augmentant les aides au logement et en créant un revenu universel de base pour lutter contre la précarité.",
+                    Title = "Renforcement du systÃ¨me de protection sociale",
+                    Description = "Proposition pour renforcer le systÃ¨me de protection sociale franÃ§ais en amÃ©liorant l'accÃ¨s aux soins, en augmentant les aides au logement et en crÃ©ant un revenu universel de base pour lutter contre la prÃ©caritÃ©.",
                     CategoryId = 3,
-                    Tags = "social,protection,santé,logement,revenu"
+                    Tags = "social,protection,santÃ©,logement,revenu"
                 },
                 Vote = new CreateVoteDto
                 {
                     ProposalId = 2,
                     VoteType = VoteDto.Against,
-                    Comment = "Les coûts de cette mesure semblent trop élevés pour les finances publiques"
+                    Comment = "Les coÃ»ts de cette mesure semblent trop Ã©levÃ©s pour les finances publiques"
                 },
                 Comment = new CreateCommentDto
                 {
                     ProposalId = 2,
-                    Content = "Il faudrait une étude d'impact budgétaire plus détaillée",
+                    Content = "Il faudrait une Ã©tude d'impact budgÃ©taire plus dÃ©taillÃ©e",
                     ParentCommentId = null
                 }
             }

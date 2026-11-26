@@ -1,4 +1,4 @@
-namespace NicolasQuiPaie.UnitTests.Services;
+ï»¿namespace NicolasQuiPaie.UnitTests.Services;
 
 [TestFixture]
 public class AnalyticsServiceTests
@@ -102,7 +102,7 @@ public class AnalyticsServiceTests
         result.FrustrationLevel.ShouldBe(33.33, 0.01); // 2 against votes out of 6 total
         result.TotalVotes.ShouldBe(6);
         result.TotalVotesAgainst.ShouldBe(2);
-        result.CurrentMood.ShouldBe("Légèrement frustré");
+        result.CurrentMood.ShouldBe("LÃ©gÃ¨rement frustrÃ©");
         result.CategoryBreakdown.ShouldNotBeNull();
     }
 
@@ -145,9 +145,9 @@ public class AnalyticsServiceTests
         // Add test categories
         var categories = new List<Category>
         {
-            new() { Id = 1, Name = "Fiscalité", IsActive = true, Color = "#FF6B6B", IconClass = "fas fa-coins" },
+            new() { Id = 1, Name = "FiscalitÃ©", IsActive = true, Color = "#FF6B6B", IconClass = "fas fa-coins" },
             new() { Id = 2, Name = "Social", IsActive = true, Color = "#4ECDC4", IconClass = "fas fa-users" },
-            new() { Id = 3, Name = "Économie", IsActive = true, Color = "#45B7D1", IconClass = "fas fa-chart-line" }
+            new() { Id = 3, Name = "Ã‰conomie", IsActive = true, Color = "#45B7D1", IconClass = "fas fa-chart-line" }
         };
 
         // Add test proposals

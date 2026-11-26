@@ -248,7 +248,7 @@ export function setupVotingSignalR(proposalId) {
             .then(function () {
                 console.log('SignalR connection established');
                 if (window.updateSignalRStatus) {
-                    window.updateSignalRStatus('connected', 'Connexion temps réel active');
+                    window.updateSignalRStatus('connected', 'Connexion temps rÃ©el active');
                 }
                 connection.invoke("JoinProposal", proposalId.toString());
                 connection.invoke("JoinGlobalUpdates");
@@ -256,7 +256,7 @@ export function setupVotingSignalR(proposalId) {
             .catch(function (err) {
                 console.error('SignalR connection failed:', err);
                 if (window.updateSignalRStatus) {
-                    window.updateSignalRStatus('disconnected', 'Connexion temps réel échouée');
+                    window.updateSignalRStatus('disconnected', 'Connexion temps rÃ©el Ã©chouÃ©e');
                 }
             });
 
@@ -273,7 +273,7 @@ export function setupVotingSignalR(proposalId) {
         connection.onreconnected(function () {
             console.log('SignalR reconnected');
             if (window.updateSignalRStatus) {
-                window.updateSignalRStatus('connected', 'Reconnexion réussie');
+                window.updateSignalRStatus('connected', 'Reconnexion rÃ©ussie');
             }
             connection.invoke("JoinProposal", proposalId.toString());
             connection.invoke("JoinGlobalUpdates");
@@ -282,7 +282,7 @@ export function setupVotingSignalR(proposalId) {
         connection.onclose(function () {
             console.warn('SignalR connection closed');
             if (window.updateSignalRStatus) {
-                window.updateSignalRStatus('disconnected', 'Connexion fermée');
+                window.updateSignalRStatus('disconnected', 'Connexion fermÃ©e');
             }
         });
 

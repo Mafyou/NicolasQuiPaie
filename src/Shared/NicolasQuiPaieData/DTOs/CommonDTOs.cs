@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieData.DTOs;
+ï»¿namespace NicolasQuiPaieData.DTOs;
 
 // DTOs should include their own enum definitions to avoid dependencies
 public enum ContributionLevel
@@ -54,7 +54,7 @@ public record ApiLogDto
 }
 
 /// <summary>
-/// DTO pour la réponse des logs API (record for immutability)
+/// DTO pour la rÃ©ponse des logs API (record for immutability)
 /// </summary>
 public record ApiLogsResponseDto
 {
@@ -84,24 +84,24 @@ public record ProposalDto
     public string? ImageUrl { get; init; }
     public string? Tags { get; init; }
 
-    // Propriétés liées au créateur
+    // PropriÃ©tÃ©s liÃ©es au crÃ©ateur
     public string CreatedById { get; init; } = "";
     public string CreatedByDisplayName { get; init; } = "";
 
-    // Propriétés liées à la catégorie
+    // PropriÃ©tÃ©s liÃ©es Ã  la catÃ©gorie
     public int CategoryId { get; init; }
     public string CategoryName { get; init; } = "";
     public string CategoryColor { get; init; } = "";
     public string CategoryIcon { get; init; } = "";
 
-    // Propriétés calculées
+    // PropriÃ©tÃ©s calculÃ©es
     public int TotalVotes => VotesFor + VotesAgainst;
     public double ApprovalRate => TotalVotes > 0 ? (double)VotesFor / TotalVotes * 100 : 0;
     public bool IsHot => TotalVotes > 50 && CreatedAt > DateTime.UtcNow.AddDays(-3);
 }
 
 /// <summary>
-/// DTO pour créer une proposition (class with setters for form binding)
+/// DTO pour crÃ©er une proposition (class with setters for form binding)
 /// </summary>
 public class CreateProposalDto
 {
@@ -113,7 +113,7 @@ public class CreateProposalDto
 }
 
 /// <summary>
-/// DTO pour mettre à jour une proposition (class with setters for form binding)
+/// DTO pour mettre Ã  jour une proposition (class with setters for form binding)
 /// </summary>
 public class UpdateProposalDto
 {
@@ -140,7 +140,7 @@ public record VoteDto
 }
 
 /// <summary>
-/// DTO pour créer un vote (class with setters for form binding)
+/// DTO pour crÃ©er un vote (class with setters for form binding)
 /// </summary>
 public class CreateVoteDto
 {
@@ -169,7 +169,7 @@ public record CommentDto
 }
 
 /// <summary>
-/// DTO pour créer un commentaire (class with setters for form binding)
+/// DTO pour crÃ©er un commentaire (class with setters for form binding)
 /// </summary>
 public class CreateCommentDto
 {
@@ -179,7 +179,7 @@ public class CreateCommentDto
 }
 
 /// <summary>
-/// DTO pour mettre à jour un commentaire (class with setters for form binding)
+/// DTO pour mettre Ã  jour un commentaire (class with setters for form binding)
 /// </summary>
 public class UpdateCommentDto
 {
@@ -187,7 +187,7 @@ public class UpdateCommentDto
 }
 
 /// <summary>
-/// DTO pour les catégories (record for immutability during transfer)
+/// DTO pour les catÃ©gories (record for immutability during transfer)
 /// </summary>
 public record CategoryDto
 {
@@ -219,7 +219,7 @@ public record UserDto
 }
 
 /// <summary>
-/// DTO pour mettre à jour le profil utilisateur (class with setters for form binding)
+/// DTO pour mettre Ã  jour le profil utilisateur (class with setters for form binding)
 /// </summary>
 public class UpdateUserProfileDto
 {
@@ -251,7 +251,7 @@ public record AchievementDto
 }
 
 /// <summary>
-/// DTO pour un élément d'activité (record for immutability)
+/// DTO pour un Ã©lÃ©ment d'activitÃ© (record for immutability)
 /// </summary>
 public record ActivityItemDto
 {

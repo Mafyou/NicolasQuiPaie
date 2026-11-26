@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
 namespace NicolasQuiPaieWeb.Services;
 
@@ -81,7 +81,7 @@ public class ApiHealthService(HttpClient httpClient, IOptionsSnapshot<Maintenanc
 
         return isAvailable switch
         {
-            true => "? API connect�e et fonctionnelle",
+            true => "? API connectée et fonctionnelle",
             false => $"? API non disponible ({_httpClient.BaseAddress})"
         };
     }

@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Presentation.Endpoints;
+ï»¿namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 public static class CommentEndpoints
 {
@@ -54,7 +54,7 @@ public static class CommentEndpoints
             }
         })
         .WithName("GetCommentsForProposal")
-        .WithSummary("Récupère les commentaires d'une proposition")
+        .WithSummary("RÃ©cupÃ¨re les commentaires d'une proposition")
         .Produces<IEnumerable<CommentDto>>()
         .Produces(400)
         .Produces(500);
@@ -145,7 +145,7 @@ public static class CommentEndpoints
             }
         })
         .WithName("CreateComment")
-        .WithSummary("Créer un nouveau commentaire")
+        .WithSummary("CrÃ©er un nouveau commentaire")
         .Produces<CommentDto>(201)
         .Produces(400)
         .Produces(401)

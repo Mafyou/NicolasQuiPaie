@@ -1,4 +1,4 @@
-using NicolasQuiPaie.IntegrationTests.Fixtures;
+ï»¿using NicolasQuiPaie.IntegrationTests.Fixtures;
 using System.Net;
 using System.Text.Json;
 using ContributionLevel = NicolasQuiPaieAPI.Infrastructure.Models.ContributionLevel;
@@ -42,7 +42,7 @@ public class VotingEndpointsTests
         {
             ProposalId = 1,
             VoteType = VoteType.For,
-            Comment = "Je soutiens cette proposition pour les Nicolas français"
+            Comment = "Je soutiens cette proposition pour les Nicolas franÃ§ais"
         };
 
         // Add authentication header
@@ -132,7 +132,7 @@ public class VotingEndpointsTests
         {
             ProposalId = 2,
             VoteType = VoteType.Against,
-            Comment = "J'ai changé d'avis, je vote contre"
+            Comment = "J'ai changÃ© d'avis, je vote contre"
         };
 
         // Act - Cast second vote
@@ -149,7 +149,7 @@ public class VotingEndpointsTests
 
         updatedVote.ShouldNotBeNull();
         updatedVote.VoteType.ShouldBe(VoteType.Against);
-        updatedVote.Comment.ShouldBe("J'ai changé d'avis, je vote contre");
+        updatedVote.Comment.ShouldBe("J'ai changÃ© d'avis, je vote contre");
     }
 
     [Test]
@@ -236,7 +236,7 @@ public class VotingEndpointsTests
         {
             ProposalId = 4,
             VoteType = VoteType.Against,
-            Comment = "Vote à supprimer"
+            Comment = "Vote Ã  supprimer"
         };
 
         _client.DefaultRequestHeaders.Authorization =

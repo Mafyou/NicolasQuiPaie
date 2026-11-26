@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Presentation.Endpoints;
+ï»¿namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 /// <summary>
 /// Analytics endpoints with role-based authorization and modern language features
@@ -18,7 +18,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/global-stats - Basic analytics for all authenticated users
         group.MapGet("/global-stats", GetGlobalStatsAsync)
             .WithName("GetGlobalStats")
-            .WithSummary("Récupère les statistiques globales")
+            .WithSummary("RÃ©cupÃ¨re les statistiques globales")
             .Produces<GlobalStatsDto>()
             .Produces(401)
             .Produces(403)
@@ -27,7 +27,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/voting-trends - Detailed trends for authenticated users
         group.MapGet("/voting-trends", GetVotingTrendsAsync)
             .WithName("GetVotingTrends")
-            .WithSummary("Récupère les tendances de vote")
+            .WithSummary("RÃ©cupÃ¨re les tendances de vote")
             .Produces<VotingTrendsDto>()
             .Produces(400)
             .Produces(401)
@@ -37,7 +37,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/contribution-distribution - For all authenticated users
         group.MapGet("/contribution-distribution", GetContributionDistributionAsync)
             .WithName("GetContributionDistribution")
-            .WithSummary("Récupère la distribution des niveaux de contribution")
+            .WithSummary("RÃ©cupÃ¨re la distribution des niveaux de contribution")
             .Produces<ContributionLevelDistributionDto>()
             .Produces(401)
             .Produces(403)
@@ -46,7 +46,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/top-contributors - Public leaderboard for authenticated users
         group.MapGet("/top-contributors", GetTopContributorsAsync)
             .WithName("GetTopContributors")
-            .WithSummary("Récupère les meilleurs contributeurs")
+            .WithSummary("RÃ©cupÃ¨re les meilleurs contributeurs")
             .Produces<TopContributorsDto>()
             .Produces(400)
             .Produces(401)
@@ -56,7 +56,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/recent-activity - For all authenticated users
         group.MapGet("/recent-activity", GetRecentActivityAsync)
             .WithName("GetRecentActivity")
-            .WithSummary("Récupère l'activité récente")
+            .WithSummary("RÃ©cupÃ¨re l'activitÃ© rÃ©cente")
             .Produces<RecentActivityDto>()
             .Produces(400)
             .Produces(401)
@@ -66,7 +66,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/frustration-barometer - Public mood indicator
         group.MapGet("/frustration-barometer", GetFrustrationBarometerAsync)
             .WithName("GetFrustrationBarometer")
-            .WithSummary("Récupère le baromètre de frustration")
+            .WithSummary("RÃ©cupÃ¨re le baromÃ¨tre de frustration")
             .Produces<FrustrationBarometerDto>()
             .Produces(401)
             .Produces(403)
@@ -75,7 +75,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/dashboard-stats - Enhanced dashboard for authenticated users
         group.MapGet("/dashboard-stats", GetDashboardStatsAsync)
             .WithName("GetDashboardStats")
-            .WithSummary("Récupère les statistiques pour le tableau de bord")
+            .WithSummary("RÃ©cupÃ¨re les statistiques pour le tableau de bord")
             .Produces<DashboardStatsDto>()
             .Produces(401)
             .Produces(403)
@@ -96,7 +96,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/advanced/user-engagement - Detailed user analytics
         advancedGroup.MapGet("/user-engagement", GetUserEngagementAsync)
             .WithName("GetUserEngagement")
-            .WithSummary("Récupère les statistiques d'engagement utilisateur (SuperUser+)")
+            .WithSummary("RÃ©cupÃ¨re les statistiques d'engagement utilisateur (SuperUser+)")
             .Produces<UserEngagementDto>()
             .Produces(401)
             .Produces(403)
@@ -105,7 +105,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/advanced/moderation-stats - Moderation statistics
         advancedGroup.MapGet("/moderation-stats", GetModerationStatsAsync)
             .WithName("GetModerationStats")
-            .WithSummary("Récupère les statistiques de modération (SuperUser+)")
+            .WithSummary("RÃ©cupÃ¨re les statistiques de modÃ©ration (SuperUser+)")
             .Produces<ModerationStatsDto>()
             .Produces(401)
             .Produces(403)
@@ -118,7 +118,7 @@ public static class AnalyticsEndpoints
         // GET /api/analytics/advanced/admin/system-health - System health metrics
         adminGroup.MapGet("/system-health", GetSystemHealthAsync)
             .WithName("GetSystemHealth")
-            .WithSummary("Récupère les métriques de santé système (Admin uniquement)")
+            .WithSummary("RÃ©cupÃ¨re les mÃ©triques de santÃ© systÃ¨me (Admin uniquement)")
             .Produces<SystemHealthDto>()
             .Produces(401)
             .Produces(403)

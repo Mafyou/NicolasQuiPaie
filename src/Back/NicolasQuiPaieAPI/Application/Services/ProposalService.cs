@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Application.Services;
+ï»¿namespace NicolasQuiPaieAPI.Application.Services;
 
 public class ProposalService : IProposalService
 {
@@ -20,7 +20,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions actives");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions actives");
             throw;
         }
     }
@@ -34,7 +34,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions tendances");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions tendances");
             throw;
         }
     }
@@ -48,7 +48,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions récentes");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions rÃ©centes");
             throw;
         }
     }
@@ -62,7 +62,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions populaires");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions populaires");
             throw;
         }
     }
@@ -76,7 +76,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération des propositions controversées");
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des propositions controversÃ©es");
             throw;
         }
     }
@@ -89,7 +89,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la récupération de la proposition {ProposalId}", id);
+            _logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration de la proposition {ProposalId}", id);
             throw;
         }
     }
@@ -106,12 +106,12 @@ public class ProposalService : IProposalService
             var createdProposal = await _unitOfWork.Proposals.AddAsync(proposal);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Proposition créée avec succès: {ProposalId} par {UserId}", createdProposal.Id, userId);
+            _logger.LogInformation("Proposition crÃ©Ã©e avec succÃ¨s: {ProposalId} par {UserId}", createdProposal.Id, userId);
             return createdProposal.ToDto();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la création de la proposition par {UserId}", userId);
+            _logger.LogError(ex, "Erreur lors de la crÃ©ation de la proposition par {UserId}", userId);
             throw;
         }
     }
@@ -134,12 +134,12 @@ public class ProposalService : IProposalService
             var updatedProposal = await _unitOfWork.Proposals.UpdateAsync(proposal);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Proposition mise à jour: {ProposalId} par {UserId}", id, userId);
+            _logger.LogInformation("Proposition mise Ã  jour: {ProposalId} par {UserId}", id, userId);
             return updatedProposal.ToDto();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la mise à jour de la proposition {ProposalId} par {UserId}", id, userId);
+            _logger.LogError(ex, "Erreur lors de la mise Ã  jour de la proposition {ProposalId} par {UserId}", id, userId);
             throw;
         }
     }
@@ -188,7 +188,7 @@ public class ProposalService : IProposalService
             await _unitOfWork.Proposals.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Proposition supprimée: {ProposalId} par {UserId}", id, userId);
+            _logger.LogInformation("Proposition supprimÃ©e: {ProposalId} par {UserId}", id, userId);
             return new ProposalDeleted(id);
         }
         catch (Exception ex)
@@ -207,7 +207,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de la vérification des droits d'édition pour la proposition {ProposalId} par {UserId}", proposalId, userId);
+            _logger.LogError(ex, "Erreur lors de la vÃ©rification des droits d'Ã©dition pour la proposition {ProposalId} par {UserId}", proposalId, userId);
             return false;
         }
     }
@@ -233,7 +233,7 @@ public class ProposalService : IProposalService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erreur lors de l'incrémentation des vues pour la proposition {ProposalId}", proposalId);
+            _logger.LogError(ex, "Erreur lors de l'incrÃ©mentation des vues pour la proposition {ProposalId}", proposalId);
             // Don't throw here as view counting is not critical functionality
         }
     }

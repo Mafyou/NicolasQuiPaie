@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Application.Validators;
+ï»¿namespace NicolasQuiPaieAPI.Application.Validators;
 
 public class CreateProposalDtoValidator : AbstractValidator<CreateProposalDto>
 {
@@ -6,19 +6,19 @@ public class CreateProposalDtoValidator : AbstractValidator<CreateProposalDto>
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Le titre est obligatoire")
-            .MaximumLength(200).WithMessage("Le titre ne peut pas dépasser 200 caractères")
-            .MinimumLength(10).WithMessage("Le titre doit contenir au moins 10 caractères");
+            .MaximumLength(200).WithMessage("Le titre ne peut pas dÃ©passer 200 caractÃ¨res")
+            .MinimumLength(10).WithMessage("Le titre doit contenir au moins 10 caractÃ¨res");
 
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("La description est obligatoire")
-            .MaximumLength(2000).WithMessage("La description ne peut pas dépasser 2000 caractères")
-            .MinimumLength(50).WithMessage("La description doit contenir au moins 50 caractères");
+            .MaximumLength(2000).WithMessage("La description ne peut pas dÃ©passer 2000 caractÃ¨res")
+            .MinimumLength(50).WithMessage("La description doit contenir au moins 50 caractÃ¨res");
 
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0).WithMessage("Veuillez sélectionner une catégorie valide");
+            .GreaterThan(0).WithMessage("Veuillez sÃ©lectionner une catÃ©gorie valide");
 
         RuleFor(x => x.Tags)
-            .MaximumLength(200).WithMessage("Les tags ne peuvent pas dépasser 200 caractères");
+            .MaximumLength(200).WithMessage("Les tags ne peuvent pas dÃ©passer 200 caractÃ¨res");
 
         RuleFor(x => x.ImageUrl)
             .Must(BeAValidUrl).WithMessage("L'URL de l'image n'est pas valide")
@@ -38,19 +38,19 @@ public class UpdateProposalDtoValidator : AbstractValidator<UpdateProposalDto>
     {
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Le titre est obligatoire")
-            .MaximumLength(200).WithMessage("Le titre ne peut pas dépasser 200 caractères")
-            .MinimumLength(10).WithMessage("Le titre doit contenir au moins 10 caractères");
+            .MaximumLength(200).WithMessage("Le titre ne peut pas dÃ©passer 200 caractÃ¨res")
+            .MinimumLength(10).WithMessage("Le titre doit contenir au moins 10 caractÃ¨res");
 
         RuleFor(x => x.Description)
             .NotEmpty().WithMessage("La description est obligatoire")
-            .MaximumLength(2000).WithMessage("La description ne peut pas dépasser 2000 caractères")
-            .MinimumLength(50).WithMessage("La description doit contenir au moins 50 caractères");
+            .MaximumLength(2000).WithMessage("La description ne peut pas dÃ©passer 2000 caractÃ¨res")
+            .MinimumLength(50).WithMessage("La description doit contenir au moins 50 caractÃ¨res");
 
         RuleFor(x => x.CategoryId)
-            .GreaterThan(0).WithMessage("Veuillez sélectionner une catégorie valide");
+            .GreaterThan(0).WithMessage("Veuillez sÃ©lectionner une catÃ©gorie valide");
 
         RuleFor(x => x.Tags)
-            .MaximumLength(200).WithMessage("Les tags ne peuvent pas dépasser 200 caractères");
+            .MaximumLength(200).WithMessage("Les tags ne peuvent pas dÃ©passer 200 caractÃ¨res");
 
         RuleFor(x => x.ImageUrl)
             .Must(BeAValidUrl).WithMessage("L'URL de l'image n'est pas valide")
@@ -75,7 +75,7 @@ public class CreateVoteDtoValidator : AbstractValidator<CreateVoteDto>
             .IsInEnum().WithMessage("Type de vote invalide");
 
         RuleFor(x => x.Comment)
-            .MaximumLength(500).WithMessage("Le commentaire ne peut pas dépasser 500 caractères");
+            .MaximumLength(500).WithMessage("Le commentaire ne peut pas dÃ©passer 500 caractÃ¨res");
     }
 }
 
@@ -88,8 +88,8 @@ public class CreateCommentDtoValidator : AbstractValidator<CreateCommentDto>
 
         RuleFor(x => x.Content)
             .NotEmpty().WithMessage("Le contenu du commentaire est obligatoire")
-            .MaximumLength(1000).WithMessage("Le commentaire ne peut pas dépasser 1000 caractères")
-            .MinimumLength(5).WithMessage("Le commentaire doit contenir au moins 5 caractères");
+            .MaximumLength(1000).WithMessage("Le commentaire ne peut pas dÃ©passer 1000 caractÃ¨res")
+            .MinimumLength(5).WithMessage("Le commentaire doit contenir au moins 5 caractÃ¨res");
 
         RuleFor(x => x.ParentCommentId)
             .GreaterThan(0).WithMessage("ID de commentaire parent invalide")
@@ -102,12 +102,12 @@ public class UpdateUserProfileDtoValidator : AbstractValidator<UpdateUserProfile
     public UpdateUserProfileDtoValidator()
     {
         RuleFor(x => x.DisplayName)
-            .MaximumLength(100).WithMessage("Le nom d'affichage ne peut pas dépasser 100 caractères")
-            .MinimumLength(2).WithMessage("Le nom d'affichage doit contenir au moins 2 caractères")
+            .MaximumLength(100).WithMessage("Le nom d'affichage ne peut pas dÃ©passer 100 caractÃ¨res")
+            .MinimumLength(2).WithMessage("Le nom d'affichage doit contenir au moins 2 caractÃ¨res")
             .When(x => !string.IsNullOrEmpty(x.DisplayName));
 
         RuleFor(x => x.Bio)
-            .MaximumLength(500).WithMessage("La biographie ne peut pas dépasser 500 caractères");
+            .MaximumLength(500).WithMessage("La biographie ne peut pas dÃ©passer 500 caractÃ¨res");
 
         RuleFor(x => x.ProfileImageUrl)
             .Must(BeAValidUrl).WithMessage("L'URL de l'image de profil n'est pas valide")

@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieAPI.Presentation.Endpoints;
+ï»¿namespace NicolasQuiPaieAPI.Presentation.Endpoints;
 
 public static class CategoryEndpoints
 {
@@ -44,7 +44,7 @@ public static class CategoryEndpoints
             }
         })
         .WithName("GetCategories")
-        .WithSummary("Récupère toutes les catégories")
+        .WithSummary("RÃ©cupÃ¨re toutes les catÃ©gories")
         .Produces<IEnumerable<CategoryDto>>()
         .Produces(500);
 
@@ -89,7 +89,7 @@ public static class CategoryEndpoints
             }
         })
         .WithName("GetCategoryById")
-        .WithSummary("Récupère une catégorie par son ID")
+        .WithSummary("RÃ©cupÃ¨re une catÃ©gorie par son ID")
         .Produces<CategoryDto>()
         .Produces(400)
         .Produces(404)
@@ -130,7 +130,7 @@ public static class CategoryEndpoints
             }
         })
         .WithName("GetActiveCategories")
-        .WithSummary("Récupère toutes les catégories actives")
+        .WithSummary("RÃ©cupÃ¨re toutes les catÃ©gories actives")
         .Produces<IEnumerable<CategoryDto>>()
         .Produces(500);
     }

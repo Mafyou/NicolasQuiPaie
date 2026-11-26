@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Services;
+ï»¿namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
 /// Client-side wrapper service for API calls - with fallback to sample data in read-only mode
@@ -79,7 +79,7 @@ public class ProposalService(
         if (_maintenanceSettings.IsReadOnlyMode)
         {
             _logger.LogWarning("Cannot create proposal in read-only mode");
-            throw new InvalidOperationException("La création de propositions n'est pas disponible en mode démonstration.");
+            throw new InvalidOperationException("La crÃ©ation de propositions n'est pas disponible en mode dÃ©monstration.");
         }
 
         return await _apiProposalService.CreateProposalAsync(proposal);
@@ -93,7 +93,7 @@ public class ProposalService(
         if (_maintenanceSettings.IsReadOnlyMode)
         {
             _logger.LogWarning("Cannot toggle proposal status in read-only mode");
-            throw new InvalidOperationException("La modification du statut des propositions n'est pas disponible en mode démonstration.");
+            throw new InvalidOperationException("La modification du statut des propositions n'est pas disponible en mode dÃ©monstration.");
         }
 
         return await _apiProposalService.ToggleProposalStatusAsync(proposalId, newStatus);

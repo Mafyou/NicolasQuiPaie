@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Services;
+ï»¿namespace NicolasQuiPaieWeb.Services;
 
 /// <summary>
 /// Client-side service for comment operations via API
@@ -12,7 +12,7 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
     };
 
     /// <summary>
-    /// Récupère tous les commentaires d'une proposition
+    /// RÃ©cupÃ¨re tous les commentaires d'une proposition
     /// </summary>
     public async Task<IEnumerable<CommentDto>> GetCommentsForProposalAsync(int proposalId)
     {
@@ -23,13 +23,13 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erreur lors de la récupération des commentaires pour la proposition {ProposalId}", proposalId);
+            logger.LogError(ex, "Erreur lors de la rÃ©cupÃ©ration des commentaires pour la proposition {ProposalId}", proposalId);
             return [];
         }
     }
 
     /// <summary>
-    /// Crée un nouveau commentaire
+    /// CrÃ©e un nouveau commentaire
     /// </summary>
     public async Task<CommentDto?> CreateCommentAsync(CreateCommentDto createDto)
     {
@@ -42,18 +42,18 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
                 return await response.Content.ReadFromJsonAsync<CommentDto>(_jsonOptions);
             }
 
-            logger.LogWarning("Échec de la création du commentaire. Status: {StatusCode}", response.StatusCode);
+            logger.LogWarning("Ã‰chec de la crÃ©ation du commentaire. Status: {StatusCode}", response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erreur lors de la création du commentaire");
+            logger.LogError(ex, "Erreur lors de la crÃ©ation du commentaire");
             return null;
         }
     }
 
     /// <summary>
-    /// Met à jour un commentaire existant
+    /// Met Ã  jour un commentaire existant
     /// </summary>
     public async Task<CommentDto?> UpdateCommentAsync(int commentId, UpdateCommentDto updateDto)
     {
@@ -66,12 +66,12 @@ public class ApiCommentService(HttpClient httpClient, ILogger<ApiCommentService>
                 return await response.Content.ReadFromJsonAsync<CommentDto>(_jsonOptions);
             }
 
-            logger.LogWarning("Échec de la mise à jour du commentaire {CommentId}. Status: {StatusCode}", commentId, response.StatusCode);
+            logger.LogWarning("Ã‰chec de la mise Ã  jour du commentaire {CommentId}. Status: {StatusCode}", commentId, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erreur lors de la mise à jour du commentaire {CommentId}", commentId);
+            logger.LogError(ex, "Erreur lors de la mise Ã  jour du commentaire {CommentId}", commentId);
             return null;
         }
     }
@@ -124,7 +124,7 @@ public class CommentService(
         if (_maintenanceSettings.IsReadOnlyMode)
         {
             _logger.LogWarning("Cannot create comment in read-only mode");
-            throw new InvalidOperationException("La création de commentaires n'est pas disponible en mode démonstration.");
+            throw new InvalidOperationException("La crÃ©ation de commentaires n'est pas disponible en mode dÃ©monstration.");
         }
 
         return await _apiCommentService.CreateCommentAsync(createDto);
@@ -135,7 +135,7 @@ public class CommentService(
         if (_maintenanceSettings.IsReadOnlyMode)
         {
             _logger.LogWarning("Cannot update comment in read-only mode");
-            throw new InvalidOperationException("La modification de commentaires n'est pas disponible en mode démonstration.");
+            throw new InvalidOperationException("La modification de commentaires n'est pas disponible en mode dÃ©monstration.");
         }
 
         return await _apiCommentService.UpdateCommentAsync(commentId, updateDto);
@@ -146,7 +146,7 @@ public class CommentService(
         if (_maintenanceSettings.IsReadOnlyMode)
         {
             _logger.LogWarning("Cannot delete comment in read-only mode");
-            throw new InvalidOperationException("La suppression de commentaires n'est pas disponible en mode démonstration.");
+            throw new InvalidOperationException("La suppression de commentaires n'est pas disponible en mode dÃ©monstration.");
         }
 
         return await _apiCommentService.DeleteCommentAsync(commentId);

@@ -1,4 +1,4 @@
-namespace NicolasQuiPaieWeb.Configuration;
+ï»¿namespace NicolasQuiPaieWeb.Configuration;
 
 public class MaintenanceSettings
 {
@@ -10,12 +10,12 @@ public class MaintenanceSettings
     public bool IsUnderConstruction { get; set; } = false;
 
     /// <summary>
-    /// Si true, le site est complètement inaccessible (mode maintenance totale)
+    /// Si true, le site est complÃ¨tement inaccessible (mode maintenance totale)
     /// </summary>
     public bool IsCompletelyDown { get; set; } = false;
 
     /// <summary>
-    /// Si true, utilise les données d'exemple au lieu de l'API (mode lecture seule)
+    /// Si true, utilise les donnÃ©es d'exemple au lieu de l'API (mode lecture seule)
     /// </summary>
     public bool IsReadOnlyMode { get; set; } = true;
 
@@ -23,7 +23,7 @@ public class MaintenanceSettings
     public string ConstructionMessage { get; set; } = "";
 
     /// <summary>
-    /// Message affiché quand le site est complètement fermé
+    /// Message affichÃ© quand le site est complÃ¨tement fermÃ©
     /// </summary>
     public string MaintenancePageMessage { get; set; } = "?? Site temporairement indisponible pour maintenance";
 
