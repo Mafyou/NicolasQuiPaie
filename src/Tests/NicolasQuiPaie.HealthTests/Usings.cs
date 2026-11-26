@@ -1,0 +1,26 @@
+extern alias Api;
+extern alias WebHost;
+
+global using ApiHealth = Api::NicolasQuiPaieAPI.Extensions.MafyouHealth;
+global using ApiProgram = Api::Program;
+global using HostHealth = WebHost::NicolasQuiPaieWeb.Host.Extensions.MafyouHealth;
+global using WebHostProgram = WebHost::Program;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Hosting.Server;
+global using Microsoft.AspNetCore.Hosting.Server.Features;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc.Testing;
+global using Microsoft.EntityFrameworkCore;
+global using Microsoft.EntityFrameworkCore.Infrastructure;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Diagnostics.HealthChecks;
+global using Microsoft.Extensions.Hosting;
+global using Moq;
+global using NicolasQuiPaie.HealthTests.Support;
+global using NicolasQuiPaieAPI.Infrastructure.Data;
+global using Shouldly;
+global using System.Net;
+global using System.Net.Http.Headers;
+global using System.Net.Http.Json;
+global using System.Text.Json;
+global using Xunit;
