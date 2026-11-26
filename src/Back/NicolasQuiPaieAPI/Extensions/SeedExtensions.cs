@@ -20,7 +20,12 @@ public static class SeedExtensions
 
         try
         {
-            await context.Database.EnsureCreatedAsync();
+            // Migrations on SQL Server: EnsureCreated does nothing on a database that already holds other tables
+            // (funnydb is shared by the demos). The in-memory database of the tests is simply created.
+            if (context.Database.IsRelational())
+                await context.Database.MigrateAsync();
+            else
+                await context.Database.EnsureCreatedAsync();
 
             // Seed categories first
             await SeedCategoriesAsync(context, logger);

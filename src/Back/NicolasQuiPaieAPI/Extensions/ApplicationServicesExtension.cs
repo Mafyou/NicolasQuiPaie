@@ -63,7 +63,8 @@ public static class ApplicationServicesExtension
                         "https://localhost:7051",  // API HTTPS
                         "https://happy-ocean-06624de03.2.azurestaticapps.net", // NicolasQuiPaieWeb Azure Static Web App
                         "https://*.azurestaticapps.net",
-                        "https://nicolasquipaie.eu"
+                        "https://nicolasquipaie.eu",
+                        "https://nqp-efg7dvh9dzguchew.francecentral-01.azurewebsites.net" // NicolasQuiPaieWeb.Host on App Service
                       )
                       .SetIsOriginAllowedToAllowWildcardSubdomains() // Allow subdomains
                       .AllowAnyHeader()
@@ -96,7 +97,8 @@ public static class ApplicationServicesExtension
         // Configuration Entity Framework
         services.AddDbContext<ApplicationDbContext>(options =>
         {
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"),
+                sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", ApplicationDbContext.Schema));
         });
 
         // 🎯 Use extension methods to configure authentication and authorization

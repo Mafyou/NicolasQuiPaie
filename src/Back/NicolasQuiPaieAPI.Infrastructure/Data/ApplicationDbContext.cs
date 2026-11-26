@@ -4,6 +4,9 @@ namespace NicolasQuiPaieAPI.Infrastructure.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
+    /// <summary>The schema of every table of the API, and of its migration history.</summary>
+    public const string Schema = "nqp";
+
     public DbSet<Proposal> Proposals { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
     public DbSet<Vote> Votes { get; set; } = null!;
@@ -14,6 +17,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Its own schema: the database is shared with the other demos (bc, mt, crm...), dbo is not ours.
+        builder.HasDefaultSchema(Schema);
 
         // Configuration des entités
         ConfigureProposal(builder);
