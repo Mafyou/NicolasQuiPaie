@@ -33,6 +33,9 @@ public static class SeedExtensions
             // Seed test user for development
             await SeedTestUserAsync(userManager, logger);
 
+            // Sample proposals for the demo site only (SeedDemoData, set by the App Service deployment)
+            await DemoDataSeeder.SeedAsync(app.Configuration, context, userManager, logger);
+
             // Test logging after DB initialization
             logger.LogWarning("Database initialization completed - SQL logging test with custom ApiLog table");
         }

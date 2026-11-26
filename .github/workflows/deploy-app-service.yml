@@ -58,7 +58,7 @@ jobs:
           path: api
 
       # The real connection string lives in the production environment's secrets, never in the repository.
-      - name: Set the connection string
+      - name: Set the connection string and turn the demo data on
         env:
           DEFAULT_CONNECTION: ${{ secrets.DEFAULT_CONNECTION }}
         run: |
@@ -66,7 +66,8 @@ jobs:
             echo "::error::Secret DEFAULT_CONNECTION missing in the production environment"
             exit 1
           fi
-          jq --arg cs "$DEFAULT_CONNECTION" '.ConnectionStrings.DefaultConnection = $cs' api/appsettings.json > api/appsettings.json.tmp
+          # SeedDemoData: this App Service is the demo site, sample proposals are added to an empty platform.
+          jq --arg cs "$DEFAULT_CONNECTION" '.ConnectionStrings.DefaultConnection = $cs | .SeedDemoData = true' api/appsettings.json > api/appsettings.json.tmp
           mv api/appsettings.json.tmp api/appsettings.json
 
       - name: Deploy the API
